@@ -113,7 +113,6 @@ function verifyCode() {
         // Successful verification
         const currentUser = {
             email: pendingVerification.email,
-            isAdmin: pendingVerification.email === "aguiilatown@gmail.com"
         };
         
         localStorage.setItem('currentUser', JSON.stringify(currentUser));
@@ -187,4 +186,5 @@ function resendVerificationCode() {
 function closeVerificationModal() {
     document.getElementById('verification-modal').style.display = 'none';
     document.getElementById('verification-input').value = '';
+
 }
