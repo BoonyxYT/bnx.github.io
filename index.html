@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Manager - Login</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- EMAILJS INTEGRATION -->
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script src="auth.js"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
+            min-height: 100vh;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+    <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-8 w-full max-w-md shadow-2xl">
+        <div class="text-center mb-8">
+            <i class="fas fa-music text-5xl text-cyan-300 mb-4"></i>
+            <h1 class="text-3xl font-bold text-white">Music Manager</h1>
+            <p class="text-white/70 mt-2">Sign in to manage your YouTube playlists</p>
+        </div>
+
+        <!-- Authentication Section -->
+        <div id="auth-section">
+            <div class="flex flex-col gap-4">
+                <input type="email" id="email-input" placeholder="Enter your email" 
+                       class="px-4 py-3.5 rounded-lg bg-white/90 border-0 text-base text-black focus:ring-2 focus:ring-cyan-400 focus:outline-none">
+                <button id="send-code-btn" 
+                        class="px-4 py-3.5 rounded-lg bg-cyan-400 text-white font-medium cursor-pointer transition-all hover:bg-cyan-500 transform hover:-translate-y-0.5">
+                    Send Verification Code
+                </button>
+            </div>
+            <div id="email-status" class="mt-4"></div>
+        </div>
+
+        <!-- Verification Modal -->
+        <div id="verification-modal" class="hidden fixed top-0 left-0 w-full h-full bg-black/70 z-50 justify-center items-center p-4">
+            <div class="bg-white/95 text-gray-800 p-8 rounded-xl max-w-lg w-full text-center">
+                <h2 class="text-2xl font-bold mb-5 text-cyan-400">Email Verification</h2>
+                <div class="verification-instructions my-4 text-sm text-gray-600">
+                    <p>We've sent a verification code to your email address.</p>
+                    <p>Please check your inbox and enter the code below:</p>
+                </div>
+                <div class="mb-5">
+                    <input type="text" id="verification-input" placeholder="Enter verification code" 
+                           class="w-full px-4 py-3.5 rounded-lg bg-white/90 border-0 text-base focus:ring-2 focus:ring-cyan-400 focus:outline-none">
+                </div>
+                <button id="verify-btn" 
+                        class="w-full inline-block bg-cyan-400 text-white px-6 py-3.5 rounded-lg cursor-pointer text-base font-medium text-center transition-all hover:bg-cyan-500 mb-2">
+                    Verify
+                </button>
+                <button id="resend-code-btn" 
+                        class="w-full inline-block bg-orange-500 text-white px-6 py-3.5 rounded-lg cursor-pointer text-base font-medium text-center transition-all hover:bg-orange-600 mb-2">
+                    Resend Code
+                </button>
+                <button id="close-modal-btn" 
+                        class="w-full inline-block bg-red-500 text-white px-6 py-3.5 rounded-lg cursor-pointer text-base font-medium text-center transition-all hover:bg-red-600">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if user is already logged in
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            if (currentUser) {
+                // Redirect to dashboard if already logged in
+                window.location.href = 'dashboard.html';
+                return;
+            }
+
+            // Authentication events
+            document.getElementById('send-code-btn').addEventListener('click', sendVerificationCode);
+            document.getElementById('verify-btn').addEventListener('click', verifyCode);
+            document.getElementById('resend-code-btn').addEventListener('click', resendVerificationCode);
+            document.getElementById('close-modal-btn').addEventListener('click', closeVerificationModal);
+
+            // Allow pressing Enter in email input
+            document.getElementById('email-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendVerificationCode();
+                }
+            });
+
+            // Allow pressing Enter in verification input
+            document.getElementById('verification-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    verifyCode();
+                }
+            });
+        });
+
+        // Function to handle successful login
+        function handleSuccessfulLogin() {
+            // Redirect to dashboard after successful login
+            window.location.href = 'dashboard.html';
+        }
+    </script>
+</body>
+</html>
