@@ -46,7 +46,9 @@
             { id: "d2", title: "Focus Music", url: "https://www.youtube.com/watch?v=4SsiTtDJ9hY", videoId: "4SsiTtDJ9hY"}
         ];
 
-       
+       // User authentication state
+        let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
+        
 
         // Debug function
         function debugLog(message) {
@@ -654,6 +656,7 @@
 </body>
 
 </html>
+
 
 
 
