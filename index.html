@@ -9,9 +9,13 @@
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script>
         // INICIALIZAR EMAILJS CON TU PUBLIC KEY
-        emailjs.init("y6z1_yLYoZzfUqleA");
+        (function() {
+            emailjs.init("y6z1_yLYoZzfUqleA");
+            console.log("EmailJS initialized");
+        })();
     </script>
     <style>
+        /* (Mantén todos los estilos igual que antes) */
         * {
             margin: 0;
             padding: 0;
@@ -532,6 +536,15 @@
             color: #666;
         }
         
+        .debug-info {
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-size: 0.8rem;
+            display: none;
+        }
+        
         @media (max-width: 768px) {
             .main-content {
                 flex-direction: column;
@@ -589,6 +602,7 @@
                 <input type="email" id="email-input" placeholder="Enter your email">
                 <button id="send-code-btn">Send Verification Code</button>
             </div>
+            <div id="debug-info" class="debug-info"></div>
         </div>
 
         <!-- User Info Section (hidden by default) -->
@@ -617,11 +631,13 @@
                 </div>
                 <button id="verify-btn" class="btn btn-block">Verify</button>
                 <button id="resend-code-btn" class="btn btn-block btn-warning" style="margin-top: 10px;">Resend Code</button>
+                <button id="close-modal-btn" class="btn btn-block btn-danger" style="margin-top: 10px;">Cancel</button>
             </div>
         </div>
 
         <!-- Main Content (hidden until signed in) -->
         <div id="main-content" style="display: none;">
+            <!-- (Mantén el resto del contenido igual) -->
             <div class="main-content">
                 <section class="input-section">
                     <h2 class="section-title">Add New Song</h2>
@@ -754,6 +770,16 @@
         // User authentication state
         let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
         const ADMIN_EMAIL = "aguiilatown@gmail.com";
+
+        // Debug function
+        function debugLog(message) {
+            console.log(message);
+            const debugInfo = document.getElementById('debug-info');
+            if (debugInfo) {
+                debugInfo.innerHTML += `<div>${new Date().toLocaleTimeString()}: ${message}</div>`;
+                debugInfo.style.display = 'block';
+            }
+        }
 
         // Save to localStorage
         function savePlaylists() {
@@ -1041,4 +1067,380 @@
 
         // Remove a song
         function removeSong(playlistIndex, songIndex) {
-            if (confirm('Are you sure you want to remove this song?'))
+            if (confirm('Are you sure you want to remove this song?')) {
+                playlists[playlistIndex].songs.splice(songIndex, 1);
+                savePlaylists();
+                renderPlaylists();
+            }
+        }
+
+        // Delete a playlist
+        function deletePlaylist(playlistIndex) {
+            if (confirm('Are you sure you want to delete this playlist?')) {
+                playlists.splice(playlistIndex, 1);
+                savePlaylists();
+                renderPlaylists();
+            }
+        }
+
+        // Add a new song to user's playlist
+        function addSong() {
+            const youtubeUrl = document.getElementById('youtube-url').value.trim();
+            const songTitle = document.getElementById('song-title').value.trim();
+            const playlistName = document.getElementById('playlist-name').value.trim();
+            
+            if (!youtubeUrl) {
+                alert('Please enter a YouTube URL');
+                return;
+            }
+            
+            const videoId = extractVideoId(youtubeUrl);
+            if (!videoId) {
+                alert('The YouTube URL is not valid');
+                return;
+            }
+            
+            if (!playlistName) {
+                alert('Please enter a playlist name');
+                return;
+            }
+            
+            // Find if playlist already exists
+            let playlistIndex = playlists.findIndex(p => p.name === playlistName);
+            
+            // If it doesn't exist, create a new playlist
+            if (playlistIndex === -1) {
+                playlists.push({
+                    id: generateId(),
+                    name: playlistName,
+                    songs: []
+                });
+                playlistIndex = playlists.length - 1;
+            }
+            
+            // Add the song to the playlist
+            const finalTitle = songTitle || `Song ${playlists[playlistIndex].songs.length + 1}`;
+            
+            playlists[playlistIndex].songs.push({
+                id: generateId(),
+                title: finalTitle,
+                url: youtubeUrl,
+                videoId: videoId
+            });
+            
+            // Save and update the view
+            savePlaylists();
+            renderPlaylists();
+            
+            // Clear input fields
+            document.getElementById('youtube-url').value = '';
+            document.getElementById('song-title').value = '';
+        }
+
+        // Add a song to discover section (admin only)
+        function addSongToDiscover() {
+            const youtubeUrl = document.getElementById('discover-youtube-url').value.trim();
+            const songTitle = document.getElementById('discover-song-title').value.trim();
+            
+            if (!youtubeUrl) {
+                alert('Please enter a YouTube URL');
+                return;
+            }
+            
+            const videoId = extractVideoId(youtubeUrl);
+            if (!videoId) {
+                alert('The YouTube URL is not valid');
+                return;
+            }
+            
+            if (!songTitle) {
+                alert('Please enter a song title');
+                return;
+            }
+            
+            // Add the song to discover section
+            discoverSongs.push({
+                id: generateId(),
+                title: songTitle,
+                url: youtubeUrl,
+                videoId: videoId,
+                addedBy: currentUser.email
+            });
+            
+            // Save and update the view
+            saveDiscoverSongs();
+            renderDiscoverSongs();
+            
+            // Clear input fields
+            document.getElementById('discover-youtube-url').value = '';
+            document.getElementById('discover-song-title').value = '';
+            
+            alert('Song added to Discover section!');
+        }
+
+        // Quick add to existing playlist
+        function quickAdd() {
+            const playlistIndex = document.getElementById('existing-playlists').value;
+            
+            if (playlistIndex === "") {
+                alert('Please select a playlist');
+                return;
+            }
+            
+            document.getElementById('playlist-name').value = playlists[playlistIndex].name;
+            addSong();
+        }
+
+        // REAL EMAIL VERIFICATION WITH EMAILJS - VERSIÓN MEJORADA
+        function sendVerificationCode() {
+            const email = document.getElementById('email-input').value.trim();
+            
+            if (!email) {
+                alert('Please enter your email address');
+                return;
+            }
+            
+            debugLog(`Starting verification for: ${email}`);
+            
+            // Generate verification code
+            const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+            debugLog(`Generated code: ${verificationCode}`);
+            
+            // Store for verification
+            sessionStorage.setItem('pendingVerification', JSON.stringify({
+                email: email,
+                code: verificationCode,
+                timestamp: Date.now()
+            }));
+            
+            // Show sending status
+            const emailStatus = document.getElementById('email-status');
+            emailStatus.style.display = 'block';
+            emailStatus.textContent = '⏳ Sending verification code...';
+            emailStatus.className = 'email-status';
+            
+            // CONFIGURACIÓN ACTUALIZADA CON TUS CREDENCIALES
+            const SERVICE_ID = "service_l01icdo";
+            const TEMPLATE_ID = "template_exzottb";
+            
+            debugLog(`Sending email with Service: ${SERVICE_ID}, Template: ${TEMPLATE_ID}`);
+            
+            // Send email using EmailJS
+            emailjs.send(SERVICE_ID, TEMPLATE_ID, {
+                to_email: email,
+                verification_code: verificationCode
+            })
+            .then(function(response) {
+                debugLog('✅ Email sent successfully!');
+                console.log('✅ Email sent successfully!', response);
+                emailStatus.textContent = `✅ Verification code sent to ${email}`;
+                emailStatus.className = 'email-status email-success';
+                document.getElementById('verification-modal').style.display = 'flex';
+                
+                // Clear email input
+                document.getElementById('email-input').value = '';
+            }, function(error) {
+                debugLog('❌ Failed to send email: ' + JSON.stringify(error));
+                console.log('❌ Failed to send email:', error);
+                
+                let errorMessage = 'Failed to send verification code. ';
+                
+                if (error.text) {
+                    errorMessage += `Error: ${error.text}`;
+                } else if (error.status) {
+                    errorMessage += `Status: ${error.status}`;
+                }
+                
+                emailStatus.textContent = errorMessage;
+                emailStatus.className = 'email-status email-error';
+                
+                // For testing purposes, show the modal anyway with the code
+                if (confirm('Email sending failed. For testing, would you like to see the verification code?')) {
+                    alert(`TEST CODE: ${verificationCode}`);
+                    document.getElementById('verification-modal').style.display = 'flex';
+                }
+            });
+        }
+
+        function verifyCode() {
+            const pendingVerification = JSON.parse(sessionStorage.getItem('pendingVerification'));
+            const enteredCode = document.getElementById('verification-input').value.trim();
+            
+            if (!enteredCode) {
+                alert('Please enter the verification code');
+                return;
+            }
+            
+            if (!pendingVerification) {
+                alert('No verification session found. Please request a new code.');
+                return;
+            }
+            
+            // Check if code is expired (10 minutes)
+            const now = Date.now();
+            if (now - pendingVerification.timestamp > 10 * 60 * 1000) {
+                alert('Verification code has expired. Please request a new one.');
+                sessionStorage.removeItem('pendingVerification');
+                return;
+            }
+            
+            if (enteredCode === pendingVerification.code) {
+                // Successful verification
+                currentUser = {
+                    email: pendingVerification.email,
+                    isAdmin: pendingVerification.email === ADMIN_EMAIL
+                };
+                
+                saveUser();
+                updateUIForUser();
+                
+                // Hide the modal and clear session
+                document.getElementById('verification-modal').style.display = 'none';
+                sessionStorage.removeItem('pendingVerification');
+                document.getElementById('verification-input').value = '';
+                
+                debugLog('User successfully verified and logged in');
+                alert('Successfully signed in!');
+            } else {
+                alert('Invalid verification code. Please try again.');
+                document.getElementById('verification-input').value = '';
+                document.getElementById('verification-input').focus();
+            }
+        }
+
+        function resendVerificationCode() {
+            const pendingVerification = JSON.parse(sessionStorage.getItem('pendingVerification'));
+            if (!pendingVerification) {
+                alert('No pending verification found. Please enter your email again.');
+                return;
+            }
+            
+            const email = pendingVerification.email;
+            const newCode = Math.floor(100000 + Math.random() * 900000).toString();
+            
+            debugLog(`Resending code to: ${email}, new code: ${newCode}`);
+            
+            // Update stored code
+            sessionStorage.setItem('pendingVerification', JSON.stringify({
+                email: email,
+                code: newCode,
+                timestamp: Date.now()
+            }));
+            
+            const emailStatus = document.getElementById('email-status');
+            emailStatus.style.display = 'block';
+            emailStatus.textContent = '⏳ Resending verification code...';
+            emailStatus.className = 'email-status';
+            
+            const SERVICE_ID = "service_l01icdo";
+            const TEMPLATE_ID = "template_exzottb";
+            
+            emailjs.send(SERVICE_ID, TEMPLATE_ID, {
+                to_email: email,
+                verification_code: newCode
+            })
+            .then(function(response) {
+                emailStatus.textContent = `✅ Verification code resent to ${email}`;
+                emailStatus.className = 'email-status email-success';
+                debugLog('Resent email successfully');
+            }, function(error) {
+                emailStatus.textContent = '❌ Failed to resend verification code. Please try again.';
+                emailStatus.className = 'email-status email-error';
+                debugLog('Failed to resend email: ' + JSON.stringify(error));
+                
+                // For testing
+                if (confirm('Resend failed. Show code for testing?')) {
+                    alert(`TEST CODE: ${newCode}`);
+                }
+            });
+        }
+
+        function closeVerificationModal() {
+            document.getElementById('verification-modal').style.display = 'none';
+            document.getElementById('verification-input').value = '';
+        }
+
+        function logout() {
+            currentUser = null;
+            saveUser();
+            updateUIForUser();
+            debugLog('User logged out');
+        }
+
+        function updateUIForUser() {
+            if (currentUser) {
+                // User is signed in
+                document.getElementById('auth-section').style.display = 'none';
+                document.getElementById('user-info').style.display = 'flex';
+                document.getElementById('main-content').style.display = 'block';
+                
+                document.getElementById('user-email').textContent = currentUser.email;
+                
+                if (currentUser.isAdmin) {
+                    document.getElementById('admin-badge').style.display = 'inline-block';
+                    document.getElementById('admin-controls').style.display = 'block';
+                } else {
+                    document.getElementById('admin-badge').style.display = 'none';
+                    document.getElementById('admin-controls').style.display = 'none';
+                }
+                
+                // Render user-specific content
+                renderPlaylists();
+                renderDiscoverSongs();
+            } else {
+                // User is not signed in
+                document.getElementById('auth-section').style.display = 'block';
+                document.getElementById('user-info').style.display = 'none';
+                document.getElementById('main-content').style.display = 'none';
+            }
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            debugLog('Application initialized');
+            
+            // Check if user is already signed in
+            updateUIForUser();
+            
+            // Add song button event
+            document.getElementById('add-song-btn').addEventListener('click', addSong);
+            
+            // Quick add button event
+            document.getElementById('quick-add-btn').addEventListener('click', quickAdd);
+            
+            // Add to discover button event
+            document.getElementById('add-to-discover-btn').addEventListener('click', addSongToDiscover);
+            
+            // Allow pressing Enter in the URL field to add a song
+            document.getElementById('youtube-url').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addSong();
+                }
+            });
+            
+            // Authentication events
+            document.getElementById('send-code-btn').addEventListener('click', sendVerificationCode);
+            document.getElementById('verify-btn').addEventListener('click', verifyCode);
+            document.getElementById('resend-code-btn').addEventListener('click', resendVerificationCode);
+            document.getElementById('close-modal-btn').addEventListener('click', closeVerificationModal);
+            document.getElementById('logout-btn').addEventListener('click', logout);
+            
+            // Allow pressing Enter in verification input
+            document.getElementById('verification-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    verifyCode();
+                }
+            });
+            
+            // Allow pressing Enter in email input
+            document.getElementById('email-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendVerificationCode();
+                }
+            });
+            
+            debugLog('All event listeners attached');
+        });
+    </script>
+</body>
+</html>
