@@ -129,11 +129,33 @@
             border-radius: 50%;
             pointer-events: none;
         }
+
+        /* Modal de verificación */
+        .verification-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .verification-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            max-width: 400px;
+            width: 90%;
+        }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
     <!-- Background Music -->
-    <audio id="background-music" loop autoplay>
+    <audio id="background-music" loop>
         <source src="https://cdn.discordapp.com/attachments/1257768559883456532/1424869090153070684/Lofi__Calm_Music_Copyright_Free_-_Your_Little_Wings_by_Tokyo_Music_Walker_-_BreakingCopyright_Royalty_Free_Music.mp3?ex=68e5843f&is=68e432bf&hm=a0833a5ead8eb9d034e05f6ffd1cdbf9cb1b61ddf7e6c5c7e72be11e7b4a4bc9&" type="audio/mpeg">
     </audio>
     
@@ -146,13 +168,13 @@
     <!-- Music Player Controls -->
     <div class="music-player">
         <button id="play-pause-btn" class="text-white hover:text-cyan-300 transition-colors text-lg w-8 h-8 flex items-center justify-center">
-            <i id="play-icon" class="fas fa-play hidden"></i>
-            <i id="pause-icon" class="fas fa-pause"></i>
+            <i id="play-icon" class="fas fa-play"></i>
+            <i id="pause-icon" class="fas fa-pause hidden"></i>
         </button>
         <div class="volume-slider">
             <input id="volume-slider" type="range" min="0" max="100" value="50" class="w-full">
         </div>
-        <span id="music-status" class="text-white text-sm">Playing</span>
+        <span id="music-status" class="text-white text-sm">Click play</span>
     </div>
 
     <!-- Overlay para autoplay bloqueado -->
@@ -163,6 +185,24 @@
             <button id="start-music-btn" class="bg-cyan-500 text-white px-6 py-2 rounded-lg hover:bg-cyan-600">
                 Start Music
             </button>
+        </div>
+    </div>
+
+    <!-- Modal de verificación -->
+    <div id="verification-modal" class="verification-modal hidden">
+        <div class="verification-content">
+            <h2 class="text-2xl font-bold mb-4 text-cyan-500">Verification Required</h2>
+            <p class="mb-4 text-gray-600">Enter the verification code below:</p>
+            <input type="text" id="verification-code" placeholder="Enter code" 
+                   class="w-full px-4 py-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-400 focus:outline-none">
+            <div class="flex gap-2">
+                <button id="verify-btn" class="flex-1 bg-cyan-500 text-white px-4 py-2 rounded-lg hover:bg-cyan-600">
+                    Verify
+                </button>
+                <button id="cancel-verify-btn" class="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600">
+                    Cancel
+                </button>
+            </div>
         </div>
     </div>
 
@@ -195,83 +235,173 @@
         let bars = [];
         let animationId;
         let particles = [];
+        let isPlaying = false;
 
-        // Iniciar inmediatamente cuando la página cargue
-        window.addEventListener('load', function() {
+        // Función para iniciar música automáticamente
+        function startMusicAutomatically() {
             const audioElement = document.getElementById('background-music');
             const autoplayOverlay = document.getElementById('autoplay-overlay');
-            const startMusicBtn = document.getElementById('start-music-btn');
             
-            // Configuración inicial
             audioElement.volume = 0.5;
-            audioElement.muted = false;
             
-            // Crear barras del visualizador
+            // Intentar reproducir automáticamente
+            audioElement.play().then(() => {
+                console.log("🎵 Music started automatically!");
+                isPlaying = true;
+                updateMusicUI();
+                setupAudioAnalyzer(audioElement);
+                startVisualizer();
+            }).catch(error => {
+                console.log("Autoplay blocked:", error);
+                autoplayOverlay.classList.remove('hidden');
+            });
+        }
+
+        // Configurar eventos cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', function() {
+            const audioElement = document.getElementById('background-music');
+            const playPauseBtn = document.getElementById('play-pause-btn');
+            const volumeSlider = document.getElementById('volume-slider');
+            const startMusicBtn = document.getElementById('start-music-btn');
+            const autoplayOverlay = document.getElementById('autoplay-overlay');
+            const sendCodeBtn = document.getElementById('send-code-btn');
+            const verifyBtn = document.getElementById('verify-btn');
+            const cancelVerifyBtn = document.getElementById('cancel-verify-btn');
+            const verificationModal = document.getElementById('verification-modal');
+
+            // Inicializar componentes
             createVisualizerBars();
-            
-            // Crear partículas
             createParticles();
             
-            // Intentar reproducir inmediatamente
-            const playAudio = async () => {
-                try {
-                    // Primero cargamos el audio
-                    await audioElement.load();
-                    
-                    // Configurar el analizador de audio
-                    setupAudioAnalyzer(audioElement);
-                    
-                    // Luego intentamos reproducir
-                    await audioElement.play();
-                    
-                    console.log("🎵 Music started successfully!");
-                    
-                    // Iniciar animación del visualizador
-                    startVisualizer();
-                    
-                    // Actualizar UI para mostrar que está reproduciendo
-                    document.getElementById('pause-icon').classList.remove('hidden');
-                    document.getElementById('play-icon').classList.add('hidden');
-                    document.getElementById('music-status').textContent = "Playing";
-                    
-                } catch (error) {
-                    console.log("Autoplay blocked, showing overlay:", error);
-                    // Mostrar overlay si el autoplay está bloqueado
-                    autoplayOverlay.classList.remove('hidden');
+            // Intentar reproducir música automáticamente después de un breve delay
+            setTimeout(startMusicAutomatically, 500);
+
+            // Control de volumen
+            volumeSlider.addEventListener('input', function() {
+                audioElement.volume = this.value / 100;
+            });
+
+            // Botón de play/pause
+            playPauseBtn.addEventListener('click', function() {
+                if (isPlaying) {
+                    audioElement.pause();
+                    isPlaying = false;
+                    if (animationId) {
+                        cancelAnimationFrame(animationId);
+                    }
+                } else {
+                    audioElement.play().then(() => {
+                        isPlaying = true;
+                        if (!analyser) {
+                            setupAudioAnalyzer(audioElement);
+                        }
+                        startVisualizer();
+                    }).catch(error => {
+                        console.log("Play failed:", error);
+                    });
                 }
-            };
-            
-            // Iniciar reproducción inmediatamente
-            playAudio();
-            
-            // Manejar el botón de iniciar música
+                updateMusicUI();
+            });
+
+            // Botón de iniciar música desde el overlay
             startMusicBtn.addEventListener('click', function() {
                 audioElement.play().then(() => {
+                    isPlaying = true;
+                    autoplayOverlay.classList.add('hidden');
                     setupAudioAnalyzer(audioElement);
                     startVisualizer();
-                    autoplayOverlay.classList.add('hidden');
-                    document.getElementById('music-status').textContent = "Playing";
-                }).catch(error => {
-                    console.log("Still blocked:", error);
+                    updateMusicUI();
                 });
             });
-            
-            // También permitir clic en cualquier parte del overlay
+
+            // Clic en cualquier parte del overlay para iniciar música
             autoplayOverlay.addEventListener('click', function(e) {
                 if (e.target === autoplayOverlay) {
                     audioElement.play().then(() => {
+                        isPlaying = true;
+                        autoplayOverlay.classList.add('hidden');
                         setupAudioAnalyzer(audioElement);
                         startVisualizer();
-                        autoplayOverlay.classList.add('hidden');
-                        document.getElementById('music-status').textContent = "Playing";
+                        updateMusicUI();
                     });
                 }
             });
+
+            // Botón de enviar código de verificación
+            sendCodeBtn.addEventListener('click', function() {
+                const email = document.getElementById('email-input').value;
+                if (email && email.includes('@')) {
+                    // Generar código de verificación simple
+                    const verificationCode = Math.floor(100000 + Math.random() * 900000);
+                    localStorage.setItem('verificationCode', verificationCode);
+                    
+                    document.getElementById('email-status').innerHTML = 
+                        '<p class="text-green-400">Verification code generated!</p>';
+                    
+                    // Mostrar modal de verificación
+                    verificationModal.classList.remove('hidden');
+                    
+                    // En una aplicación real, aquí enviarías el código por email
+                    console.log(`Verification code for ${email}: ${verificationCode}`);
+                } else {
+                    document.getElementById('email-status').innerHTML = 
+                        '<p class="text-red-400">Please enter a valid email address</p>';
+                }
+            });
+
+            // Botón de verificar código
+            verifyBtn.addEventListener('click', function() {
+                const enteredCode = document.getElementById('verification-code').value;
+                const storedCode = localStorage.getItem('verificationCode');
+                
+                if (enteredCode === storedCode) {
+                    alert('Verification successful! Redirecting to dashboard...');
+                    // Aquí redirigirías al dashboard
+                    // window.location.href = 'dashboard.html';
+                } else {
+                    alert('Invalid verification code. Please try again.');
+                }
+            });
+
+            // Botón de cancelar verificación
+            cancelVerifyBtn.addEventListener('click', function() {
+                verificationModal.classList.add('hidden');
+                document.getElementById('verification-code').value = '';
+            });
+
+            // Gradient overlay
+            const gradientOverlay = document.createElement('div');
+            gradientOverlay.className = 'gradient-overlay';
+            document.body.appendChild(gradientOverlay);
+
+            document.addEventListener('mousemove', function(e) {
+                const x = (e.clientX / window.innerWidth) * 100;
+                const y = (e.clientY / window.innerHeight) * 100;
+                
+                gradientOverlay.style.setProperty('--mouse-x', `${x}%`);
+                gradientOverlay.style.setProperty('--mouse-y', `${y}%`);
+            });
         });
+
+        function updateMusicUI() {
+            const playIcon = document.getElementById('play-icon');
+            const pauseIcon = document.getElementById('pause-icon');
+            const musicStatus = document.getElementById('music-status');
+            
+            if (isPlaying) {
+                playIcon.classList.add('hidden');
+                pauseIcon.classList.remove('hidden');
+                musicStatus.textContent = "Playing";
+            } else {
+                playIcon.classList.remove('hidden');
+                pauseIcon.classList.add('hidden');
+                musicStatus.textContent = "Paused";
+            }
+        }
 
         function createVisualizerBars() {
             const visualizer = document.getElementById('visualizer');
-            const barCount = Math.floor(window.innerWidth / 15); // Ajustar según ancho de pantalla
+            const barCount = Math.floor(window.innerWidth / 15);
             
             for (let i = 0; i < barCount; i++) {
                 const bar = document.createElement('div');
@@ -312,16 +442,12 @@
         }
 
         function setupAudioAnalyzer(audioElement) {
-            // Crear contexto de audio
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
             analyser = audioContext.createAnalyser();
-            
-            // Conectar el elemento de audio al analizador
             const source = audioContext.createMediaElementSource(audioElement);
             source.connect(analyser);
             analyser.connect(audioContext.destination);
             
-            // Configurar el analizador
             analyser.fftSize = 256;
             bufferLength = analyser.frequencyBinCount;
             dataArray = new Uint8Array(bufferLength);
@@ -331,17 +457,14 @@
             function animate() {
                 if (!analyser) return;
                 
-                // Obtener datos de frecuencia
                 analyser.getByteFrequencyData(dataArray);
                 
-                // Actualizar barras
                 for (let i = 0; i < bars.length; i++) {
                     const barIndex = Math.floor((i / bars.length) * bufferLength);
                     const value = dataArray[barIndex];
                     const height = (value / 255) * 100 + 5;
                     bars[i].style.height = `${height}px`;
                     
-                    // Cambiar color basado en la intensidad
                     const intensity = value / 255;
                     bars[i].style.background = `linear-gradient(to top, 
                         hsl(${200 + intensity * 60}, 100%, ${50 + intensity * 30}%), 
@@ -350,9 +473,7 @@
                     bars[i].style.boxShadow = `0 0 ${5 + intensity * 15}px hsl(${200 + intensity * 60}, 100%, 50%)`;
                 }
                 
-                // Actualizar partículas
                 updateParticles();
-                
                 animationId = requestAnimationFrame(animate);
             }
             
@@ -364,14 +485,12 @@
                 particle.x += particle.speedX;
                 particle.y += particle.speedY;
                 
-                // Rebotar en los bordes
                 if (particle.x <= 0 || particle.x >= window.innerWidth) particle.speedX *= -1;
                 if (particle.y <= 0 || particle.y >= window.innerHeight) particle.speedY *= -1;
                 
                 particle.element.style.left = `${particle.x}px`;
                 particle.element.style.top = `${particle.y}px`;
                 
-                // Cambiar opacidad basado en el ritmo (usamos datos de frecuencia)
                 if (dataArray && dataArray.length > 0) {
                     const avgFrequency = dataArray.slice(0, 10).reduce((a, b) => a + b) / 10;
                     const opacity = 0.3 + (avgFrequency / 255) * 0.7;
@@ -379,71 +498,6 @@
                 }
             });
         }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            const audioElement = document.getElementById('background-music');
-            const playPauseBtn = document.getElementById('play-pause-btn');
-            const volumeSlider = document.getElementById('volume-slider');
-            const playIcon = document.getElementById('play-icon');
-            const pauseIcon = document.getElementById('pause-icon');
-            const musicStatus = document.getElementById('music-status');
-            
-            let isPlaying = true;
-            
-            // Control de volumen
-            volumeSlider.addEventListener('input', function() {
-                audioElement.volume = this.value / 100;
-            });
-            
-            // Botón de play/pause
-            playPauseBtn.addEventListener('click', function() {
-                if (isPlaying) {
-                    audioElement.pause();
-                    isPlaying = false;
-                    musicStatus.textContent = "Paused";
-                    playIcon.classList.remove('hidden');
-                    pauseIcon.classList.add('hidden');
-                    
-                    // Pausar animación del visualizador
-                    if (animationId) {
-                        cancelAnimationFrame(animationId);
-                    }
-                } else {
-                    audioElement.play().then(() => {
-                        isPlaying = true;
-                        musicStatus.textContent = "Playing";
-                        playIcon.classList.add('hidden');
-                        pauseIcon.classList.remove('hidden');
-                        
-                        // Reanudar animación del visualizador
-                        if (analyser) {
-                            startVisualizer();
-                        }
-                    }).catch(error => {
-                        console.log("Play failed:", error);
-                    });
-                }
-            });
-            
-            // Gradient overlay
-            const gradientOverlay = document.createElement('div');
-            gradientOverlay.className = 'gradient-overlay';
-            document.body.appendChild(gradientOverlay);
-
-            document.addEventListener('mousemove', function(e) {
-                const x = (e.clientX / window.innerWidth) * 100;
-                const y = (e.clientY / window.innerHeight) * 100;
-                
-                gradientOverlay.style.setProperty('--mouse-x', `${x}%`);
-                gradientOverlay.style.setProperty('--mouse-y', `${y}%`);
-            });
-            
-            // Para el botón de enviar código
-            document.getElementById('send-code-btn').addEventListener('click', function() {
-                document.getElementById('email-status').innerHTML = 
-                    '<p class="text-green-400">Verification code sent!</p>';
-            });
-        });
     </script>
 </body>
 </html>
