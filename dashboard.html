@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Manager - Dashboard</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- EMAILJS INTEGRATION -->
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script src="auth.js"></script>
+    <style>
+        #youtube-player {
+            border-radius: 10px;
+        }
+        .debug-info {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-900 to-indigo-800 text-white min-h-screen pb-12">
+    <header class="bg-black/70 py-6 text-center mb-8 shadow-lg">
+        <div class="container mx-auto px-5">
+            <h1 class="text-4xl font-bold mb-3 text-cyan-300">
+                <i class="fas fa-music mr-2"></i> Music Manager
+            </h1>
+            <p class="text-xl opacity-90">Create and manage your YouTube playlists easily</p>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-5">
+        <!-- User Info Section -->
+        <div id="user-info" class="flex justify-between items-center mb-5 p-4 bg-white/10 rounded-xl">
+            <div class="flex items-center gap-2.5">
+                <span id="user-email"></span>
+                <span id="admin-badge" class="hidden bg-orange-500 text-white px-2.5 py-1.5 rounded-full text-xs font-bold">
+                    ADMIN
+                </span>
+            </div>
+            <button id="logout-btn" 
+                    class="bg-red-500 text-white border-0 px-3 py-2 rounded cursor-pointer transition-colors hover:bg-red-600">
+                Logout
+            </button>
+        </div>
+
+        <!-- Main Content -->
+        <div id="main-content">
+            <div class="flex flex-col lg:flex-row gap-8">
+                <section class="flex-1 min-w-[350px] bg-white/10 rounded-xl p-6 shadow-lg">
+                    <h2 class="text-2xl font-bold mb-5 text-cyan-300 pb-2.5 border-b border-white/20">Add New Song</h2>
+                    <div class="mb-5">
+                        <label for="youtube-url" class="block mb-2 font-medium">
+                            <i class="fab fa-youtube mr-2"></i> YouTube URL:
+                        </label>
+                        <input type="text" id="youtube-url" placeholder="Paste YouTube URL here..." 
+                               class="w-full px-4 py-3.5 rounded-lg bg-white/90 border-0 text-base">
+                    </div>
+                    <div class="mb-5">
+                        <label for="song-title" class="block mb-2 font-medium">
+                            <i class="fas fa-heading mr-2"></i> Song Title (optional):
+                        </label>
+                        <input type="text" id="song-title" placeholder="Enter a custom title..." 
+                               class="w-full px-4 py-3.5 rounded-lg bg-white/90 border-0 text-base">
+                    </div>
+                    <div class="mb-5">
+                        <label for="playlist-name" class="block mb-2 font-medium">
+                            <i class="fas fa-list mr-2"></i> Add to Playlist:
+                        </label>
+                        <input type="text" id="playlist-name" placeholder="Enter playlist name..." 
+                               class="w-full px-4 py-3.5 rounded-lg bg-white/90 border-0 text-base">
+                    </div>
+                    <button id="add-song-btn" 
+                            class="w-full inline-block bg-green-500 text-white px-6 py-3.5 rounded-lg cursor-pointer text-base font-medium text-center transition-all hover:bg-green-600 hover:-translate-y-1 hover:shadow-lg">
+                        <i class="fas fa-plus-circle mr-2"></i> Add to Playlist
+                    </button>
+                    
+                    <div class="quick-add-section bg-white/5 rounded-lg p-5 mt-5">
+                        <h3 class="text-lg font-semibold mb-4">Quick Add to Existing Playlist</h3>
+                        <div class="playlist-selector flex gap-2.5 mb-4 items-center">
+                            <select id="existing-playlists" 
+                                    class="flex-1 px-4 py-3 rounded-lg bg-white/90 border-0">
+                                <option value="">Select a playlist...</option>
+                            </select>
+                            <button id="quick-add-btn" 
+                                    class="bg-green-500 text-white px-4 py-3 rounded-lg cursor-pointer transition-colors hover:bg-green-600">
+                                <i class="fas fa-plus mr-1"></i> Add
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="player-section mt-8 bg-white/10 rounded-xl p-5 shadow-lg">
+                        <h3 class="text-2xl font-bold mb-5 text-cyan-300 pb-2.5 border-b border-white/20">
+                            <i class="fas fa-play-circle mr-2"></i> Player
+                        </h3>
+                        <div id="player-container">
+                            <div class="player-placeholder text-center p-10 bg-black/30 rounded-lg">
+                                <i class="fas fa-play-circle text-5xl mb-4 opacity-50"></i>
+                                <p>Select a song to play it here</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <section class="flex-2 min-w-[350px]">
+                    <h2 class="text-2xl font-bold mb-5 text-cyan-300 pb-2.5 border-b border-white/20">My Playlists</h2>
+                    <div id="playlists-container">
+                        <!-- Playlists will be generated here dynamically -->
+                    </div>
+                </section>
+            </div>
+
+            <!-- Discover Section -->
+            <section class="discover-section bg-white/10 rounded-xl p-6 mt-8 shadow-lg">
+                <h2 class="text-2xl font-bold mb-5 text-cyan-300 pb-2.5 border-b border-white/20">
+                    <i class="fas fa-compass mr-2"></i> Discover
+                </h2>
+                
+                <!-- Admin Controls (only visible to admin) -->
+                <div id="admin-controls" class="admin-controls bg-orange-500/20 rounded-lg p-5 mb-5 hidden">
+                    <h3 class="text-lg font-semibold mb-4 text-orange-400">Admin Controls</h3>
+                    <div class="admin-form flex gap-2.5 flex-wrap">
+                        <input type="text" id="discover-youtube-url" placeholder="YouTube URL for Discover section" 
+                               class="flex-1 min-w-[200px] px-4 py-3 rounded-lg bg-white/90 border-0">
+                        <input type="text" id="discover-song-title" placeholder="Song title" 
+                               class="flex-1 min-w-[200px] px-4 py-3 rounded-lg bg-white/90 border-0">
+                        <button id="add-to-discover-btn" 
+                                class="bg-orange-500 text-white px-4 py-3 rounded-lg cursor-pointer transition-colors hover:bg-orange-600">
+                            <i class="fas fa-plus mr-1"></i> Add to Discover
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="discover-songs-container" class="discover-songs grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    <!-- Discover songs will be generated here dynamically -->
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        // Sample data for testing the application
+        let playlists = JSON.parse(localStorage.getItem('musicPlaylists')) || [
+            {
+                id: "1",
+                name: "Relaxing Music",
+                songs: [
+                    { id: "1", title: "Meditation Music", url: "https://www.youtube.com/watch?v=z2U8HW9XYpE", videoId: "z2U8HW9XYpE" },
+                    { id: "2", title: "Nature Sounds", url: "https://www.youtube.com/watch?v=q76bMs-NwRk", videoId: "q76bMs-NwRk" }
+                ]
+            },
+            {
+                id: "2",
+                name: "Summer Hits",
+                songs: [
+                    { id: "3", title: "Summer Song 2023", url: "https://www.youtube.com/watch?v=JGwWNGJdvx8", videoId: "JGwWNGJdvx8" }
+                ]
+            }
+        ];
+
+        // Discover songs (shared across all users)
+        let discoverSongs = JSON.parse(localStorage.getItem('discoverSongs')) || [
+            { id: "d1", title: "Chill Lo-Fi Beats", url: "https://www.youtube.com/watch?v=5qap5aO4i9A", videoId: "5qap5aO4i9A", addedBy: "admin" },
+            { id: "d2", title: "Focus Music", url: "https://www.youtube.com/watch?v=4SsiTtDJ9hY", videoId: "4SsiTtDJ9hY", addedBy: "admin" }
+        ];
+
+        // User authentication state
+        let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
+        const ADMIN_EMAIL = "aguiilatown@gmail.com";
+
+        // Debug function
+        function debugLog(message) {
+            console.log(message);
+            const debugInfo = document.getElementById('debug-info');
+            if (debugInfo) {
+                debugInfo.innerHTML += `<div>${new Date().toLocaleTimeString()}: ${message}</div>`;
+                debugInfo.style.display = 'block';
+            }
+        }
+
+        // Save to localStorage
+        function savePlaylists() {
+            localStorage.setItem('musicPlaylists', JSON.stringify(playlists));
+        }
+
+        function saveDiscoverSongs() {
+            localStorage.setItem('discoverSongs', JSON.stringify(discoverSongs));
+        }
+
+        function saveUser() {
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        }
+
+        // Extract YouTube video ID from URL
+        function extractVideoId(url) {
+            const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+            const match = url.match(regex);
+            return match ? match[1] : null;
+        }
+
+        // Generate unique ID for songs and playlists
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        // Render all playlists
+        function renderPlaylists() {
+            const container = document.getElementById('playlists-container');
+            container.innerHTML = '';
+
+            if (playlists.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state text-center p-10 opacity-70">
+                        <i class="fas fa-music text-5xl mb-4 opacity-50"></i>
+                        <p>You don't have any playlists yet.</p>
+                        <p>Create your first playlist by adding a song!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            playlists.forEach((playlist, playlistIndex) => {
+                const playlistElement = document.createElement('div');
+                playlistElement.className = 'playlist-card bg-white/10 rounded-xl p-5 mb-6 shadow-lg transition-transform hover:-translate-y-1';
+                
+                let songsHtml = '';
+                
+                if (playlist.songs.length === 0) {
+                    songsHtml = `
+                        <div class="empty-state text-center p-10 opacity-70">
+                            <i class="fas fa-plus-circle text-5xl mb-4 opacity-50"></i>
+                            <p>This playlist is empty</p>
+                            <p>Add songs using the "Add to this playlist" button</p>
+                        </div>
+                    `;
+                } else {
+                    playlist.songs.forEach((song, songIndex) => {
+                        songsHtml += `
+                            <div class="song-item flex justify-between items-center p-4 bg-white/5 rounded-lg mb-3 transition-colors hover:bg-white/10">
+                                <div class="song-info flex items-center gap-4 flex-1">
+                                    <div class="song-thumbnail w-24 h-18 rounded-lg bg-gray-700 flex items-center justify-center overflow-hidden flex-shrink-0">
+                                        <img src="https://img.youtube.com/vi/${song.videoId}/hqdefault.jpg" alt="Thumbnail" class="w-full h-full object-cover">
+                                    </div>
+                                    <div class="song-details flex-1">
+                                        <div class="song-title font-medium text-lg mb-1">${song.title}</div>
+                                        <div class="song-url text-sm opacity-70 break-all">${song.url}</div>
+                                    </div>
+                                </div>
+                                <div class="song-actions flex gap-2.5">
+                                    <button class="btn-play bg-green-500 text-white px-3 py-2 rounded cursor-pointer text-sm transition-colors hover:bg-green-600" 
+                                            data-playlist="${playlistIndex}" data-song="${songIndex}">
+                                        <i class="fas fa-play mr-1"></i> Play
+                                    </button>
+                                    <button class="bg-red-500 text-white px-3 py-2 rounded cursor-pointer text-sm transition-colors hover:bg-red-600" 
+                                            data-playlist="${playlistIndex}" data-song="${songIndex}">
+                                        <i class="fas fa-trash mr-1"></i> Remove
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+
+                // Add song button for this playlist
+                songsHtml += `
+                    <div class="song-item flex justify-between items-center p-4 bg-cyan-400/20 rounded-lg">
+                        <div class="song-info flex items-center gap-4 flex-1">
+                            <div class="song-thumbnail w-24 h-18 rounded-lg bg-cyan-400/50 flex items-center justify-center">
+                                <i class="fas fa-plus text-xl"></i>
+                            </div>
+                            <div class="song-details flex-1">
+                                <div class="song-title font-medium text-lg">Add a new song to this playlist</div>
+                                <div class="song-url text-sm opacity-70">Click the button to add a YouTube video</div>
+                            </div>
+                        </div>
+                        <div class="song-actions">
+                            <button class="add-to-playlist-btn bg-green-500 text-white px-3 py-2 rounded cursor-pointer text-sm transition-colors hover:bg-green-600" 
+                                    data-playlist="${playlistIndex}">
+                                <i class="fas fa-plus-circle mr-1"></i> Add to this Playlist
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                playlistElement.innerHTML = `
+                    <div class="playlist-header flex justify-between items-center mb-5 pb-4 border-b border-white/20">
+                        <h3 class="playlist-title text-2xl text-cyan-300">${playlist.name}</h3>
+                        <div class="playlist-actions flex gap-2.5">
+                            <button class="delete-playlist bg-red-500 text-white px-4 py-2 rounded cursor-pointer transition-colors hover:bg-red-600" 
+                                    data-index="${playlistIndex}">
+                                <i class="fas fa-trash mr-1"></i> Delete Playlist
+                            </button>
+                        </div>
+                    </div>
+                    ${songsHtml}
+                `;
+
+                container.appendChild(playlistElement);
+            });
+
+            // Add event listeners
+            document.querySelectorAll('.btn-play').forEach(button => {
+                button.addEventListener('click', function() {
+                    const playlistIndex = this.getAttribute('data-playlist');
+                    const songIndex = this.getAttribute('data-song');
+                    playSong(playlistIndex, songIndex);
+                });
+            });
+
+            document.querySelectorAll('.bg-red-500').forEach(button => {
+                if (!button.classList.contains('delete-playlist')) {
+                    button.addEventListener('click', function() {
+                        const playlistIndex = this.getAttribute('data-playlist');
+                        const songIndex = this.getAttribute('data-song');
+                        removeSong(playlistIndex, songIndex);
+                    });
+                }
+            });
+
+            document.querySelectorAll('.delete-playlist').forEach(button => {
+                button.addEventListener('click', function() {
+                    const playlistIndex = this.getAttribute('data-index');
+                    deletePlaylist(playlistIndex);
+                });
+            });
+
+            document.querySelectorAll('.add-to-playlist-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const playlistIndex = this.getAttribute('data-playlist');
+                    document.getElementById('existing-playlists').value = playlistIndex;
+                    document.getElementById('playlist-name').value = playlists[playlistIndex].name;
+                    document.getElementById('youtube-url').focus();
+                });
+            });
+
+            // Update the existing playlists dropdown
+            updatePlaylistsDropdown();
+        }
+
+        // Render discover songs
+        function renderDiscoverSongs() {
+            const container = document.getElementById('discover-songs-container');
+            container.innerHTML = '';
+
+            if (discoverSongs.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state text-center p-10 opacity-70 col-span-full">
+                        <i class="fas fa-compass text-5xl mb-4 opacity-50"></i>
+                        <p>No songs in the Discover section yet.</p>
+                        <p>Check back later for new music recommendations!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            discoverSongs.forEach((song, index) => {
+                const songElement = document.createElement('div');
+                songElement.className = 'discover-song-card bg-white/5 rounded-lg p-4 transition-transform hover:-translate-y-1 hover:bg-white/10';
+                
+                songElement.innerHTML = `
+                    <div class="discover-song-thumbnail w-full h-36 rounded-lg mb-2.5 overflow-hidden">
+                        <img src="https://img.youtube.com/vi/${song.videoId}/hqdefault.jpg" alt="Thumbnail" class="w-full h-full object-cover">
+                    </div>
+                    <div class="song-details">
+                        <div class="song-title font-medium text-lg">${song.title}</div>
+                        <div class="song-url text-sm opacity-70">${song.url}</div>
+                    </div>
+                    <div class="discover-song-actions flex gap-2.5 mt-2.5">
+                        <button class="discover-play bg-green-500 text-white px-3 py-2 rounded cursor-pointer text-sm flex-1 transition-colors hover:bg-green-600" 
+                                data-index="${index}">
+                            <i class="fas fa-play mr-1"></i> Play
+                        </button>
+                        <button class="discover-add bg-green-500 text-white px-3 py-2 rounded cursor-pointer text-sm flex-1 transition-colors hover:bg-green-600" 
+                                data-index="${index}">
+                            <i class="fas fa-plus mr-1"></i> Add to My List
+                        </button>
+                    </div>
+                `;
+
+                container.appendChild(songElement);
+            });
+
+            // Add event listeners for discover songs
+            document.querySelectorAll('.discover-play').forEach(button => {
+                button.addEventListener('click', function() {
+                    const index = this.getAttribute('data-index');
+                    playDiscoverSong(index);
+                });
+            });
+
+            document.querySelectorAll('.discover-add').forEach(button => {
+                button.addEventListener('click', function() {
+                    const index = this.getAttribute('data-index');
+                    addDiscoverSongToPlaylist(index);
+                });
+            });
+        }
+
+        // Update the existing playlists dropdown
+        function updatePlaylistsDropdown() {
+            const dropdown = document.getElementById('existing-playlists');
+            
+            // Clear existing options except the first one
+            while (dropdown.options.length > 1) {
+                dropdown.remove(1);
+            }
+            
+            // Add current playlists
+            playlists.forEach((playlist, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = playlist.name;
+                dropdown.appendChild(option);
+            });
+        }
+
+        // Play a song from playlist
+        function playSong(playlistIndex, songIndex) {
+            const song = playlists[playlistIndex].songs[songIndex];
+            const playerContainer = document.getElementById('player-container');
+            playerContainer.innerHTML = `
+                <iframe id="youtube-player" src="https://www.youtube.com/embed/${song.videoId}?autoplay=1" 
+                        frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowfullscreen class="w-full h-96">
+                </iframe>
+            `;
+        }
+
+        // Play a song from discover section
+        function playDiscoverSong(index) {
+            const song = discoverSongs[index];
+            const playerContainer = document.getElementById('player-container');
+            playerContainer.innerHTML = `
+                <iframe id="youtube-player" src="https://www.youtube.com/embed/${song.videoId}?autoplay=1" 
+                        frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowfullscreen class="w-full h-96">
+                </iframe>
+            `;
+        }
+
+        // Add a discover song to user's playlist
+        function addDiscoverSongToPlaylist(index) {
+            const song = discoverSongs[index];
+            
+            // Check if user has a "My Discoveries" playlist, if not create one
+            let playlistIndex = playlists.findIndex(p => p.name === "My Discoveries");
+            if (playlistIndex === -1) {
+                playlists.push({
+                    id: generateId(),
+                    name: "My Discoveries",
+                    songs: []
+                });
+                playlistIndex = playlists.length - 1;
+            }
+            
+            // Add the song to the playlist
+            playlists[playlistIndex].songs.push({
+                id: generateId(),
+                title: song.title,
+                url: song.url,
+                videoId: song.videoId
+            });
+            
+            // Save and update the view
+            savePlaylists();
+            renderPlaylists();
+            alert(`"${song.title}" has been added to your "My Discoveries" playlist!`);
+        }
+
+        // Remove a song
+        function removeSong(playlistIndex, songIndex) {
+            if (confirm('Are you sure you want to remove this song?')) {
+                playlists[playlistIndex].songs.splice(songIndex, 1);
+                savePlaylists();
+                renderPlaylists();
+            }
+        }
+
+        // Delete a playlist
+        function deletePlaylist(playlistIndex) {
+            if (confirm('Are you sure you want to delete this playlist?')) {
+                playlists.splice(playlistIndex, 1);
+                savePlaylists();
+                renderPlaylists();
+            }
+        }
+
+        // Add a new song to user's playlist
+        function addSong() {
+            const youtubeUrl = document.getElementById('youtube-url').value.trim();
+            const songTitle = document.getElementById('song-title').value.trim();
+            const playlistName = document.getElementById('playlist-name').value.trim();
+            
+            if (!youtubeUrl) {
+                alert('Please enter a YouTube URL');
+                return;
+            }
+            
+            const videoId = extractVideoId(youtubeUrl);
+            if (!videoId) {
+                alert('The YouTube URL is not valid');
+                return;
+            }
+            
+            if (!playlistName) {
+                alert('Please enter a playlist name');
+                return;
+            }
+            
+            // Find if playlist already exists
+            let playlistIndex = playlists.findIndex(p => p.name === playlistName);
+            
+            // If it doesn't exist, create a new playlist
+            if (playlistIndex === -1) {
+                playlists.push({
+                    id: generateId(),
+                    name: playlistName,
+                    songs: []
+                });
+                playlistIndex = playlists.length - 1;
+            }
+            
+            // Add the song to the playlist
+            const finalTitle = songTitle || `Song ${playlists[playlistIndex].songs.length + 1}`;
+            playlists[playlistIndex].songs.push({
+                id: generateId(),
+                title: finalTitle,
+                url: youtubeUrl,
+                videoId: videoId
+            });
+            
+            // Save and update the view
+            savePlaylists();
+            renderPlaylists();
+            
+            // Clear input fields
+            document.getElementById('youtube-url').value = '';
+            document.getElementById('song-title').value = '';
+        }
+
+        // Add a song to discover section (admin only)
+        function addSongToDiscover() {
+            const youtubeUrl = document.getElementById('discover-youtube-url').value.trim();
+            const songTitle = document.getElementById('discover-song-title').value.trim();
+            
+            if (!youtubeUrl) {
+                alert('Please enter a YouTube URL');
+                return;
+            }
+            
+            const videoId = extractVideoId(youtubeUrl);
+            if (!videoId) {
+                alert('The YouTube URL is not valid');
+                return;
+            }
+            
+            if (!songTitle) {
+                alert('Please enter a song title');
+                return;
+            }
+            
+            // Add the song to discover section
+            discoverSongs.push({
+                id: generateId(),
+                title: songTitle,
+                url: youtubeUrl,
+                videoId: videoId,
+                addedBy: currentUser.email
+            });
+            
+            // Save and update the view
+            saveDiscoverSongs();
+            renderDiscoverSongs();
+            
+            // Clear input fields
+            document.getElementById('discover-youtube-url').value = '';
+            document.getElementById('discover-song-title').value = '';
+            
+            alert('Song added to Discover section!');
+        }
+
+        // Quick add to existing playlist
+        function quickAdd() {
+            const playlistIndex = document.getElementById('existing-playlists').value;
+            if (playlistIndex === "") {
+                alert('Please select a playlist');
+                return;
+            }
+            
+            document.getElementById('playlist-name').value = playlists[playlistIndex].name;
+            addSong();
+        }
+
+        function logout() {
+            currentUser = null;
+            saveUser();
+            // Redirect to login page
+            window.location.href = 'index.html';
+        }
+
+        function updateUIForUser() {
+            if (currentUser) {
+                // User is signed in
+                document.getElementById('user-email').textContent = currentUser.email;
+                
+                if (currentUser.isAdmin) {
+                    document.getElementById('admin-badge').style.display = 'inline-block';
+                    document.getElementById('admin-controls').style.display = 'block';
+                } else {
+                    document.getElementById('admin-badge').style.display = 'none';
+                    document.getElementById('admin-controls').style.display = 'none';
+                }
+                
+                // Render user-specific content
+                renderPlaylists();
+                renderDiscoverSongs();
+            } else {
+                // User is not signed in, redirect to login
+                window.location.href = 'index.html';
+            }
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            debugLog('Application initialized');
+            
+            // Check if user is already signed in
+            updateUIForUser();
+            
+            // Add song button event
+            document.getElementById('add-song-btn').addEventListener('click', addSong);
+            
+            // Quick add button event
+            document.getElementById('quick-add-btn').addEventListener('click', quickAdd);
+            
+            // Add to discover button event
+            document.getElementById('add-to-discover-btn').addEventListener('click', addSongToDiscover);
+            
+            // Allow pressing Enter in the URL field to add a song
+            document.getElementById('youtube-url').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addSong();
+                }
+            });
+            
+            // Logout event
+            document.getElementById('logout-btn').addEventListener('click', logout);
+            
+            debugLog('All event listeners attached');
+        });
+    </script>
+</body>
+</html>
