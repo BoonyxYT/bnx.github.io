@@ -294,6 +294,22 @@
             `;
         }
 
+        // Función para iniciar la música manualmente (desde el overlay)
+        function startMusicManually() {
+            const audioElement = document.getElementById('background-music');
+            const autoplayOverlay = document.getElementById('autoplay-overlay');
+            
+            audioElement.play().then(() => {
+                isPlaying = true;
+                autoplayOverlay.classList.add('hidden');
+                setupAudioAnalyzer(audioElement);
+                startVisualizer();
+                updateMusicUI();
+            }).catch(error => {
+                console.log("Manual play failed:", error);
+            });
+        }
+
         // Configurar eventos cuando el DOM esté listo
         document.addEventListener('DOMContentLoaded', function() {
             const audioElement = document.getElementById('background-music');
@@ -341,26 +357,12 @@
             });
 
             // Botón de iniciar música desde el overlay
-            startMusicBtn.addEventListener('click', function() {
-                audioElement.play().then(() => {
-                    isPlaying = true;
-                    autoplayOverlay.classList.add('hidden');
-                    setupAudioAnalyzer(audioElement);
-                    startVisualizer();
-                    updateMusicUI();
-                });
-            });
+            startMusicBtn.addEventListener('click', startMusicManually);
 
             // Clic en cualquier parte del overlay para iniciar música
             autoplayOverlay.addEventListener('click', function(e) {
                 if (e.target === autoplayOverlay) {
-                    audioElement.play().then(() => {
-                        isPlaying = true;
-                        autoplayOverlay.classList.add('hidden');
-                        setupAudioAnalyzer(audioElement);
-                        startVisualizer();
-                        updateMusicUI();
-                    });
+                    startMusicManually();
                 }
             });
 
