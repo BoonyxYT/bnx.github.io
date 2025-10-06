@@ -4,12 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Music Manager - Login</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- EMAILJS INTEGRATION -->
-    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
         body {
             background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
@@ -58,159 +54,21 @@
         .music-player:hover .volume-slider {
             width: 80px;
         }
+        
+        .track-info {
+            font-size: 0.8rem;
+            max-width: 150px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
     </style>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Check if user is already logged in
-            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-            if (currentUser) {
-                // Redirect to dashboard if already logged in
-                window.location.href = 'dashboard.html';
-                return;
-            }
-
-            // Audio context for background music
-            let audioContext;
-            let audioElement;
-            let isPlaying = false;
-            
-            // Initialize audio
-            function initAudio() {
-                audioElement = document.getElementById('background-music');
-                
-                // Set initial volume
-                audioElement.volume = 0.3;
-                
-                // Update play/pause button
-                updatePlayButton();
-                
-                // Set up volume slider
-                const volumeSlider = document.getElementById('volume-slider');
-                volumeSlider.addEventListener('input', function() {
-                    audioElement.volume = this.value / 100;
-                });
-                
-                // Set up play/pause button
-                document.getElementById('play-pause-btn').addEventListener('click', togglePlayback);
-            }
-            
-            function togglePlayback() {
-                if (isPlaying) {
-                    audioElement.pause();
-                } else {
-                    // Try to play audio - this will work after user interaction
-                    const playPromise = audioElement.play();
-                    
-                    if (playPromise !== undefined) {
-                        playPromise.then(_ => {
-                            // Audio started successfully
-                            isPlaying = true;
-                            updatePlayButton();
-                        }).catch(error => {
-                            // Autoplay was prevented, show message
-                            document.getElementById('music-status').textContent = "Click to play music";
-                        });
-                    }
-                }
-                isPlaying = !isPlaying;
-                updatePlayButton();
-            }
-            
-            function updatePlayButton() {
-                const playIcon = document.getElementById('play-icon');
-                const pauseIcon = document.getElementById('pause-icon');
-                
-                if (isPlaying) {
-                    playIcon.classList.add('hidden');
-                    pauseIcon.classList.remove('hidden');
-                } else {
-                    playIcon.classList.remove('hidden');
-                    pauseIcon.classList.add('hidden');
-                }
-            }
-            
-            // Initialize audio when page loads
-            initAudio();
-            
-            // Create gradient overlay
-            const gradientOverlay = document.createElement('div');
-            gradientOverlay.className = 'gradient-overlay';
-            document.body.appendChild(gradientOverlay);
-
-            // Track mouse movement for dynamic gradient
-            document.addEventListener('mousemove', function(e) {
-                const x = (e.clientX / window.innerWidth) * 100;
-                const y = (e.clientY / window.innerHeight) * 100;
-                
-                gradientOverlay.style.setProperty('--mouse-x', `${x}%`);
-                gradientOverlay.style.setProperty('--mouse-y', `${y}%`);
-            });
-            
-            // Authentication events
-            document.getElementById('send-code-btn').addEventListener('click', function() {
-                // Try to start music when user interacts
-                if (!isPlaying) {
-                    togglePlayback();
-                }
-                sendVerificationCode();
-            });
-            
-            document.getElementById('verify-btn').addEventListener('click', verifyCode);
-            document.getElementById('resend-code-btn').addEventListener('click', resendVerificationCode);
-            document.getElementById('close-modal-btn').addEventListener('click', closeVerificationModal);
-
-            // Allow pressing Enter in email input
-            document.getElementById('email-input').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    sendVerificationCode();
-                }
-            });
-
-            // Allow pressing Enter in verification input
-            document.getElementById('verification-input').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    verifyCode();
-                }
-            });
-        });
-
-        // Placeholder functions for authentication
-        function sendVerificationCode() {
-            document.getElementById('email-status').innerHTML = 
-                '<p class="text-green-400">Verification code sent to your email!</p>';
-            document.getElementById('verification-modal').classList.remove('hidden');
-        }
-        
-        function verifyCode() {
-            // In a real app, you would verify the code here
-            alert('Verification successful! Redirecting...');
-            handleSuccessfulLogin();
-        }
-        
-        function resendVerificationCode() {
-            document.getElementById('email-status').innerHTML = 
-                '<p class="text-green-400">New verification code sent!</p>';
-        }
-        
-        function closeVerificationModal() {
-            document.getElementById('verification-modal').classList.add('hidden');
-        }
-
-        // Function to handle successful login
-        function handleSuccessfulLogin() {
-            // Redirect to dashboard after successful login
-            window.location.href = 'dashboard.html';
-        }
-    </script>
-    
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
-    <!-- Background Music -->
+    <!-- Background Music - CON TU MÚSICA -->
     <audio id="background-music" loop>
-        <!-- Replace with your own music file or URL -->
-        <source src="https://assets.codepen.io/1468070/Forget-Me-Not_-_Background.mp3" type="audio/mpeg">
-        Your browser does not support the audio element.
+        <source src="https://drive.googleapis.com/uc?export=download&id=1Yr6G_rlI9VaCP5NO2M-crcwkrnPh7sBU" type="audio/mpeg">
+        Tu navegador no soporta el elemento de audio.
     </audio>
     
     <!-- Music Player Controls -->
@@ -222,7 +80,10 @@
         <div class="volume-slider">
             <input id="volume-slider" type="range" min="0" max="100" value="30" class="w-full">
         </div>
-        <span id="music-status" class="text-white text-sm">Click play</span>
+        <div class="track-info text-white text-sm">
+            <div id="music-status">Click play</div>
+            <div id="track-name" class="text-cyan-300">Tu música</div>
+        </div>
     </div>
 
     <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-8 w-full max-w-md shadow-2xl z-10">
@@ -232,7 +93,6 @@
             <p class="text-white/70 mt-2">Sign in to manage your YouTube playlists</p>
         </div>
 
-        <!-- Authentication Section -->
         <div id="auth-section">
             <div class="flex flex-col gap-4">
                 <input type="email" id="email-input" placeholder="Enter your email" 
@@ -244,34 +104,97 @@
             </div>
             <div id="email-status" class="mt-4"></div>
         </div>
-
-        <!-- Verification Modal -->
-        <div id="verification-modal" class="hidden fixed top-0 left-0 w-full h-full bg-black/70 z-50 justify-center items-center p-4">
-            <div class="bg-white/95 text-gray-800 p-8 rounded-xl max-w-lg w-full text-center">
-                <h2 class="text-2xl font-bold mb-5 text-cyan-400">Email Verification</h2>
-                <div class="verification-instructions my-4 text-sm text-gray-600">
-                    <p>We've sent a verification code to your email address.</p>
-                    <p>Please check your inbox and enter the code below:</p>
-                </div>
-                <div class="mb-5">
-                    <input type="text" id="verification-input" placeholder="Enter verification code" 
-                           class="w-full px-4 py-3.5 rounded-lg bg-white/90 border-0 text-base focus:ring-2 focus:ring-cyan-400 focus:outline-none">
-                </div>
-                <button id="verify-btn" 
-                        class="w-full inline-block bg-cyan-400 text-white px-6 py-3.5 rounded-lg cursor-pointer text-base font-medium text-center transition-all hover:bg-cyan-500 mb-2">
-                    Verify
-                </button>
-                <button id="resend-code-btn" 
-                        class="w-full inline-block bg-orange-500 text-white px-6 py-3.5 rounded-lg cursor-pointer text-base font-medium text-center transition-all hover:bg-orange-600 mb-2">
-                    Resend Code
-                </button>
-                <button id="close-modal-btn" 
-                        class="w-full inline-block bg-red-500 text-white px-6 py-3.5 rounded-lg cursor-pointer text-base font-medium text-center transition-all hover:bg-red-600">
-                    Cancel
-                </button>
-            </div>
-        </div>
     </div>
-</body>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Audio setup
+            let audioElement = document.getElementById('background-music');
+            let isPlaying = false;
+            
+            // Set initial volume
+            audioElement.volume = 0.3;
+            
+            // Volume slider
+            document.getElementById('volume-slider').addEventListener('input', function() {
+                audioElement.volume = this.value / 100;
+            });
+            
+            // Play/pause button
+            document.getElementById('play-pause-btn').addEventListener('click', function() {
+                if (isPlaying) {
+                    audioElement.pause();
+                    isPlaying = false;
+                } else {
+                    audioElement.play().then(() => {
+                        isPlaying = true;
+                        document.getElementById('track-name').textContent = "Reproduciendo...";
+                    }).catch(error => {
+                        document.getElementById('music-status').textContent = "Click para reproducir";
+                        console.log("Error al reproducir:", error);
+                    });
+                }
+                updatePlayButton();
+            });
+            
+            function updatePlayButton() {
+                const playIcon = document.getElementById('play-icon');
+                const pauseIcon = document.getElementById('pause-icon');
+                
+                if (isPlaying) {
+                    playIcon.classList.add('hidden');
+                    pauseIcon.classList.remove('hidden');
+                    document.getElementById('music-status').textContent = "Reproduciendo";
+                } else {
+                    playIcon.classList.remove('hidden');
+                    pauseIcon.classList.add('hidden');
+                    document.getElementById('music-status').textContent = "Pausado";
+                }
+            }
+            
+            // Audio event listeners
+            audioElement.addEventListener('loadeddata', function() {
+                document.getElementById('track-name').textContent = "Música cargada ✓";
+            });
+            
+            audioElement.addEventListener('error', function(e) {
+                console.error("Error cargando audio:", e);
+                document.getElementById('track-name').textContent = "Error cargando música";
+                document.getElementById('track-name').classList.add('text-red-400');
+            });
+            
+            // Gradient overlay
+            const gradientOverlay = document.createElement('div');
+            gradientOverlay.className = 'gradient-overlay';
+            document.body.appendChild(gradientOverlay);
+
+            document.addEventListener('mousemove', function(e) {
+                const x = (e.clientX / window.innerWidth) * 100;
+                const y = (e.clientY / window.innerHeight) * 100;
+                
+                gradientOverlay.style.setProperty('--mouse-x', `${x}%`);
+                gradientOverlay.style.setProperty('--mouse-y', `${y}%`);
+            });
+            
+            // Start music on user interaction
+            document.getElementById('send-code-btn').addEventListener('click', function() {
+                if (!isPlaying) {
+                    document.getElementById('play-pause-btn').click();
+                }
+                // Simulate sending code
+                document.getElementById('email-status').innerHTML = 
+                    '<p class="text-green-400">¡Código de verificación enviado!</p>';
+            });
+            
+            // Also start music when clicking anywhere on the form
+            document.getElementById('auth-section').addEventListener('click', function() {
+                if (!isPlaying) {
+                    setTimeout(() => {
+                        document.getElementById('play-pause-btn').click();
+                    }, 1000);
+                }
+            });
+        });
+    </script>
+</body>
 </html>
