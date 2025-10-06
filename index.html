@@ -12,6 +12,8 @@
             min-height: 100vh;
             position: relative;
             overflow: hidden;
+            margin: 0;
+            padding: 0;
         }
         
         .gradient-overlay {
@@ -53,28 +55,55 @@
             display: none;
         }
         
-        .loading {
-            opacity: 0.7;
+        .autoplay-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .autoplay-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            text-align: center;
+            max-width: 400px;
         }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
-    <!-- Background Music - CON TU ENLACE DE DISCORD -->
-    <audio id="background-music" loop>
+    <!-- Background Music -->
+    <audio id="background-music" loop autoplay>
         <source src="https://cdn.discordapp.com/attachments/1257768559883456532/1424869090153070684/Lofi__Calm_Music_Copyright_Free_-_Your_Little_Wings_by_Tokyo_Music_Walker_-_BreakingCopyright_Royalty_Free_Music.mp3?ex=68e5843f&is=68e432bf&hm=a0833a5ead8eb9d034e05f6ffd1cdbf9cb1b61ddf7e6c5c7e72be11e7b4a4bc9&" type="audio/mpeg">
     </audio>
     
     <!-- Music Player Controls -->
     <div class="music-player">
         <button id="play-pause-btn" class="text-white hover:text-cyan-300 transition-colors text-lg w-8 h-8 flex items-center justify-center">
-            <i id="play-icon" class="fas fa-play"></i>
-            <i id="pause-icon" class="fas fa-pause hidden"></i>
-            <i id="loading-icon" class="fas fa-spinner fa-spin hidden"></i>
+            <i id="play-icon" class="fas fa-play hidden"></i>
+            <i id="pause-icon" class="fas fa-pause"></i>
         </button>
         <div class="volume-slider">
-            <input id="volume-slider" type="range" min="0" max="100" value="30" class="w-full">
+            <input id="volume-slider" type="range" min="0" max="100" value="50" class="w-full">
         </div>
-        <span id="music-status" class="text-white text-sm">Loading...</span>
+        <span id="music-status" class="text-white text-sm">Playing</span>
+    </div>
+
+    <!-- Overlay para autoplay bloqueado -->
+    <div id="autoplay-overlay" class="autoplay-overlay hidden">
+        <div class="autoplay-content">
+            <h3 class="text-xl font-bold mb-4">🎵 Music Manager</h3>
+            <p class="mb-4">Click anywhere to start the background music</p>
+            <button id="start-music-btn" class="bg-cyan-500 text-white px-6 py-2 rounded-lg hover:bg-cyan-600">
+                Start Music
+            </button>
+        </div>
     </div>
 
     <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-8 w-full max-w-md shadow-2xl z-10">
@@ -98,29 +127,72 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            let audioElement = document.getElementById('background-music');
-            let isPlaying = false;
-            
-            // Elementos del DOM
-            const playIcon = document.getElementById('play-icon');
-            const pauseIcon = document.getElementById('pause-icon');
-            const loadingIcon = document.getElementById('loading-icon');
-            const musicStatus = document.getElementById('music-status');
-            const playPauseBtn = document.getElementById('play-pause-btn');
-            const volumeSlider = document.getElementById('volume-slider');
+        // Iniciar inmediatamente cuando la página cargue
+        window.addEventListener('load', function() {
+            const audioElement = document.getElementById('background-music');
+            const autoplayOverlay = document.getElementById('autoplay-overlay');
+            const startMusicBtn = document.getElementById('start-music-btn');
             
             // Configuración inicial
-            audioElement.volume = 0.3;
-            volumeSlider.value = 30;
+            audioElement.volume = 0.5;
+            audioElement.muted = false;
             
-            // Mostrar estado de carga inmediatamente
-            showLoadingState();
+            // Intentar reproducir inmediatamente
+            const playAudio = async () => {
+                try {
+                    // Primero cargamos el audio
+                    await audioElement.load();
+                    
+                    // Luego intentamos reproducir
+                    await audioElement.play();
+                    
+                    console.log("🎵 Music started successfully!");
+                    
+                    // Actualizar UI para mostrar que está reproduciendo
+                    document.getElementById('pause-icon').classList.remove('hidden');
+                    document.getElementById('play-icon').classList.add('hidden');
+                    document.getElementById('music-status').textContent = "Playing";
+                    
+                } catch (error) {
+                    console.log("Autoplay blocked, showing overlay:", error);
+                    // Mostrar overlay si el autoplay está bloqueado
+                    autoplayOverlay.classList.remove('hidden');
+                }
+            };
             
-            // Intentar reproducir automáticamente al cargar
-            setTimeout(() => {
-                autoPlayAudio();
-            }, 1000);
+            // Iniciar reproducción inmediatamente
+            playAudio();
+            
+            // Manejar el botón de iniciar música
+            startMusicBtn.addEventListener('click', function() {
+                audioElement.play().then(() => {
+                    autoplayOverlay.classList.add('hidden');
+                    document.getElementById('music-status').textContent = "Playing";
+                }).catch(error => {
+                    console.log("Still blocked:", error);
+                });
+            });
+            
+            // También permitir clic en cualquier parte del overlay
+            autoplayOverlay.addEventListener('click', function(e) {
+                if (e.target === autoplayOverlay) {
+                    audioElement.play().then(() => {
+                        autoplayOverlay.classList.add('hidden');
+                        document.getElementById('music-status').textContent = "Playing";
+                    });
+                }
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const audioElement = document.getElementById('background-music');
+            const playPauseBtn = document.getElementById('play-pause-btn');
+            const volumeSlider = document.getElementById('volume-slider');
+            const playIcon = document.getElementById('play-icon');
+            const pauseIcon = document.getElementById('pause-icon');
+            const musicStatus = document.getElementById('music-status');
+            
+            let isPlaying = true; // Asumimos que está reproduciendo al inicio
             
             // Control de volumen
             volumeSlider.addEventListener('input', function() {
@@ -129,111 +201,37 @@
             
             // Botón de play/pause
             playPauseBtn.addEventListener('click', function() {
-                togglePlayback();
-            });
-            
-            function autoPlayAudio() {
-                console.log("Attempting autoplay...");
-                
-                // Intentar reproducir automáticamente
-                const playPromise = audioElement.play();
-                
-                if (playPromise !== undefined) {
-                    playPromise.then(() => {
-                        // Éxito - la música se reproduce automáticamente
-                        console.log("Autoplay successful");
-                        isPlaying = true;
-                        hideLoadingState();
-                        updatePlayButton();
-                        musicStatus.textContent = "Playing";
-                    }).catch(error => {
-                        // Falló el autoplay - esperar interacción del usuario
-                        console.log("Autoplay failed, waiting for user interaction:", error);
-                        hideLoadingState();
-                        musicStatus.textContent = "Click to play";
-                        
-                        // Configurar para reproducir en la siguiente interacción
-                        setupInteractionPlay();
-                    });
-                }
-            }
-            
-            function setupInteractionPlay() {
-                // Reproducir en el primer clic en cualquier parte de la página
-                const playOnInteraction = function() {
-                    if (!isPlaying) {
-                        togglePlayback();
-                    }
-                    document.removeEventListener('click', playOnInteraction);
-                };
-                
-                document.addEventListener('click', playOnInteraction);
-            }
-            
-            function togglePlayback() {
                 if (isPlaying) {
                     audioElement.pause();
                     isPlaying = false;
                     musicStatus.textContent = "Paused";
-                    updatePlayButton();
-                } else {
-                    const playPromise = audioElement.play();
-                    
-                    if (playPromise !== undefined) {
-                        showLoadingState();
-                        playPromise.then(() => {
-                            isPlaying = true;
-                            hideLoadingState();
-                            musicStatus.textContent = "Playing";
-                            updatePlayButton();
-                        }).catch(error => {
-                            hideLoadingState();
-                            console.log("Play failed:", error);
-                            musicStatus.textContent = "Click to play";
-                        });
-                    }
-                }
-            }
-            
-            function updatePlayButton() {
-                if (isPlaying) {
-                    playIcon.classList.add('hidden');
-                    pauseIcon.classList.remove('hidden');
-                } else {
                     playIcon.classList.remove('hidden');
                     pauseIcon.classList.add('hidden');
-                }
-            }
-            
-            function showLoadingState() {
-                playIcon.classList.add('hidden');
-                pauseIcon.classList.add('hidden');
-                loadingIcon.classList.remove('hidden');
-                musicStatus.textContent = "Loading...";
-                playPauseBtn.classList.add('loading');
-            }
-            
-            function hideLoadingState() {
-                loadingIcon.classList.add('hidden');
-                playPauseBtn.classList.remove('loading');
-                updatePlayButton();
-            }
-            
-            // Event listeners para el audio
-            audioElement.addEventListener('waiting', function() {
-                if (isPlaying) {
-                    musicStatus.textContent = "Buffering...";
+                } else {
+                    audioElement.play().then(() => {
+                        isPlaying = true;
+                        musicStatus.textContent = "Playing";
+                        playIcon.classList.add('hidden');
+                        pauseIcon.classList.remove('hidden');
+                    }).catch(error => {
+                        console.log("Play failed:", error);
+                    });
                 }
             });
             
-            audioElement.addEventListener('playing', function() {
+            // Actualizar estado basado en eventos del audio
+            audioElement.addEventListener('play', function() {
+                isPlaying = true;
                 musicStatus.textContent = "Playing";
+                playIcon.classList.add('hidden');
+                pauseIcon.classList.remove('hidden');
             });
             
-            audioElement.addEventListener('error', function() {
-                hideLoadingState();
-                musicStatus.textContent = "Error loading audio";
-                musicStatus.classList.add('text-red-400');
+            audioElement.addEventListener('pause', function() {
+                isPlaying = false;
+                musicStatus.textContent = "Paused";
+                playIcon.classList.remove('hidden');
+                pauseIcon.classList.add('hidden');
             });
             
             // Gradient overlay
