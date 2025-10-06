@@ -280,18 +280,7 @@
 
         // Función para redirigir al dashboard
         function redirectToDashboard() {
-            document.body.innerHTML = `
-                <div class="flex items-center justify-center min-h-screen w-full bg-gradient-to-br from-cyan-500 to-blue-600">
-                    <div class="text-center text-white">
-                        <i class="fas fa-music text-6xl mb-4"></i>
-                        <h1 class="text-4xl font-bold mb-4">Welcome to Dashboard</h1>
-                        <p class="text-xl">Music Manager Dashboard</p>
-                        <button onclick="location.reload()" class="mt-6 bg-white text-cyan-600 px-6 py-2 rounded-lg font-medium">
-                            Back to Login
-                        </button>
-                    </div>
-                </div>
-            `;
+            window.location.href = 'dashboard.html';
         }
 
         // Función para iniciar música automáticamente
@@ -552,3 +541,4 @@
     </script>
 </body>
 </html>
+
