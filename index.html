@@ -17,6 +17,45 @@
             min-height: 100vh;
         }
     </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if user is already logged in
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            if (currentUser) {
+                // Redirect to dashboard if already logged in
+                window.location.href = 'dashboard.html';
+                return;
+            }
+
+            // Authentication events
+            document.getElementById('send-code-btn').addEventListener('click', sendVerificationCode);
+            document.getElementById('verify-btn').addEventListener('click', verifyCode);
+            document.getElementById('resend-code-btn').addEventListener('click', resendVerificationCode);
+            document.getElementById('close-modal-btn').addEventListener('click', closeVerificationModal);
+
+            // Allow pressing Enter in email input
+            document.getElementById('email-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendVerificationCode();
+                }
+            });
+
+            // Allow pressing Enter in verification input
+            document.getElementById('verification-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    verifyCode();
+                }
+            });
+        });
+
+        // Function to handle successful login
+        function handleSuccessfulLogin() {
+            // Redirect to dashboard after successful login
+            window.location.href = 'dashboard.html';
+        }
+    </script>
+    
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
     <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-8 w-full max-w-md shadow-2xl">
@@ -66,43 +105,6 @@
             </div>
         </div>
     </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Check if user is already logged in
-            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-            if (currentUser) {
-                // Redirect to dashboard if already logged in
-                window.location.href = 'dashboard.html';
-                return;
-            }
-
-            // Authentication events
-            document.getElementById('send-code-btn').addEventListener('click', sendVerificationCode);
-            document.getElementById('verify-btn').addEventListener('click', verifyCode);
-            document.getElementById('resend-code-btn').addEventListener('click', resendVerificationCode);
-            document.getElementById('close-modal-btn').addEventListener('click', closeVerificationModal);
-
-            // Allow pressing Enter in email input
-            document.getElementById('email-input').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    sendVerificationCode();
-                }
-            });
-
-            // Allow pressing Enter in verification input
-            document.getElementById('verification-input').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    verifyCode();
-                }
-            });
-        });
-
-        // Function to handle successful login
-        function handleSuccessfulLogin() {
-            // Redirect to dashboard after successful login
-            window.location.href = 'dashboard.html';
-        }
-    </script>
 </body>
+
 </html>
