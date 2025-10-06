@@ -74,7 +74,7 @@
         <div class="volume-slider">
             <input id="volume-slider" type="range" min="0" max="100" value="30" class="w-full">
         </div>
-        <span id="music-status" class="text-white text-sm">Ready</span>
+        <span id="music-status" class="text-white text-sm">Loading...</span>
     </div>
 
     <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-8 w-full max-w-md shadow-2xl z-10">
@@ -101,7 +101,6 @@
         document.addEventListener('DOMContentLoaded', function() {
             let audioElement = document.getElementById('background-music');
             let isPlaying = false;
-            let audioLoaded = false;
             
             // Elementos del DOM
             const playIcon = document.getElementById('play-icon');
@@ -115,6 +114,14 @@
             audioElement.volume = 0.3;
             volumeSlider.value = 30;
             
+            // Mostrar estado de carga inmediatamente
+            showLoadingState();
+            
+            // Intentar reproducir automáticamente al cargar
+            setTimeout(() => {
+                autoPlayAudio();
+            }, 1000);
+            
             // Control de volumen
             volumeSlider.addEventListener('input', function() {
                 audioElement.volume = this.value / 100;
@@ -122,40 +129,45 @@
             
             // Botón de play/pause
             playPauseBtn.addEventListener('click', function() {
-                if (!audioLoaded) {
-                    loadAndPlayAudio();
-                } else {
-                    togglePlayback();
-                }
+                togglePlayback();
             });
             
-            function loadAndPlayAudio() {
-                showLoadingState();
+            function autoPlayAudio() {
+                console.log("Attempting autoplay...");
                 
-                // Forzar la carga del audio
-                audioElement.load();
+                // Intentar reproducir automáticamente
+                const playPromise = audioElement.play();
                 
-                // Intentar reproducir después de cargar
-                audioElement.addEventListener('canplaythrough', function() {
-                    hideLoadingState();
-                    audioLoaded = true;
-                    togglePlayback();
-                }, { once: true });
-                
-                // Manejar errores
-                audioElement.addEventListener('error', function() {
-                    hideLoadingState();
-                    musicStatus.textContent = "Error loading";
-                    musicStatus.classList.add('text-red-400');
-                }, { once: true });
-                
-                // Timeout por si tarda mucho
-                setTimeout(() => {
-                    if (!audioLoaded) {
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        // Éxito - la música se reproduce automáticamente
+                        console.log("Autoplay successful");
+                        isPlaying = true;
+                        hideLoadingState();
+                        updatePlayButton();
+                        musicStatus.textContent = "Playing";
+                    }).catch(error => {
+                        // Falló el autoplay - esperar interacción del usuario
+                        console.log("Autoplay failed, waiting for user interaction:", error);
                         hideLoadingState();
                         musicStatus.textContent = "Click to play";
+                        
+                        // Configurar para reproducir en la siguiente interacción
+                        setupInteractionPlay();
+                    });
+                }
+            }
+            
+            function setupInteractionPlay() {
+                // Reproducir en el primer clic en cualquier parte de la página
+                const playOnInteraction = function() {
+                    if (!isPlaying) {
+                        togglePlayback();
                     }
-                }, 5000);
+                    document.removeEventListener('click', playOnInteraction);
+                };
+                
+                document.addEventListener('click', playOnInteraction);
             }
             
             function togglePlayback() {
@@ -168,11 +180,14 @@
                     const playPromise = audioElement.play();
                     
                     if (playPromise !== undefined) {
+                        showLoadingState();
                         playPromise.then(() => {
                             isPlaying = true;
+                            hideLoadingState();
                             musicStatus.textContent = "Playing";
                             updatePlayButton();
                         }).catch(error => {
+                            hideLoadingState();
                             console.log("Play failed:", error);
                             musicStatus.textContent = "Click to play";
                         });
@@ -201,7 +216,7 @@
             function hideLoadingState() {
                 loadingIcon.classList.add('hidden');
                 playPauseBtn.classList.remove('loading');
-                playIcon.classList.remove('hidden');
+                updatePlayButton();
             }
             
             // Event listeners para el audio
@@ -215,16 +230,10 @@
                 musicStatus.textContent = "Playing";
             });
             
-            // Iniciar música automáticamente al interactuar con el formulario
-            document.getElementById('send-code-btn').addEventListener('click', function() {
-                if (!audioLoaded && !isPlaying) {
-                    setTimeout(() => {
-                        playPauseBtn.click();
-                    }, 1000);
-                }
-                
-                document.getElementById('email-status').innerHTML = 
-                    '<p class="text-green-400">Verification code sent!</p>';
+            audioElement.addEventListener('error', function() {
+                hideLoadingState();
+                musicStatus.textContent = "Error loading audio";
+                musicStatus.classList.add('text-red-400');
             });
             
             // Gradient overlay
@@ -238,6 +247,12 @@
                 
                 gradientOverlay.style.setProperty('--mouse-x', `${x}%`);
                 gradientOverlay.style.setProperty('--mouse-y', `${y}%`);
+            });
+            
+            // Para el botón de enviar código
+            document.getElementById('send-code-btn').addEventListener('click', function() {
+                document.getElementById('email-status').innerHTML = 
+                    '<p class="text-green-400">Verification code sent!</p>';
             });
         });
     </script>
