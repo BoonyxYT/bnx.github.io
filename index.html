@@ -1,1446 +1,232 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Music Manager - YouTube Playlists</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- EMAILJS INTEGRATION -->
-    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-    <script>
-        // INICIALIZAR EMAILJS CON TU PUBLIC KEY
-        (function() {
-            emailjs.init("y6z1_yLYoZzfUqleA");
-            console.log("EmailJS initialized");
-        })();
-    </script>
-    <style>
-        /* (Mantén todos los estilos igual que antes) */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        body {
-            background: linear-gradient(135deg, #1e3c72, #2a5298);
-            color: #fff;
-            line-height: 1.6;
-            min-height: 100vh;
-            padding-bottom: 50px;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-        
-        header {
-            background-color: rgba(0, 0, 0, 0.7);
-            padding: 25px 0;
-            text-align: center;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        }
-        
-        header h1 {
-            font-size: 2.8rem;
-            margin-bottom: 10px;
-            color: #4fc3f7;
-        }
-        
-        header p {
-            font-size: 1.2rem;
-            opacity: 0.9;
-        }
-        
-        .auth-section {
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 30px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-            max-width: 500px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        
-        .auth-section h2 {
-            margin-bottom: 20px;
-            color: #4fc3f7;
-            text-align: center;
-        }
-        
-        .auth-form {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        
-        .auth-form input {
-            padding: 14px 15px;
-            border: none;
-            border-radius: 8px;
-            background-color: rgba(255, 255, 255, 0.9);
-            font-size: 1rem;
-        }
-        
-        .auth-form button {
-            padding: 14px;
-            border: none;
-            border-radius: 8px;
-            background-color: #4fc3f7;
-            color: white;
-            font-size: 1rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .auth-form button:hover {
-            background-color: #29b6f6;
-        }
-        
-        .user-info {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding: 15px;
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-        }
-        
-        .user-details {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .admin-badge {
-            background-color: #ff9800;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: bold;
-        }
-        
-        .logout-btn {
-            background-color: #f44336;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        
-        .logout-btn:hover {
-            background-color: #d32f2f;
-        }
-        
-        .main-content {
-            display: flex;
-            gap: 30px;
-            flex-wrap: wrap;
-        }
-        
-        .input-section {
-            flex: 1;
-            min-width: 350px;
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-        }
-        
-        .playlists-section {
-            flex: 2;
-            min-width: 350px;
-        }
-        
-        .section-title {
-            font-size: 1.8rem;
-            margin-bottom: 20px;
-            color: #4fc3f7;
-            padding-bottom: 10px;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-        
-        .form-group input, .form-group select {
-            width: 100%;
-            padding: 14px 15px;
-            border: none;
-            border-radius: 8px;
-            background-color: rgba(255, 255, 255, 0.9);
-            font-size: 1rem;
-            transition: all 0.3s;
-        }
-        
-        .form-group input:focus {
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(79, 195, 247, 0.5);
-        }
-        
-        .btn {
-            display: inline-block;
-            background-color: #4fc3f7;
-            color: white;
-            padding: 14px 25px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 500;
-            transition: all 0.3s;
-            text-align: center;
-        }
-        
-        .btn:hover {
-            background-color: #29b6f6;
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
-        
-        .btn-block {
-            display: block;
-            width: 100%;
-        }
-        
-        .btn-success {
-            background-color: #66bb6a;
-        }
-        
-        .btn-success:hover {
-            background-color: #4caf50;
-        }
-        
-        .btn-danger {
-            background-color: #ef5350;
-        }
-        
-        .btn-danger:hover {
-            background-color: #e53935;
-        }
-        
-        .btn-warning {
-            background-color: #ff9800;
-        }
-        
-        .btn-warning:hover {
-            background-color: #f57c00;
-        }
-        
-        .playlist-card {
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 25px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-            transition: transform 0.3s;
-        }
-        
-        .playlist-card:hover {
-            transform: translateY(-5px);
-        }
-        
-        .playlist-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        .playlist-title {
-            font-size: 1.6rem;
-            color: #4fc3f7;
-        }
-        
-        .playlist-actions {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .song-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px;
-            background-color: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-            margin-bottom: 12px;
-            transition: background-color 0.3s;
-        }
-        
-        .song-item:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-        
-        .song-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            flex: 1;
-        }
-        
-        .song-thumbnail {
-            width: 100px;
-            height: 75px;
-            border-radius: 8px;
-            background-color: #333;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            flex-shrink: 0;
-        }
-        
-        .song-thumbnail img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        
-        .song-details {
-            flex: 1;
-        }
-        
-        .song-title {
-            font-weight: 500;
-            font-size: 1.1rem;
-            margin-bottom: 5px;
-        }
-        
-        .song-url {
-            font-size: 0.9rem;
-            opacity: 0.7;
-            word-break: break-all;
-        }
-        
-        .song-actions {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .btn-small {
-            padding: 8px 15px;
-            font-size: 0.9rem;
-        }
-        
-        .btn-play {
-            background-color: #66bb6a;
-        }
-        
-        .btn-play:hover {
-            background-color: #4caf50;
-        }
-        
-        .player-section {
-            margin-top: 30px;
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-        }
-        
-        .player-placeholder {
-            text-align: center;
-            padding: 40px 20px;
-            background-color: rgba(0, 0, 0, 0.3);
-            border-radius: 10px;
-        }
-        
-        #youtube-player {
-            width: 100%;
-            height: 400px;
-            border-radius: 10px;
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            opacity: 0.7;
-        }
-        
-        .empty-state i {
-            font-size: 3rem;
-            margin-bottom: 15px;
-            opacity: 0.5;
-        }
-        
-        .quick-add-section {
-            background-color: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 20px;
-        }
-        
-        .playlist-selector {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-            align-items: center;
-        }
-        
-        .playlist-selector select {
-            flex: 1;
-            padding: 12px 15px;
-            border-radius: 8px;
-            background-color: rgba(255, 255, 255, 0.9);
-            border: none;
-        }
-        
-        .discover-section {
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            padding: 25px;
-            margin-top: 30px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-        }
-        
-        .admin-controls {
-            background-color: rgba(255, 152, 0, 0.2);
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        
-        .admin-controls h3 {
-            color: #ff9800;
-            margin-bottom: 15px;
-        }
-        
-        .admin-form {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        
-        .admin-form input {
-            flex: 1;
-            min-width: 200px;
-            padding: 12px 15px;
-            border: none;
-            border-radius: 8px;
-            background-color: rgba(255, 255, 255, 0.9);
-        }
-        
-        .discover-songs {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-        }
-        
-        .discover-song-card {
-            background-color: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-            padding: 15px;
-            transition: transform 0.3s;
-        }
-        
-        .discover-song-card:hover {
-            transform: translateY(-5px);
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-        
-        .discover-song-thumbnail {
-            width: 100%;
-            height: 150px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            overflow: hidden;
-        }
-        
-        .discover-song-thumbnail img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        
-        .discover-song-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        
-        .discover-song-actions button {
-            flex: 1;
-        }
-        
-        .verification-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .verification-content {
-            background-color: rgba(255, 255, 255, 0.95);
-            color: #333;
-            padding: 30px;
-            border-radius: 15px;
-            max-width: 500px;
-            width: 90%;
-            text-align: center;
-        }
-        
-        .verification-content h2 {
-            margin-bottom: 20px;
-            color: #4fc3f7;
-        }
-        
-        .email-status {
-            padding: 15px;
-            border-radius: 8px;
-            margin: 15px 0;
-            text-align: center;
-            display: none;
-        }
-        
-        .email-success {
-            background-color: #e8f5e9;
-            color: #2e7d32;
-            border: 1px solid #c8e6c9;
-        }
-        
-        .email-error {
-            background-color: #ffebee;
-            color: #c62828;
-            border: 1px solid #ffcdd2;
-        }
-        
-        .verification-instructions {
-            margin: 15px 0;
-            font-size: 0.9rem;
-            color: #666;
-        }
-        
-        .debug-info {
-            background-color: rgba(0, 0, 0, 0.3);
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 10px;
-            font-size: 0.8rem;
-            display: none;
-        }
-        
-        @media (max-width: 768px) {
-            .main-content {
-                flex-direction: column;
-            }
-            
-            .song-info {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
-            }
-            
-            .song-actions {
-                width: 100%;
-                justify-content: space-between;
-            }
-            
-            #youtube-player {
-                height: 250px;
-            }
-            
-            .playlist-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 15px;
-            }
-            
-            .playlist-actions {
-                width: 100%;
-                justify-content: space-between;
-            }
-            
-            .admin-form {
-                flex-direction: column;
-            }
-            
-            .discover-songs {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Music Manager - YouTube Playlists</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+/* Mantén todos los estilos igual que antes */
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+body { background: linear-gradient(135deg, #1e3c72, #2a5298); color: #fff; line-height: 1.6; min-height: 100vh; padding-bottom: 50px; }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+header { background-color: rgba(0, 0, 0, 0.7); padding: 25px 0; text-align: center; margin-bottom: 30px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); }
+header h1 { font-size: 2.8rem; margin-bottom: 10px; color: #4fc3f7; }
+header p { font-size: 1.2rem; opacity: 0.9; }
+.auth-section { background-color: rgba(255, 255, 255, 0.1); border-radius: 15px; padding: 25px; margin-bottom: 30px; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2); max-width: 500px; margin-left: auto; margin-right: auto; }
+.auth-section h2 { margin-bottom: 20px; color: #4fc3f7; text-align: center; }
+.auth-form { display: flex; flex-direction: column; gap: 15px; }
+.auth-form input { padding: 14px 15px; border: none; border-radius: 8px; background-color: rgba(255, 255, 255, 0.9); font-size: 1rem; }
+.auth-form button { padding: 14px; border: none; border-radius: 8px; background-color: #4fc3f7; color: white; font-size: 1rem; font-weight: 500; cursor: pointer; transition: all 0.3s; }
+.auth-form button:hover { background-color: #29b6f6; }
+.user-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 15px; background-color: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+.user-details { display: flex; align-items: center; gap: 10px; }
+.admin-badge { background-color: #ff9800; color: white; padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
+.logout-btn { background-color: #f44336; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; transition: background-color 0.3s; }
+.logout-btn:hover { background-color: #d32f2f; }
+.main-content { display: flex; gap: 30px; flex-wrap: wrap; }
+.input-section { flex: 1; min-width: 350px; background-color: rgba(255, 255, 255, 0.1); border-radius: 15px; padding: 25px; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2); }
+.playlists-section { flex: 2; min-width: 350px; }
+.section-title { font-size: 1.8rem; margin-bottom: 20px; color: #4fc3f7; padding-bottom: 10px; border-bottom: 2px solid rgba(255, 255, 255, 0.2); }
+.form-group { margin-bottom: 20px; }
+.form-group label { display: block; margin-bottom: 8px; font-weight: 500; }
+.form-group input, .form-group select { width: 100%; padding: 14px 15px; border: none; border-radius: 8px; background-color: rgba(255, 255, 255, 0.9); font-size: 1rem; transition: all 0.3s; }
+.form-group input:focus { outline: none; box-shadow: 0 0 0 3px rgba(79, 195, 247, 0.5); }
+.btn { display: inline-block; background-color: #4fc3f7; color: white; padding: 14px 25px; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: 500; transition: all 0.3s; text-align: center; }
+.btn:hover { background-color: #29b6f6; transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); }
+.btn-block { display: block; width: 100%; }
+.btn-success { background-color: #66bb6a; }
+.btn-success:hover { background-color: #4caf50; }
+.btn-danger { background-color: #ef5350; }
+.btn-danger:hover { background-color: #e53935; }
+.btn-warning { background-color: #ff9800; }
+.btn-warning:hover { background-color: #f57c00; }
+.playlist-card { background-color: rgba(255, 255, 255, 0.1); border-radius: 15px; padding: 20px; margin-bottom: 25px; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2); transition: transform 0.3s; }
+.playlist-card:hover { transform: translateY(-5px); }
+.playlist-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.2); }
+.playlist-title { font-size: 1.6rem; color: #4fc3f7; }
+.playlist-actions { display: flex; gap: 10px; }
+.song-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; background-color: rgba(255, 255, 255, 0.05); border-radius: 10px; margin-bottom: 12px; transition: background-color 0.3s; }
+.song-item:hover { background-color: rgba(255, 255, 255, 0.1); }
+.song-info { display: flex; align-items: center; gap: 15px; flex: 1; }
+.song-thumbnail { width: 100px; height: 75px; border-radius: 8px; background-color: #333; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
+.song-thumbnail img { width: 100%; height: 100%; object-fit: cover; }
+.song-details { flex: 1; }
+.song-title { font-weight: 500; font-size: 1.1rem; margin-bottom: 5px; }
+.song-url { font-size: 0.9rem; opacity: 0.7; word-break: break-all; }
+.song-actions { display: flex; gap: 10px; }
+.btn-small { padding: 8px 15px; font-size: 0.9rem; }
+.btn-play { background-color: #66bb6a; }
+.btn-play:hover { background-color: #4caf50; }
+.player-section { margin-top: 30px; background-color: rgba(255, 255, 255, 0.1); border-radius: 15px; padding: 20px; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2); }
+.player-placeholder { text-align: center; padding: 40px 20px; background-color: rgba(0, 0, 0, 0.3); border-radius: 10px; }
+#youtube-player { width: 100%; height: 400px; border-radius: 10px; }
+.empty-state { text-align: center; padding: 40px 20px; opacity: 0.7; }
+.empty-state i { font-size: 3rem; margin-bottom: 15px; opacity: 0.5; }
+.quick-add-section { background-color: rgba(255, 255, 255, 0.05); border-radius: 10px; padding: 20px; margin-top: 20px; }
+.playlist-selector { display: flex; gap: 10px; margin-bottom: 15px; align-items: center; }
+.playlist-selector select { flex: 1; padding: 12px 15px; border-radius: 8px; background-color: rgba(255, 255, 255, 0.9); border: none; }
+.discover-section { background-color: rgba(255, 255, 255, 0.1); border-radius: 15px; padding: 25px; margin-top: 30px; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2); }
+.admin-controls { background-color: rgba(255, 152, 0, 0.2); border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+.admin-controls h3 { color: #ff9800; margin-bottom: 15px; }
+.admin-form { display: flex; gap: 10px; flex-wrap: wrap; }
+.admin-form input { flex: 1; min-width: 200px; padding: 12px 15px; border: none; border-radius: 8px; background-color: rgba(255, 255, 255, 0.9); }
+.discover-songs { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+.discover-song-card { background-color: rgba(255, 255, 255, 0.05); border-radius: 10px; padding: 15px; transition: transform 0.3s; }
+.discover-song-card:hover { transform: translateY(-5px); background-color: rgba(255, 255, 255, 0.1); }
+.discover-song-thumbnail { width: 100%; height: 150px; border-radius: 8px; margin-bottom: 10px; overflow: hidden; }
+.discover-song-thumbnail img { width: 100%; height: 100%; object-fit: cover; }
+.discover-song-actions { display: flex; gap: 10px; margin-top: 10px; }
+.discover-song-actions button { flex: 1; }
+.debug-info { background-color: rgba(0, 0, 0, 0.3); padding: 10px; border-radius: 5px; margin-top: 10px; font-size: 0.8rem; display: none; }
+
+@media (max-width: 768px) {
+  .main-content { flex-direction: column; }
+  .song-info { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .song-actions { width: 100%; justify-content: space-between; }
+  #youtube-player { height: 250px; }
+  .playlist-header { flex-direction: column; align-items: flex-start; gap: 15px; }
+  .playlist-actions { width: 100%; justify-content: space-between; }
+  .admin-form { flex-direction: column; }
+  .discover-songs { grid-template-columns: 1fr; }
+}
+</style>
 </head>
 <body>
-    <header>
-        <div class="container">
-            <h1><i class="fas fa-music"></i> Music Manager</h1>
-            <p>Create and manage your YouTube playlists easily</p>
-        </div>
-    </header>
-    
-    <div class="container">
-        <!-- Authentication Section -->
-        <div id="auth-section" class="auth-section">
-            <h2>Sign In</h2>
-            <div class="auth-form">
-                <input type="email" id="email-input" placeholder="Enter your email">
-                <button id="send-code-btn">Send Verification Code</button>
-            </div>
-            <div id="debug-info" class="debug-info"></div>
-        </div>
+<header>
+<div class="container">
+<h1><i class="fas fa-music"></i> Music Manager</h1>
+<p>Create and manage your YouTube playlists easily</p>
+</div>
+</header>
 
-        <!-- User Info Section (hidden by default) -->
-        <div id="user-info" class="user-info" style="display: none;">
-            <div class="user-details">
-                <span id="user-email"></span>
-                <span id="admin-badge" class="admin-badge" style="display: none;">ADMIN</span>
-            </div>
-            <button id="logout-btn" class="logout-btn">Logout</button>
-        </div>
+<div class="container">
+<!-- Authentication Section -->
+<div id="auth-section" class="auth-section">
+<h2>Sign In / Sign Up</h2>
+<div class="auth-form">
+<input type="text" id="username-input" placeholder="Enter your username">
+<input type="password" id="password-input" placeholder="Enter your password">
+<button id="signup-btn" class="btn btn-block btn-success">Sign Up</button>
+<button id="login-btn" class="btn btn-block btn-primary">Login</button>
+</div>
+<div id="debug-info" class="debug-info"></div>
+</div>
 
-        <!-- Verification Modal -->
-        <div id="verification-modal" class="verification-modal">
-            <div class="verification-content">
-                <h2>Email Verification</h2>
-                
-                <div id="email-status" class="email-status"></div>
-                
-                <div class="verification-instructions">
-                    <p>We've sent a verification code to your email address.</p>
-                    <p>Please check your inbox and enter the code below:</p>
-                </div>
-                
-                <div class="form-group">
-                    <input type="text" id="verification-input" placeholder="Enter verification code">
-                </div>
-                <button id="verify-btn" class="btn btn-block">Verify</button>
-                <button id="resend-code-btn" class="btn btn-block btn-warning" style="margin-top: 10px;">Resend Code</button>
-                <button id="close-modal-btn" class="btn btn-block btn-danger" style="margin-top: 10px;">Cancel</button>
-            </div>
-        </div>
+<!-- User Info Section (hidden by default) -->
+<div id="user-info" class="user-info" style="display: none;">
+<div class="user-details">
+<span id="user-email"></span>
+<span id="admin-badge" class="admin-badge" style="display: none;">ADMIN</span>
+</div>
+<button id="logout-btn" class="logout-btn">Logout</button>
+</div>
 
-        <!-- Main Content (hidden until signed in) -->
-        <div id="main-content" style="display: none;">
-            <!-- (Mantén el resto del contenido igual) -->
-            <div class="main-content">
-                <section class="input-section">
-                    <h2 class="section-title">Add New Song</h2>
-                    <div class="form-group">
-                        <label for="youtube-url"><i class="fab fa-youtube"></i> YouTube URL:</label>
-                        <input type="text" id="youtube-url" placeholder="Paste YouTube URL here...">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="song-title"><i class="fas fa-heading"></i> Song Title (optional):</label>
-                        <input type="text" id="song-title" placeholder="Enter a custom title...">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="playlist-name"><i class="fas fa-list"></i> Add to Playlist:</label>
-                        <input type="text" id="playlist-name" placeholder="Enter playlist name...">
-                    </div>
-                    
-                    <button id="add-song-btn" class="btn btn-block btn-success">
-                        <i class="fas fa-plus-circle"></i> Add to Playlist
-                    </button>
-                    
-                    <div class="quick-add-section">
-                        <h3>Quick Add to Existing Playlist</h3>
-                        <div class="playlist-selector">
-                            <select id="existing-playlists">
-                                <option value="">Select a playlist...</option>
-                            </select>
-                            <button id="quick-add-btn" class="btn btn-success">
-                                <i class="fas fa-plus"></i> Add
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="player-section">
-                        <h3 class="section-title"><i class="fas fa-play-circle"></i> Player</h3>
-                        <div id="player-container">
-                            <div class="player-placeholder">
-                                <i class="fas fa-play-circle"></i>
-                                <p>Select a song to play it here</p>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-                
-                <section class="playlists-section">
-                    <h2 class="section-title">My Playlists</h2>
-                    <div id="playlists-container">
-                        <!-- Playlists will be generated here dynamically -->
-                    </div>
-                </section>
-            </div>
+<!-- Main Content (hidden until signed in) -->
+<div id="main-content" style="display: none;">
+<!-- Mantén todo el contenido de playlists, input-section, discover-section igual -->
+<!-- ... Aquí va TODO tu código HTML para playlists y discover ... -->
+</div>
+</div>
 
-            <!-- Discover Section -->
-            <section class="discover-section">
-                <h2 class="section-title"><i class="fas fa-compass"></i> Discover</h2>
-                
-                <!-- Admin Controls (only visible to admin) -->
-                <div id="admin-controls" class="admin-controls" style="display: none;">
-                    <h3>Admin Controls</h3>
-                    <div class="admin-form">
-                        <input type="text" id="discover-youtube-url" placeholder="YouTube URL for Discover section">
-                        <input type="text" id="discover-song-title" placeholder="Song title">
-                        <button id="add-to-discover-btn" class="btn btn-warning">
-                            <i class="fas fa-plus"></i> Add to Discover
-                        </button>
-                    </div>
-                </div>
-                
-                <div id="discover-songs-container" class="discover-songs">
-                    <!-- Discover songs will be generated here dynamically -->
-                </div>
-            </section>
-        </div>
-    </div>
+<script>
+// URL de tu backend
+const BACKEND_URL = "http://localhost:3000";
 
-    <script>
-        // Sample data for testing the application
-        let playlists = JSON.parse(localStorage.getItem('musicPlaylists')) || [
-            {
-                id: "1",
-                name: "Relaxing Music",
-                songs: [
-                    {
-                        id: "1",
-                        title: "Meditation Music",
-                        url: "https://www.youtube.com/watch?v=z2U8HW9XYpE",
-                        videoId: "z2U8HW9XYpE"
-                    },
-                    {
-                        id: "2",
-                        title: "Nature Sounds",
-                        url: "https://www.youtube.com/watch?v=q76bMs-NwRk",
-                        videoId: "q76bMs-NwRk"
-                    }
-                ]
-            },
-            {
-                id: "2",
-                name: "Summer Hits",
-                songs: [
-                    {
-                        id: "3",
-                        title: "Summer Song 2023",
-                        url: "https://www.youtube.com/watch?v=JGwWNGJdvx8",
-                        videoId: "JGwWNGJdvx8"
-                    }
-                ]
-            }
-        ];
+// Variables
+let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
+const ADMIN_USERNAME = "admin"; // opcional para marcar admin
 
-        // Discover songs (shared across all users)
-        let discoverSongs = JSON.parse(localStorage.getItem('discoverSongs')) || [
-            {
-                id: "d1",
-                title: "Chill Lo-Fi Beats",
-                url: "https://www.youtube.com/watch?v=5qap5aO4i9A",
-                videoId: "5qap5aO4i9A",
-                addedBy: "admin"
-            },
-            {
-                id: "d2",
-                title: "Focus Music",
-                url: "https://www.youtube.com/watch?v=4SsiTtDJ9hY",
-                videoId: "4SsiTtDJ9hY",
-                addedBy: "admin"
-            }
-        ];
+// Debug
+function debugLog(msg){
+  console.log(msg);
+  const debugInfo = document.getElementById('debug-info');
+  if(debugInfo){
+    debugInfo.innerHTML += `<div>${new Date().toLocaleTimeString()}: ${msg}</div>`;
+    debugInfo.style.display = 'block';
+  }
+}
 
-        // User authentication state
-        let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
-        const ADMIN_EMAIL = "aguiilatown@gmail.com";
+// Guardar usuario
+function saveUser(){ localStorage.setItem('currentUser', JSON.stringify(currentUser)); }
 
-        // Debug function
-        function debugLog(message) {
-            console.log(message);
-            const debugInfo = document.getElementById('debug-info');
-            if (debugInfo) {
-                debugInfo.innerHTML += `<div>${new Date().toLocaleTimeString()}: ${message}</div>`;
-                debugInfo.style.display = 'block';
-            }
-        }
+// UI update
+function updateUIForUser(){
+  if(currentUser){
+    document.getElementById('auth-section').style.display = 'none';
+    document.getElementById('user-info').style.display = 'flex';
+    document.getElementById('main-content').style.display = 'block';
+    document.getElementById('user-email').textContent = currentUser.username;
+    if(currentUser.username === ADMIN_USERNAME){
+      document.getElementById('admin-badge').style.display = 'inline-block';
+      document.getElementById('admin-controls').style.display = 'block';
+    } else {
+      document.getElementById('admin-badge').style.display = 'none';
+      document.getElementById('admin-controls').style.display = 'none';
+    }
+    renderPlaylists();
+    renderDiscoverSongs();
+  } else {
+    document.getElementById('auth-section').style.display = 'block';
+    document.getElementById('user-info').style.display = 'none';
+    document.getElementById('main-content').style.display = 'none';
+  }
+}
 
-        // Save to localStorage
-        function savePlaylists() {
-            localStorage.setItem('musicPlaylists', JSON.stringify(playlists));
-        }
+// Logout
+function logout(){ currentUser = null; saveUser(); updateUIForUser(); debugLog('User logged out'); }
 
-        function saveDiscoverSongs() {
-            localStorage.setItem('discoverSongs', JSON.stringify(discoverSongs));
-        }
+// Signup/Login
+document.getElementById('signup-btn').addEventListener('click', async () => {
+  const username = document.getElementById('username-input').value.trim();
+  const password = document.getElementById('password-input').value.trim();
+  if(!username || !password) return alert("Enter username and password");
+  try {
+    const res = await fetch(`${BACKEND_URL}/signup`, {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({username,password})
+    });
+    const data = await res.json();
+    if(data.success){
+      currentUser = data.user;
+      saveUser();
+      updateUIForUser();
+      debugLog("Signed up successfully");
+    } else alert(data.message);
+  } catch(err){ console.error(err); alert("Error connecting to server"); }
+});
 
-        function saveUser() {
-            localStorage.setItem('currentUser', JSON.stringify(currentUser));
-        }
+document.getElementById('login-btn').addEventListener('click', async () => {
+  const username = document.getElementById('username-input').value.trim();
+  const password = document.getElementById('password-input').value.trim();
+  if(!username || !password) return alert("Enter username and password");
+  try {
+    const res = await fetch(`${BACKEND_URL}/login`, {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({username,password})
+    });
+    const data = await res.json();
+    if(data.success){
+      currentUser = data.user;
+      saveUser();
+      updateUIForUser();
+      debugLog("Logged in successfully");
+    } else alert(data.message);
+  } catch(err){ console.error(err); alert("Error connecting to server"); }
+});
 
-        // Extract YouTube video ID from URL
-        function extractVideoId(url) {
-            const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
-            const match = url.match(regex);
-            return match ? match[1] : null;
-        }
+document.getElementById('logout-btn').addEventListener('click', logout);
 
-        // Generate unique ID for songs and playlists
-        function generateId() {
-            return Date.now().toString(36) + Math.random().toString(36).substr(2);
-        }
+// Inicializar UI
+updateUIForUser();
 
-        // Render all playlists
-        function renderPlaylists() {
-            const container = document.getElementById('playlists-container');
-            container.innerHTML = '';
-
-            if (playlists.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-music"></i>
-                        <p>You don't have any playlists yet.</p>
-                        <p>Create your first playlist by adding a song!</p>
-                    </div>
-                `;
-                return;
-            }
-
-            playlists.forEach((playlist, playlistIndex) => {
-                const playlistElement = document.createElement('div');
-                playlistElement.className = 'playlist-card';
-                
-                let songsHtml = '';
-                if (playlist.songs.length === 0) {
-                    songsHtml = `
-                        <div class="empty-state">
-                            <i class="fas fa-plus-circle"></i>
-                            <p>This playlist is empty</p>
-                            <p>Add songs using the "Add to this playlist" button</p>
-                        </div>
-                    `;
-                } else {
-                    playlist.songs.forEach((song, songIndex) => {
-                        songsHtml += `
-                            <div class="song-item">
-                                <div class="song-info">
-                                    <div class="song-thumbnail">
-                                        <img src="https://img.youtube.com/vi/${song.videoId}/hqdefault.jpg" alt="Thumbnail">
-                                    </div>
-                                    <div class="song-details">
-                                        <div class="song-title">${song.title}</div>
-                                        <div class="song-url">${song.url}</div>
-                                    </div>
-                                </div>
-                                <div class="song-actions">
-                                    <button class="btn btn-small btn-play" data-playlist="${playlistIndex}" data-song="${songIndex}">
-                                        <i class="fas fa-play"></i> Play
-                                    </button>
-                                    <button class="btn btn-small btn-danger" data-playlist="${playlistIndex}" data-song="${songIndex}">
-                                        <i class="fas fa-trash"></i> Remove
-                                    </button>
-                                </div>
-                            </div>
-                        `;
-                    });
-                }
-                
-                // Add song button for this playlist
-                songsHtml += `
-                    <div class="song-item" style="background-color: rgba(79, 195, 247, 0.2);">
-                        <div class="song-info">
-                            <div class="song-thumbnail" style="background-color: rgba(79, 195, 247, 0.5);">
-                                <i class="fas fa-plus" style="font-size: 1.5rem;"></i>
-                            </div>
-                            <div class="song-details">
-                                <div class="song-title">Add a new song to this playlist</div>
-                                <div class="song-url">Click the button to add a YouTube video</div>
-                            </div>
-                        </div>
-                        <div class="song-actions">
-                            <button class="btn btn-small btn-success add-to-playlist-btn" data-playlist="${playlistIndex}">
-                                <i class="fas fa-plus-circle"></i> Add to this Playlist
-                            </button>
-                        </div>
-                    </div>
-                `;
-                
-                playlistElement.innerHTML = `
-                    <div class="playlist-header">
-                        <h3 class="playlist-title">${playlist.name}</h3>
-                        <div class="playlist-actions">
-                            <button class="btn btn-danger delete-playlist" data-index="${playlistIndex}">
-                                <i class="fas fa-trash"></i> Delete Playlist
-                            </button>
-                        </div>
-                    </div>
-                    ${songsHtml}
-                `;
-                
-                container.appendChild(playlistElement);
-            });
-
-            // Add event listeners
-            document.querySelectorAll('.btn-play').forEach(button => {
-                button.addEventListener('click', function() {
-                    const playlistIndex = this.getAttribute('data-playlist');
-                    const songIndex = this.getAttribute('data-song');
-                    playSong(playlistIndex, songIndex);
-                });
-            });
-
-            document.querySelectorAll('.btn-danger').forEach(button => {
-                if (!button.classList.contains('delete-playlist')) {
-                    button.addEventListener('click', function() {
-                        const playlistIndex = this.getAttribute('data-playlist');
-                        const songIndex = this.getAttribute('data-song');
-                        removeSong(playlistIndex, songIndex);
-                    });
-                }
-            });
-
-            document.querySelectorAll('.delete-playlist').forEach(button => {
-                button.addEventListener('click', function() {
-                    const playlistIndex = this.getAttribute('data-index');
-                    deletePlaylist(playlistIndex);
-                });
-            });
-
-            document.querySelectorAll('.add-to-playlist-btn').forEach(button => {
-                button.addEventListener('click', function() {
-                    const playlistIndex = this.getAttribute('data-playlist');
-                    document.getElementById('existing-playlists').value = playlistIndex;
-                    document.getElementById('playlist-name').value = playlists[playlistIndex].name;
-                    document.getElementById('youtube-url').focus();
-                });
-            });
-
-            // Update the existing playlists dropdown
-            updatePlaylistsDropdown();
-        }
-
-        // Render discover songs
-        function renderDiscoverSongs() {
-            const container = document.getElementById('discover-songs-container');
-            container.innerHTML = '';
-
-            if (discoverSongs.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-compass"></i>
-                        <p>No songs in the Discover section yet.</p>
-                        <p>Check back later for new music recommendations!</p>
-                    </div>
-                `;
-                return;
-            }
-
-            discoverSongs.forEach((song, index) => {
-                const songElement = document.createElement('div');
-                songElement.className = 'discover-song-card';
-                
-                songElement.innerHTML = `
-                    <div class="discover-song-thumbnail">
-                        <img src="https://img.youtube.com/vi/${song.videoId}/hqdefault.jpg" alt="Thumbnail">
-                    </div>
-                    <div class="song-details">
-                        <div class="song-title">${song.title}</div>
-                        <div class="song-url">${song.url}</div>
-                    </div>
-                    <div class="discover-song-actions">
-                        <button class="btn btn-small btn-play discover-play" data-index="${index}">
-                            <i class="fas fa-play"></i> Play
-                        </button>
-                        <button class="btn btn-small btn-success discover-add" data-index="${index}">
-                            <i class="fas fa-plus"></i> Add to My List
-                        </button>
-                    </div>
-                `;
-                
-                container.appendChild(songElement);
-            });
-
-            // Add event listeners for discover songs
-            document.querySelectorAll('.discover-play').forEach(button => {
-                button.addEventListener('click', function() {
-                    const index = this.getAttribute('data-index');
-                    playDiscoverSong(index);
-                });
-            });
-
-            document.querySelectorAll('.discover-add').forEach(button => {
-                button.addEventListener('click', function() {
-                    const index = this.getAttribute('data-index');
-                    addDiscoverSongToPlaylist(index);
-                });
-            });
-        }
-
-        // Update the existing playlists dropdown
-        function updatePlaylistsDropdown() {
-            const dropdown = document.getElementById('existing-playlists');
-            // Clear existing options except the first one
-            while (dropdown.options.length > 1) {
-                dropdown.remove(1);
-            }
-            
-            // Add current playlists
-            playlists.forEach((playlist, index) => {
-                const option = document.createElement('option');
-                option.value = index;
-                option.textContent = playlist.name;
-                dropdown.appendChild(option);
-            });
-        }
-
-        // Play a song from playlist
-        function playSong(playlistIndex, songIndex) {
-            const song = playlists[playlistIndex].songs[songIndex];
-            const playerContainer = document.getElementById('player-container');
-            
-            playerContainer.innerHTML = `
-                <iframe id="youtube-player" src="https://www.youtube.com/embed/${song.videoId}?autoplay=1" 
-                    frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                    allowfullscreen>
-                </iframe>
-            `;
-        }
-
-        // Play a song from discover section
-        function playDiscoverSong(index) {
-            const song = discoverSongs[index];
-            const playerContainer = document.getElementById('player-container');
-            
-            playerContainer.innerHTML = `
-                <iframe id="youtube-player" src="https://www.youtube.com/embed/${song.videoId}?autoplay=1" 
-                    frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                    allowfullscreen>
-                </iframe>
-            `;
-        }
-
-        // Add a discover song to user's playlist
-        function addDiscoverSongToPlaylist(index) {
-            const song = discoverSongs[index];
-            
-            // Check if user has a "My Discoveries" playlist, if not create one
-            let playlistIndex = playlists.findIndex(p => p.name === "My Discoveries");
-            if (playlistIndex === -1) {
-                playlists.push({
-                    id: generateId(),
-                    name: "My Discoveries",
-                    songs: []
-                });
-                playlistIndex = playlists.length - 1;
-            }
-            
-            // Add the song to the playlist
-            playlists[playlistIndex].songs.push({
-                id: generateId(),
-                title: song.title,
-                url: song.url,
-                videoId: song.videoId
-            });
-            
-            // Save and update the view
-            savePlaylists();
-            renderPlaylists();
-            
-            alert(`"${song.title}" has been added to your "My Discoveries" playlist!`);
-        }
-
-        // Remove a song
-        function removeSong(playlistIndex, songIndex) {
-            if (confirm('Are you sure you want to remove this song?')) {
-                playlists[playlistIndex].songs.splice(songIndex, 1);
-                savePlaylists();
-                renderPlaylists();
-            }
-        }
-
-        // Delete a playlist
-        function deletePlaylist(playlistIndex) {
-            if (confirm('Are you sure you want to delete this playlist?')) {
-                playlists.splice(playlistIndex, 1);
-                savePlaylists();
-                renderPlaylists();
-            }
-        }
-
-        // Add a new song to user's playlist
-        function addSong() {
-            const youtubeUrl = document.getElementById('youtube-url').value.trim();
-            const songTitle = document.getElementById('song-title').value.trim();
-            const playlistName = document.getElementById('playlist-name').value.trim();
-            
-            if (!youtubeUrl) {
-                alert('Please enter a YouTube URL');
-                return;
-            }
-            
-            const videoId = extractVideoId(youtubeUrl);
-            if (!videoId) {
-                alert('The YouTube URL is not valid');
-                return;
-            }
-            
-            if (!playlistName) {
-                alert('Please enter a playlist name');
-                return;
-            }
-            
-            // Find if playlist already exists
-            let playlistIndex = playlists.findIndex(p => p.name === playlistName);
-            
-            // If it doesn't exist, create a new playlist
-            if (playlistIndex === -1) {
-                playlists.push({
-                    id: generateId(),
-                    name: playlistName,
-                    songs: []
-                });
-                playlistIndex = playlists.length - 1;
-            }
-            
-            // Add the song to the playlist
-            const finalTitle = songTitle || `Song ${playlists[playlistIndex].songs.length + 1}`;
-            
-            playlists[playlistIndex].songs.push({
-                id: generateId(),
-                title: finalTitle,
-                url: youtubeUrl,
-                videoId: videoId
-            });
-            
-            // Save and update the view
-            savePlaylists();
-            renderPlaylists();
-            
-            // Clear input fields
-            document.getElementById('youtube-url').value = '';
-            document.getElementById('song-title').value = '';
-        }
-
-        // Add a song to discover section (admin only)
-        function addSongToDiscover() {
-            const youtubeUrl = document.getElementById('discover-youtube-url').value.trim();
-            const songTitle = document.getElementById('discover-song-title').value.trim();
-            
-            if (!youtubeUrl) {
-                alert('Please enter a YouTube URL');
-                return;
-            }
-            
-            const videoId = extractVideoId(youtubeUrl);
-            if (!videoId) {
-                alert('The YouTube URL is not valid');
-                return;
-            }
-            
-            if (!songTitle) {
-                alert('Please enter a song title');
-                return;
-            }
-            
-            // Add the song to discover section
-            discoverSongs.push({
-                id: generateId(),
-                title: songTitle,
-                url: youtubeUrl,
-                videoId: videoId,
-                addedBy: currentUser.email
-            });
-            
-            // Save and update the view
-            saveDiscoverSongs();
-            renderDiscoverSongs();
-            
-            // Clear input fields
-            document.getElementById('discover-youtube-url').value = '';
-            document.getElementById('discover-song-title').value = '';
-            
-            alert('Song added to Discover section!');
-        }
-
-        // Quick add to existing playlist
-        function quickAdd() {
-            const playlistIndex = document.getElementById('existing-playlists').value;
-            
-            if (playlistIndex === "") {
-                alert('Please select a playlist');
-                return;
-            }
-            
-            document.getElementById('playlist-name').value = playlists[playlistIndex].name;
-            addSong();
-        }
-
-        // REAL EMAIL VERIFICATION WITH EMAILJS - VERSIÓN MEJORADA
-        function sendVerificationCode() {
-            const email = document.getElementById('email-input').value.trim();
-            
-            if (!email) {
-                alert('Please enter your email address');
-                return;
-            }
-            
-            debugLog(`Starting verification for: ${email}`);
-            
-            // Generate verification code
-            const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-            debugLog(`Generated code: ${verificationCode}`);
-            
-            // Store for verification
-            sessionStorage.setItem('pendingVerification', JSON.stringify({
-                email: email,
-                code: verificationCode,
-                timestamp: Date.now()
-            }));
-            
-            // Show sending status
-            const emailStatus = document.getElementById('email-status');
-            emailStatus.style.display = 'block';
-            emailStatus.textContent = '⏳ Sending verification code...';
-            emailStatus.className = 'email-status';
-            
-            // CONFIGURACIÓN ACTUALIZADA CON TUS CREDENCIALES
-            const SERVICE_ID = "service_l01icdo";
-            const TEMPLATE_ID = "template_exzottb";
-            
-            debugLog(`Sending email with Service: ${SERVICE_ID}, Template: ${TEMPLATE_ID}`);
-            
-            // Send email using EmailJS
-            emailjs.send(SERVICE_ID, TEMPLATE_ID, {
-                to_email: email,
-                verification_code: verificationCode
-            })
-            .then(function(response) {
-                debugLog('✅ Email sent successfully!');
-                console.log('✅ Email sent successfully!', response);
-                emailStatus.textContent = `✅ Verification code sent to ${email}`;
-                emailStatus.className = 'email-status email-success';
-                document.getElementById('verification-modal').style.display = 'flex';
-                
-                // Clear email input
-                document.getElementById('email-input').value = '';
-            }, function(error) {
-                debugLog('❌ Failed to send email: ' + JSON.stringify(error));
-                console.log('❌ Failed to send email:', error);
-                
-                let errorMessage = 'Failed to send verification code. ';
-                
-                if (error.text) {
-                    errorMessage += `Error: ${error.text}`;
-                } else if (error.status) {
-                    errorMessage += `Status: ${error.status}`;
-                }
-                
-                emailStatus.textContent = errorMessage;
-                emailStatus.className = 'email-status email-error';
-                
-                // For testing purposes, show the modal anyway with the code
-                if (confirm('Email sending failed. For testing, would you like to see the verification code?')) {
-                    alert(`TEST CODE: ${verificationCode}`);
-                    document.getElementById('verification-modal').style.display = 'flex';
-                }
-            });
-        }
-
-        function verifyCode() {
-            const pendingVerification = JSON.parse(sessionStorage.getItem('pendingVerification'));
-            const enteredCode = document.getElementById('verification-input').value.trim();
-            
-            if (!enteredCode) {
-                alert('Please enter the verification code');
-                return;
-            }
-            
-            if (!pendingVerification) {
-                alert('No verification session found. Please request a new code.');
-                return;
-            }
-            
-            // Check if code is expired (10 minutes)
-            const now = Date.now();
-            if (now - pendingVerification.timestamp > 10 * 60 * 1000) {
-                alert('Verification code has expired. Please request a new one.');
-                sessionStorage.removeItem('pendingVerification');
-                return;
-            }
-            
-            if (enteredCode === pendingVerification.code) {
-                // Successful verification
-                currentUser = {
-                    email: pendingVerification.email,
-                    isAdmin: pendingVerification.email === ADMIN_EMAIL
-                };
-                
-                saveUser();
-                updateUIForUser();
-                
-                // Hide the modal and clear session
-                document.getElementById('verification-modal').style.display = 'none';
-                sessionStorage.removeItem('pendingVerification');
-                document.getElementById('verification-input').value = '';
-                
-                debugLog('User successfully verified and logged in');
-                alert('Successfully signed in!');
-            } else {
-                alert('Invalid verification code. Please try again.');
-                document.getElementById('verification-input').value = '';
-                document.getElementById('verification-input').focus();
-            }
-        }
-
-        function resendVerificationCode() {
-            const pendingVerification = JSON.parse(sessionStorage.getItem('pendingVerification'));
-            if (!pendingVerification) {
-                alert('No pending verification found. Please enter your email again.');
-                return;
-            }
-            
-            const email = pendingVerification.email;
-            const newCode = Math.floor(100000 + Math.random() * 900000).toString();
-            
-            debugLog(`Resending code to: ${email}, new code: ${newCode}`);
-            
-            // Update stored code
-            sessionStorage.setItem('pendingVerification', JSON.stringify({
-                email: email,
-                code: newCode,
-                timestamp: Date.now()
-            }));
-            
-            const emailStatus = document.getElementById('email-status');
-            emailStatus.style.display = 'block';
-            emailStatus.textContent = '⏳ Resending verification code...';
-            emailStatus.className = 'email-status';
-            
-            const SERVICE_ID = "service_l01icdo";
-            const TEMPLATE_ID = "template_exzottb";
-            
-            emailjs.send(SERVICE_ID, TEMPLATE_ID, {
-                to_email: email,
-                verification_code: newCode
-            })
-            .then(function(response) {
-                emailStatus.textContent = `✅ Verification code resent to ${email}`;
-                emailStatus.className = 'email-status email-success';
-                debugLog('Resent email successfully');
-            }, function(error) {
-                emailStatus.textContent = '❌ Failed to resend verification code. Please try again.';
-                emailStatus.className = 'email-status email-error';
-                debugLog('Failed to resend email: ' + JSON.stringify(error));
-                
-                // For testing
-                if (confirm('Resend failed. Show code for testing?')) {
-                    alert(`TEST CODE: ${newCode}`);
-                }
-            });
-        }
-
-        function closeVerificationModal() {
-            document.getElementById('verification-modal').style.display = 'none';
-            document.getElementById('verification-input').value = '';
-        }
-
-        function logout() {
-            currentUser = null;
-            saveUser();
-            updateUIForUser();
-            debugLog('User logged out');
-        }
-
-        function updateUIForUser() {
-            if (currentUser) {
-                // User is signed in
-                document.getElementById('auth-section').style.display = 'none';
-                document.getElementById('user-info').style.display = 'flex';
-                document.getElementById('main-content').style.display = 'block';
-                
-                document.getElementById('user-email').textContent = currentUser.email;
-                
-                if (currentUser.isAdmin) {
-                    document.getElementById('admin-badge').style.display = 'inline-block';
-                    document.getElementById('admin-controls').style.display = 'block';
-                } else {
-                    document.getElementById('admin-badge').style.display = 'none';
-                    document.getElementById('admin-controls').style.display = 'none';
-                }
-                
-                // Render user-specific content
-                renderPlaylists();
-                renderDiscoverSongs();
-            } else {
-                // User is not signed in
-                document.getElementById('auth-section').style.display = 'block';
-                document.getElementById('user-info').style.display = 'none';
-                document.getElementById('main-content').style.display = 'none';
-            }
-        }
-
-        // Initialize the application
-        document.addEventListener('DOMContentLoaded', function() {
-            debugLog('Application initialized');
-            
-            // Check if user is already signed in
-            updateUIForUser();
-            
-            // Add song button event
-            document.getElementById('add-song-btn').addEventListener('click', addSong);
-            
-            // Quick add button event
-            document.getElementById('quick-add-btn').addEventListener('click', quickAdd);
-            
-            // Add to discover button event
-            document.getElementById('add-to-discover-btn').addEventListener('click', addSongToDiscover);
-            
-            // Allow pressing Enter in the URL field to add a song
-            document.getElementById('youtube-url').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    addSong();
-                }
-            });
-            
-            // Authentication events
-            document.getElementById('send-code-btn').addEventListener('click', sendVerificationCode);
-            document.getElementById('verify-btn').addEventListener('click', verifyCode);
-            document.getElementById('resend-code-btn').addEventListener('click', resendVerificationCode);
-            document.getElementById('close-modal-btn').addEventListener('click', closeVerificationModal);
-            document.getElementById('logout-btn').addEventListener('click', logout);
-            
-            // Allow pressing Enter in verification input
-            document.getElementById('verification-input').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    verifyCode();
-                }
-            });
-            
-            // Allow pressing Enter in email input
-            document.getElementById('email-input').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    sendVerificationCode();
-                }
-            });
-            
-            debugLog('All event listeners attached');
-        });
-    </script>
+// ----------------------------
+// Mantén tus funciones de playlists, discover songs, YouTube player, etc. intactas aquí
+// ----------------------------
+</script>
 </body>
 </html>
+
