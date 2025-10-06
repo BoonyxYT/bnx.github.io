@@ -19,125 +19,6 @@
             display: none;
         }
     </style>
-</head>
-<body class="bg-gradient-to-br from-blue-900 to-indigo-800 text-white min-h-screen pb-12">
-    <header class="bg-black/70 py-6 text-center mb-8 shadow-lg">
-        <div class="container mx-auto px-5">
-            <h1 class="text-4xl font-bold mb-3 text-cyan-300">
-                <i class="fas fa-music mr-2"></i> Music Manager
-            </h1>
-            <p class="text-xl opacity-90">Create and manage your YouTube playlists easily</p>
-        </div>
-    </header>
-
-    <div class="container mx-auto px-5">
-        <!-- User Info Section -->
-        <div id="user-info" class="flex justify-between items-center mb-5 p-4 bg-white/10 rounded-xl">
-            <div class="flex items-center gap-2.5">
-                <span id="user-email"></span>
-                <span id="admin-badge" class="hidden bg-orange-500 text-white px-2.5 py-1.5 rounded-full text-xs font-bold">
-                    ADMIN
-                </span>
-            </div>
-            <button id="logout-btn" 
-                    class="bg-red-500 text-white border-0 px-3 py-2 rounded cursor-pointer transition-colors hover:bg-red-600">
-                Logout
-            </button>
-        </div>
-
-        <!-- Main Content -->
-        <div id="main-content">
-            <div class="flex flex-col lg:flex-row gap-8">
-                <section class="flex-1 min-w-[350px] bg-white/10 rounded-xl p-6 shadow-lg">
-                    <h2 class="text-2xl font-bold mb-5 text-cyan-300 pb-2.5 border-b border-white/20">Add New Song</h2>
-                    <div class="mb-5">
-                        <label for="youtube-url" class="block mb-2 font-medium">
-                            <i class="fab fa-youtube mr-2"></i> YouTube URL:
-                        </label>
-                        <input type="text" id="youtube-url" placeholder="Paste YouTube URL here..." 
-                               class="w-full px-4 py-3.5 rounded-lg bg-white/90 border-0 text-base">
-                    </div>
-                    <div class="mb-5">
-                        <label for="song-title" class="block mb-2 font-medium">
-                            <i class="fas fa-heading mr-2"></i> Song Title (optional):
-                        </label>
-                        <input type="text" id="song-title" placeholder="Enter a custom title..." 
-                               class="w-full px-4 py-3.5 rounded-lg bg-white/90 border-0 text-base">
-                    </div>
-                    <div class="mb-5">
-                        <label for="playlist-name" class="block mb-2 font-medium">
-                            <i class="fas fa-list mr-2"></i> Add to Playlist:
-                        </label>
-                        <input type="text" id="playlist-name" placeholder="Enter playlist name..." 
-                               class="w-full px-4 py-3.5 rounded-lg bg-white/90 border-0 text-base">
-                    </div>
-                    <button id="add-song-btn" 
-                            class="w-full inline-block bg-green-500 text-white px-6 py-3.5 rounded-lg cursor-pointer text-base font-medium text-center transition-all hover:bg-green-600 hover:-translate-y-1 hover:shadow-lg">
-                        <i class="fas fa-plus-circle mr-2"></i> Add to Playlist
-                    </button>
-                    
-                    <div class="quick-add-section bg-white/5 rounded-lg p-5 mt-5">
-                        <h3 class="text-lg font-semibold mb-4">Quick Add to Existing Playlist</h3>
-                        <div class="playlist-selector flex gap-2.5 mb-4 items-center">
-                            <select id="existing-playlists" 
-                                    class="flex-1 px-4 py-3 rounded-lg bg-white/90 border-0">
-                                <option value="">Select a playlist...</option>
-                            </select>
-                            <button id="quick-add-btn" 
-                                    class="bg-green-500 text-white px-4 py-3 rounded-lg cursor-pointer transition-colors hover:bg-green-600">
-                                <i class="fas fa-plus mr-1"></i> Add
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="player-section mt-8 bg-white/10 rounded-xl p-5 shadow-lg">
-                        <h3 class="text-2xl font-bold mb-5 text-cyan-300 pb-2.5 border-b border-white/20">
-                            <i class="fas fa-play-circle mr-2"></i> Player
-                        </h3>
-                        <div id="player-container">
-                            <div class="player-placeholder text-center p-10 bg-black/30 rounded-lg">
-                                <i class="fas fa-play-circle text-5xl mb-4 opacity-50"></i>
-                                <p>Select a song to play it here</p>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-                
-                <section class="flex-2 min-w-[350px]">
-                    <h2 class="text-2xl font-bold mb-5 text-cyan-300 pb-2.5 border-b border-white/20">My Playlists</h2>
-                    <div id="playlists-container">
-                        <!-- Playlists will be generated here dynamically -->
-                    </div>
-                </section>
-            </div>
-
-            <!-- Discover Section -->
-            <section class="discover-section bg-white/10 rounded-xl p-6 mt-8 shadow-lg">
-                <h2 class="text-2xl font-bold mb-5 text-cyan-300 pb-2.5 border-b border-white/20">
-                    <i class="fas fa-compass mr-2"></i> Discover
-                </h2>
-                
-                <!-- Admin Controls (only visible to admin) -->
-                <div id="admin-controls" class="admin-controls bg-orange-500/20 rounded-lg p-5 mb-5 hidden">
-                    <h3 class="text-lg font-semibold mb-4 text-orange-400">Admin Controls</h3>
-                    <div class="admin-form flex gap-2.5 flex-wrap">
-                        <input type="text" id="discover-youtube-url" placeholder="YouTube URL for Discover section" 
-                               class="flex-1 min-w-[200px] px-4 py-3 rounded-lg bg-white/90 border-0">
-                        <input type="text" id="discover-song-title" placeholder="Song title" 
-                               class="flex-1 min-w-[200px] px-4 py-3 rounded-lg bg-white/90 border-0">
-                        <button id="add-to-discover-btn" 
-                                class="bg-orange-500 text-white px-4 py-3 rounded-lg cursor-pointer transition-colors hover:bg-orange-600">
-                            <i class="fas fa-plus mr-1"></i> Add to Discover
-                        </button>
-                    </div>
-                </div>
-                
-                <div id="discover-songs-container" class="discover-songs grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                    <!-- Discover songs will be generated here dynamically -->
-                </div>
-            </section>
-        </div>
-    </div>
 
     <script>
         // Sample data for testing the application
@@ -650,5 +531,128 @@
             debugLog('All event listeners attached');
         });
     </script>
+    
+</head>
+<body class="bg-gradient-to-br from-blue-900 to-indigo-800 text-white min-h-screen pb-12">
+    <header class="bg-black/70 py-6 text-center mb-8 shadow-lg">
+        <div class="container mx-auto px-5">
+            <h1 class="text-4xl font-bold mb-3 text-cyan-300">
+                <i class="fas fa-music mr-2"></i> Music Manager
+            </h1>
+            <p class="text-xl opacity-90">Create and manage your YouTube playlists easily</p>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-5">
+        <!-- User Info Section -->
+        <div id="user-info" class="flex justify-between items-center mb-5 p-4 bg-white/10 rounded-xl">
+            <div class="flex items-center gap-2.5">
+                <span id="user-email"></span>
+                <span id="admin-badge" class="hidden bg-orange-500 text-white px-2.5 py-1.5 rounded-full text-xs font-bold">
+                    ADMIN
+                </span>
+            </div>
+            <button id="logout-btn" 
+                    class="bg-red-500 text-white border-0 px-3 py-2 rounded cursor-pointer transition-colors hover:bg-red-600">
+                Logout
+            </button>
+        </div>
+
+        <!-- Main Content -->
+        <div id="main-content">
+            <div class="flex flex-col lg:flex-row gap-8">
+                <section class="flex-1 min-w-[350px] bg-white/10 rounded-xl p-6 shadow-lg">
+                    <h2 class="text-2xl font-bold mb-5 text-cyan-300 pb-2.5 border-b border-white/20">Add New Song</h2>
+                    <div class="mb-5">
+                        <label for="youtube-url" class="block mb-2 font-medium">
+                            <i class="fab fa-youtube mr-2"></i> YouTube URL:
+                        </label>
+                        <input type="text" id="youtube-url" placeholder="Paste YouTube URL here..." 
+                               class="w-full px-4 py-3.5 rounded-lg bg-white/90 border-0 text-base">
+                    </div>
+                    <div class="mb-5">
+                        <label for="song-title" class="block mb-2 font-medium">
+                            <i class="fas fa-heading mr-2"></i> Song Title (optional):
+                        </label>
+                        <input type="text" id="song-title" placeholder="Enter a custom title..." 
+                               class="w-full px-4 py-3.5 rounded-lg bg-white/90 border-0 text-base">
+                    </div>
+                    <div class="mb-5">
+                        <label for="playlist-name" class="block mb-2 font-medium">
+                            <i class="fas fa-list mr-2"></i> Add to Playlist:
+                        </label>
+                        <input type="text" id="playlist-name" placeholder="Enter playlist name..." 
+                               class="w-full px-4 py-3.5 rounded-lg bg-white/90 border-0 text-base">
+                    </div>
+                    <button id="add-song-btn" 
+                            class="w-full inline-block bg-green-500 text-white px-6 py-3.5 rounded-lg cursor-pointer text-base font-medium text-center transition-all hover:bg-green-600 hover:-translate-y-1 hover:shadow-lg">
+                        <i class="fas fa-plus-circle mr-2"></i> Add to Playlist
+                    </button>
+                    
+                    <div class="quick-add-section bg-white/5 rounded-lg p-5 mt-5">
+                        <h3 class="text-lg font-semibold mb-4">Quick Add to Existing Playlist</h3>
+                        <div class="playlist-selector flex gap-2.5 mb-4 items-center">
+                            <select id="existing-playlists" 
+                                    class="flex-1 px-4 py-3 rounded-lg bg-white/90 border-0">
+                                <option value="">Select a playlist...</option>
+                            </select>
+                            <button id="quick-add-btn" 
+                                    class="bg-green-500 text-white px-4 py-3 rounded-lg cursor-pointer transition-colors hover:bg-green-600">
+                                <i class="fas fa-plus mr-1"></i> Add
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="player-section mt-8 bg-white/10 rounded-xl p-5 shadow-lg">
+                        <h3 class="text-2xl font-bold mb-5 text-cyan-300 pb-2.5 border-b border-white/20">
+                            <i class="fas fa-play-circle mr-2"></i> Player
+                        </h3>
+                        <div id="player-container">
+                            <div class="player-placeholder text-center p-10 bg-black/30 rounded-lg">
+                                <i class="fas fa-play-circle text-5xl mb-4 opacity-50"></i>
+                                <p>Select a song to play it here</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <section class="flex-2 min-w-[350px]">
+                    <h2 class="text-2xl font-bold mb-5 text-cyan-300 pb-2.5 border-b border-white/20">My Playlists</h2>
+                    <div id="playlists-container">
+                        <!-- Playlists will be generated here dynamically -->
+                    </div>
+                </section>
+            </div>
+
+            <!-- Discover Section -->
+            <section class="discover-section bg-white/10 rounded-xl p-6 mt-8 shadow-lg">
+                <h2 class="text-2xl font-bold mb-5 text-cyan-300 pb-2.5 border-b border-white/20">
+                    <i class="fas fa-compass mr-2"></i> Discover
+                </h2>
+                
+                <!-- Admin Controls (only visible to admin) -->
+                <div id="admin-controls" class="admin-controls bg-orange-500/20 rounded-lg p-5 mb-5 hidden">
+                    <h3 class="text-lg font-semibold mb-4 text-orange-400">Admin Controls</h3>
+                    <div class="admin-form flex gap-2.5 flex-wrap">
+                        <input type="text" id="discover-youtube-url" placeholder="YouTube URL for Discover section" 
+                               class="flex-1 min-w-[200px] px-4 py-3 rounded-lg bg-white/90 border-0">
+                        <input type="text" id="discover-song-title" placeholder="Song title" 
+                               class="flex-1 min-w-[200px] px-4 py-3 rounded-lg bg-white/90 border-0">
+                        <button id="add-to-discover-btn" 
+                                class="bg-orange-500 text-white px-4 py-3 rounded-lg cursor-pointer transition-colors hover:bg-orange-600">
+                            <i class="fas fa-plus mr-1"></i> Add to Discover
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="discover-songs-container" class="discover-songs grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    <!-- Discover songs will be generated here dynamically -->
+                </div>
+            </section>
+        </div>
+    </div>
+
+
 </body>
+
 </html>
