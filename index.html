@@ -54,36 +54,25 @@
         .music-player:hover .volume-slider {
             width: 80px;
         }
-        
-        .track-info {
-            font-size: 0.8rem;
-            max-width: 150px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
-    <!-- Background Music - CON TU MÚSICA -->
-    <audio id="background-music" loop>
-        <source src="https://drive.googleapis.com/uc?export=download&id=1Yr6G_rlI9VaCP5NO2M-crcwkrnPh7sBU" type="audio/mpeg">
+    <!-- Background Music -->
+    <audio id="background-music" loop preload="auto">
+        <source src="https://drive.google.com/uc?export=download&id=1Yr6G_rlI9VaCP5NO2M-crcwkrnPh7sBU" type="audio/mpeg">
         Tu navegador no soporta el elemento de audio.
     </audio>
     
     <!-- Music Player Controls -->
     <div class="music-player">
-        <button id="play-pause-btn" class="text-white hover:text-cyan-300 transition-colors">
+        <button id="play-pause-btn" class="text-white hover:text-cyan-300 transition-colors text-lg">
             <i id="play-icon" class="fas fa-play"></i>
             <i id="pause-icon" class="fas fa-pause hidden"></i>
         </button>
         <div class="volume-slider">
             <input id="volume-slider" type="range" min="0" max="100" value="30" class="w-full">
         </div>
-        <div class="track-info text-white text-sm">
-            <div id="music-status">Click play</div>
-            <div id="track-name" class="text-cyan-300">Tu música</div>
-        </div>
+        <span id="music-status" class="text-white text-sm">Click play</span>
     </div>
 
     <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-8 w-full max-w-md shadow-2xl z-10">
@@ -120,22 +109,40 @@
                 audioElement.volume = this.value / 100;
             });
             
-            // Play/pause button
+            // Play/pause button - FIXED VERSION
             document.getElementById('play-pause-btn').addEventListener('click', function() {
+                togglePlayback();
+            });
+            
+            function togglePlayback() {
                 if (isPlaying) {
+                    // Pause audio
                     audioElement.pause();
                     isPlaying = false;
+                    updatePlayButton();
                 } else {
-                    audioElement.play().then(() => {
-                        isPlaying = true;
-                        document.getElementById('track-name').textContent = "Reproduciendo...";
-                    }).catch(error => {
-                        document.getElementById('music-status').textContent = "Click para reproducir";
-                        console.log("Error al reproducir:", error);
-                    });
+                    // Play audio with error handling
+                    const playPromise = audioElement.play();
+                    
+                    if (playPromise !== undefined) {
+                        playPromise.then(() => {
+                            // Audio started successfully
+                            isPlaying = true;
+                            updatePlayButton();
+                            document.getElementById('music-status').textContent = "Playing";
+                        }).catch(error => {
+                            // Autoplay was prevented or there's an error
+                            console.log("Play error:", error);
+                            document.getElementById('music-status').textContent = "Click to play";
+                            
+                            // Show user they need to interact first
+                            if (error.name === 'NotAllowedError') {
+                                document.getElementById('music-status').textContent = "Click button to play";
+                            }
+                        });
+                    }
                 }
-                updatePlayButton();
-            });
+            }
             
             function updatePlayButton() {
                 const playIcon = document.getElementById('play-icon');
@@ -144,23 +151,32 @@
                 if (isPlaying) {
                     playIcon.classList.add('hidden');
                     pauseIcon.classList.remove('hidden');
-                    document.getElementById('music-status').textContent = "Reproduciendo";
                 } else {
                     playIcon.classList.remove('hidden');
                     pauseIcon.classList.add('hidden');
-                    document.getElementById('music-status').textContent = "Pausado";
                 }
             }
             
-            // Audio event listeners
-            audioElement.addEventListener('loadeddata', function() {
-                document.getElementById('track-name').textContent = "Música cargada ✓";
+            // Audio event listeners for better feedback
+            audioElement.addEventListener('canplaythrough', function() {
+                document.getElementById('music-status').textContent = "Ready to play";
+                console.log("Audio loaded and ready");
             });
             
             audioElement.addEventListener('error', function(e) {
-                console.error("Error cargando audio:", e);
-                document.getElementById('track-name').textContent = "Error cargando música";
-                document.getElementById('track-name').classList.add('text-red-400');
+                console.error("Error loading audio:", audioElement.error);
+                document.getElementById('music-status').textContent = "Error loading";
+                document.getElementById('music-status').classList.add('text-red-400');
+                
+                // Try alternative URL format if there's an error
+                if (audioElement.error && audioElement.error.code === 4) {
+                    console.log("Trying alternative URL...");
+                    // You could try a different URL format here if needed
+                }
+            });
+            
+            audioElement.addEventListener('waiting', function() {
+                document.getElementById('music-status').textContent = "Loading...";
             });
             
             // Gradient overlay
@@ -176,22 +192,26 @@
                 gradientOverlay.style.setProperty('--mouse-y', `${y}%`);
             });
             
-            // Start music on user interaction
+            // Start music on user interaction with the main button
             document.getElementById('send-code-btn').addEventListener('click', function() {
-                if (!isPlaying) {
-                    document.getElementById('play-pause-btn').click();
-                }
-                // Simulate sending code
-                document.getElementById('email-status').innerHTML = 
-                    '<p class="text-green-400">¡Código de verificación enviado!</p>';
-            });
-            
-            // Also start music when clicking anywhere on the form
-            document.getElementById('auth-section').addEventListener('click', function() {
+                // First user interaction - try to play music
                 if (!isPlaying) {
                     setTimeout(() => {
-                        document.getElementById('play-pause-btn').click();
-                    }, 1000);
+                        togglePlayback();
+                    }, 500);
+                }
+                
+                // Simulate sending code
+                document.getElementById('email-status').innerHTML = 
+                    '<p class="text-green-400">¡Verification code sent!</p>';
+            });
+            
+            // Also allow starting music by clicking anywhere on the page
+            document.addEventListener('click', function() {
+                // This helps unlock audio context for future plays
+                if (audioElement.paused && !isPlaying) {
+                    // Just prepare the audio context without auto-playing
+                    audioElement.load();
                 }
             });
         });
