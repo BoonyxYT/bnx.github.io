@@ -75,6 +75,60 @@
             text-align: center;
             max-width: 400px;
         }
+        
+        /* Visualizador de barras rítmicas */
+        .visualizer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 150px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 3px;
+            padding: 20px;
+            z-index: 1;
+            pointer-events: none;
+        }
+        
+        .bar {
+            width: 12px;
+            background: linear-gradient(to top, #00f2fe, #4facfe);
+            border-radius: 6px 6px 0 0;
+            transition: height 0.1s ease;
+            box-shadow: 0 0 10px rgba(79, 172, 254, 0.5);
+            min-height: 5px;
+        }
+        
+        /* Barras más pequeñas para móviles */
+        @media (max-width: 768px) {
+            .visualizer {
+                height: 100px;
+                gap: 2px;
+            }
+            .bar {
+                width: 8px;
+            }
+        }
+        
+        /* Efecto de partículas */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .particle {
+            position: absolute;
+            background: rgba(79, 172, 254, 0.6);
+            border-radius: 50%;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
@@ -82,6 +136,12 @@
     <audio id="background-music" loop autoplay>
         <source src="https://cdn.discordapp.com/attachments/1257768559883456532/1424869090153070684/Lofi__Calm_Music_Copyright_Free_-_Your_Little_Wings_by_Tokyo_Music_Walker_-_BreakingCopyright_Royalty_Free_Music.mp3?ex=68e5843f&is=68e432bf&hm=a0833a5ead8eb9d034e05f6ffd1cdbf9cb1b61ddf7e6c5c7e72be11e7b4a4bc9&" type="audio/mpeg">
     </audio>
+    
+    <!-- Visualizador de barras rítmicas -->
+    <div class="visualizer" id="visualizer"></div>
+    
+    <!-- Partículas flotantes -->
+    <div class="particles" id="particles"></div>
     
     <!-- Music Player Controls -->
     <div class="music-player">
@@ -99,9 +159,9 @@
     <div id="autoplay-overlay" class="autoplay-overlay hidden">
         <div class="autoplay-content">
             <h3 class="text-xl font-bold mb-4">🎵 Music Manager</h3>
-            <p class="mb-4">Welcome to one of the best music managers of 2025</p>
+            <p class="mb-4">Click anywhere to start the background music</p>
             <button id="start-music-btn" class="bg-cyan-500 text-white px-6 py-2 rounded-lg hover:bg-cyan-600">
-                Go in
+                Start Music
             </button>
         </div>
     </div>
@@ -127,6 +187,15 @@
     </div>
 
     <script>
+        // Variables globales para el visualizador
+        let audioContext;
+        let analyser;
+        let dataArray;
+        let bufferLength;
+        let bars = [];
+        let animationId;
+        let particles = [];
+
         // Iniciar inmediatamente cuando la página cargue
         window.addEventListener('load', function() {
             const audioElement = document.getElementById('background-music');
@@ -137,16 +206,28 @@
             audioElement.volume = 0.5;
             audioElement.muted = false;
             
+            // Crear barras del visualizador
+            createVisualizerBars();
+            
+            // Crear partículas
+            createParticles();
+            
             // Intentar reproducir inmediatamente
             const playAudio = async () => {
                 try {
                     // Primero cargamos el audio
                     await audioElement.load();
                     
+                    // Configurar el analizador de audio
+                    setupAudioAnalyzer(audioElement);
+                    
                     // Luego intentamos reproducir
                     await audioElement.play();
                     
                     console.log("🎵 Music started successfully!");
+                    
+                    // Iniciar animación del visualizador
+                    startVisualizer();
                     
                     // Actualizar UI para mostrar que está reproduciendo
                     document.getElementById('pause-icon').classList.remove('hidden');
@@ -166,6 +247,8 @@
             // Manejar el botón de iniciar música
             startMusicBtn.addEventListener('click', function() {
                 audioElement.play().then(() => {
+                    setupAudioAnalyzer(audioElement);
+                    startVisualizer();
                     autoplayOverlay.classList.add('hidden');
                     document.getElementById('music-status').textContent = "Playing";
                 }).catch(error => {
@@ -177,12 +260,125 @@
             autoplayOverlay.addEventListener('click', function(e) {
                 if (e.target === autoplayOverlay) {
                     audioElement.play().then(() => {
+                        setupAudioAnalyzer(audioElement);
+                        startVisualizer();
                         autoplayOverlay.classList.add('hidden');
                         document.getElementById('music-status').textContent = "Playing";
                     });
                 }
             });
         });
+
+        function createVisualizerBars() {
+            const visualizer = document.getElementById('visualizer');
+            const barCount = Math.floor(window.innerWidth / 15); // Ajustar según ancho de pantalla
+            
+            for (let i = 0; i < barCount; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'bar';
+                bar.style.height = '5px';
+                visualizer.appendChild(bar);
+                bars.push(bar);
+            }
+        }
+
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            for (let i = 0; i < 20; i++) {
+                createParticle(particlesContainer);
+            }
+        }
+
+        function createParticle(container) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            
+            const size = Math.random() * 4 + 2;
+            particle.style.width = `${size}px`;
+            particle.style.height = `${size}px`;
+            
+            particle.style.left = `${Math.random() * 100}%`;
+            particle.style.top = `${Math.random() * 100}%`;
+            
+            container.appendChild(particle);
+            particles.push({
+                element: particle,
+                x: Math.random() * window.innerWidth,
+                y: Math.random() * window.innerHeight,
+                speedX: (Math.random() - 0.5) * 0.5,
+                speedY: (Math.random() - 0.5) * 0.5,
+                size: size
+            });
+        }
+
+        function setupAudioAnalyzer(audioElement) {
+            // Crear contexto de audio
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            analyser = audioContext.createAnalyser();
+            
+            // Conectar el elemento de audio al analizador
+            const source = audioContext.createMediaElementSource(audioElement);
+            source.connect(analyser);
+            analyser.connect(audioContext.destination);
+            
+            // Configurar el analizador
+            analyser.fftSize = 256;
+            bufferLength = analyser.frequencyBinCount;
+            dataArray = new Uint8Array(bufferLength);
+        }
+
+        function startVisualizer() {
+            function animate() {
+                if (!analyser) return;
+                
+                // Obtener datos de frecuencia
+                analyser.getByteFrequencyData(dataArray);
+                
+                // Actualizar barras
+                for (let i = 0; i < bars.length; i++) {
+                    const barIndex = Math.floor((i / bars.length) * bufferLength);
+                    const value = dataArray[barIndex];
+                    const height = (value / 255) * 100 + 5;
+                    bars[i].style.height = `${height}px`;
+                    
+                    // Cambiar color basado en la intensidad
+                    const intensity = value / 255;
+                    bars[i].style.background = `linear-gradient(to top, 
+                        hsl(${200 + intensity * 60}, 100%, ${50 + intensity * 30}%), 
+                        hsl(${200 + intensity * 40}, 100%, ${60 + intensity * 20}%))`;
+                    
+                    bars[i].style.boxShadow = `0 0 ${5 + intensity * 15}px hsl(${200 + intensity * 60}, 100%, 50%)`;
+                }
+                
+                // Actualizar partículas
+                updateParticles();
+                
+                animationId = requestAnimationFrame(animate);
+            }
+            
+            animate();
+        }
+
+        function updateParticles() {
+            particles.forEach(particle => {
+                particle.x += particle.speedX;
+                particle.y += particle.speedY;
+                
+                // Rebotar en los bordes
+                if (particle.x <= 0 || particle.x >= window.innerWidth) particle.speedX *= -1;
+                if (particle.y <= 0 || particle.y >= window.innerHeight) particle.speedY *= -1;
+                
+                particle.element.style.left = `${particle.x}px`;
+                particle.element.style.top = `${particle.y}px`;
+                
+                // Cambiar opacidad basado en el ritmo (usamos datos de frecuencia)
+                if (dataArray && dataArray.length > 0) {
+                    const avgFrequency = dataArray.slice(0, 10).reduce((a, b) => a + b) / 10;
+                    const opacity = 0.3 + (avgFrequency / 255) * 0.7;
+                    particle.element.style.opacity = opacity;
+                }
+            });
+        }
 
         document.addEventListener('DOMContentLoaded', function() {
             const audioElement = document.getElementById('background-music');
@@ -192,7 +388,7 @@
             const pauseIcon = document.getElementById('pause-icon');
             const musicStatus = document.getElementById('music-status');
             
-            let isPlaying = true; // Asumimos que está reproduciendo al inicio
+            let isPlaying = true;
             
             // Control de volumen
             volumeSlider.addEventListener('input', function() {
@@ -207,31 +403,26 @@
                     musicStatus.textContent = "Paused";
                     playIcon.classList.remove('hidden');
                     pauseIcon.classList.add('hidden');
+                    
+                    // Pausar animación del visualizador
+                    if (animationId) {
+                        cancelAnimationFrame(animationId);
+                    }
                 } else {
                     audioElement.play().then(() => {
                         isPlaying = true;
                         musicStatus.textContent = "Playing";
                         playIcon.classList.add('hidden');
                         pauseIcon.classList.remove('hidden');
+                        
+                        // Reanudar animación del visualizador
+                        if (analyser) {
+                            startVisualizer();
+                        }
                     }).catch(error => {
                         console.log("Play failed:", error);
                     });
                 }
-            });
-            
-            // Actualizar estado basado en eventos del audio
-            audioElement.addEventListener('play', function() {
-                isPlaying = true;
-                musicStatus.textContent = "Playing";
-                playIcon.classList.add('hidden');
-                pauseIcon.classList.remove('hidden');
-            });
-            
-            audioElement.addEventListener('pause', function() {
-                isPlaying = false;
-                musicStatus.textContent = "Paused";
-                playIcon.classList.remove('hidden');
-                pauseIcon.classList.add('hidden');
             });
             
             // Gradient overlay
@@ -256,4 +447,3 @@
     </script>
 </body>
 </html>
-
