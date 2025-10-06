@@ -168,7 +168,7 @@
 <body class="flex items-center justify-center min-h-screen p-4">
     <!-- Background Music -->
     <audio id="background-music" loop>
-        <source src="https://cdn.discordapp.com/attachments/1257768559883456532/1424869090153070684/Lofi__Calm_Music_Copyright_Free_-_Your_Little_Wings_by_Tokyo_Music_Walker_-_BreakingCopyright_Royalty_Free_Music.mp3?ex=68e5843f&is=68e432bf&hm=a0833a5ead8eb9d034e05f6ffd1cdbf9cb1b61ddf7e6c5c7e72be11e7b4a4bc9&" type="audio/mpeg">
+        <source src="https://assets.codepen.io/1468070/Forget-Me-Not_-_Background.mp3" type="audio/mpeg">
     </audio>
     
     <!-- Visualizador de barras rítmicas -->
@@ -193,7 +193,7 @@
     <div id="autoplay-overlay" class="autoplay-overlay hidden">
         <div class="autoplay-content">
             <h3 class="text-xl font-bold mb-4">🎵 Music Manager</h3>
-            <p class="mb-4">Click anywhere to start the background music</p>
+            <p class="mb-4">Click the button below to start the background music</p>
             <button id="start-music-btn" class="bg-cyan-500 text-white px-6 py-2 rounded-lg hover:bg-cyan-600">
                 Start Music
             </button>
@@ -241,7 +241,7 @@
     </div>
 
     <script>
-        // Variables globales para el visualizador
+        // Variables globales
         let audioContext;
         let analyser;
         let dataArray;
@@ -257,13 +257,12 @@
             const audioElement = document.getElementById('background-music');
             const autoplayOverlay = document.getElementById('autoplay-overlay');
             
+            // Configurar volumen
             audioElement.volume = 0.5;
             
-            // Intentar reproducir automáticamente
-            const playPromise = audioElement.play();
-            
-            if (playPromise !== undefined) {
-                playPromise.then(() => {
+            // Intentar reproducir automáticamente después de un breve retraso
+            setTimeout(() => {
+                audioElement.play().then(() => {
                     console.log("🎵 Music started automatically!");
                     isPlaying = true;
                     updateMusicUI();
@@ -275,7 +274,24 @@
                     isPlaying = false;
                     updateMusicUI();
                 });
-            }
+            }, 1000);
+        }
+
+        // Función para redirigir al dashboard
+        function redirectToDashboard() {
+            // Simular redirección al dashboard
+            document.body.innerHTML = `
+                <div class="flex items-center justify-center min-h-screen w-full bg-gradient-to-br from-cyan-500 to-blue-600">
+                    <div class="text-center text-white">
+                        <i class="fas fa-music text-6xl mb-4"></i>
+                        <h1 class="text-4xl font-bold mb-4">Welcome to Dashboard</h1>
+                        <p class="text-xl">Music Manager Dashboard</p>
+                        <button onclick="location.reload()" class="mt-6 bg-white text-cyan-600 px-6 py-2 rounded-lg font-medium">
+                            Back to Login
+                        </button>
+                    </div>
+                </div>
+            `;
         }
 
         // Configurar eventos cuando el DOM esté listo
@@ -376,11 +392,16 @@
                 const enteredCode = document.getElementById('verification-input').value;
                 
                 if (enteredCode === currentVerificationCode) {
-                    alert('✅ Verification successful! Redirecting to dashboard...');
+                    // Verificación exitosa - redirigir al dashboard
                     verificationModal.classList.add('hidden');
                     document.getElementById('verification-input').value = '';
-                    // Aquí redirigirías al dashboard en una app real
-                    // window.location.href = 'dashboard.html';
+                    
+                    // Mostrar mensaje de éxito
+                    document.getElementById('email-status').innerHTML = 
+                        '<p class="text-green-400">✅ Verification successful! Redirecting...</p>';
+                    
+                    // Redirigir después de un breve retraso
+                    setTimeout(redirectToDashboard, 1500);
                 } else {
                     alert('❌ Invalid verification code. Please try again.');
                 }
