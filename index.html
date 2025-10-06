@@ -6,6 +6,8 @@
     <title>Music Manager - Login</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- EMAILJS INTEGRATION -->
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
         body {
             background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
@@ -113,6 +115,7 @@
             <p class="text-white/70 mt-2">Sign in to manage your YouTube playlists</p>
         </div>
 
+        <!-- Authentication Section -->
         <div id="auth-section">
             <div class="flex flex-col gap-4">
                 <input type="email" id="email-input" placeholder="Enter your email" 
@@ -124,9 +127,42 @@
             </div>
             <div id="email-status" class="mt-4"></div>
         </div>
+
+        <!-- Verification Modal -->
+        <div id="verification-modal" class="hidden fixed top-0 left-0 w-full h-full bg-black/70 z-50 justify-center items-center p-4">
+            <div class="bg-white/95 text-gray-800 p-8 rounded-xl max-w-lg w-full text-center">
+                <h2 class="text-2xl font-bold mb-5 text-cyan-400">Email Verification</h2>
+                <div class="verification-instructions my-4 text-sm text-gray-600">
+                    <p>We've sent a verification code to your email address.</p>
+                    <p>Please check your inbox and enter the code below:</p>
+                </div>
+                <div class="mb-5">
+                    <input type="text" id="verification-input" placeholder="Enter verification code" 
+                           class="w-full px-4 py-3.5 rounded-lg bg-white/90 border-0 text-base focus:ring-2 focus:ring-cyan-400 focus:outline-none">
+                </div>
+                <button id="verify-btn" 
+                        class="w-full inline-block bg-cyan-400 text-white px-6 py-3.5 rounded-lg cursor-pointer text-base font-medium text-center transition-all hover:bg-cyan-500 mb-2">
+                    Verify
+                </button>
+                <button id="resend-code-btn" 
+                        class="w-full inline-block bg-orange-500 text-white px-6 py-3.5 rounded-lg cursor-pointer text-base font-medium text-center transition-all hover:bg-orange-600 mb-2">
+                    Resend Code
+                </button>
+                <button id="close-modal-btn" 
+                        class="w-full inline-block bg-red-500 text-white px-6 py-3.5 rounded-lg cursor-pointer text-base font-medium text-center transition-all hover:bg-red-600">
+                    Cancel
+                </button>
+            </div>
+        </div>
     </div>
 
     <script>
+        // Inicializar EmailJS con tu public key
+        // (Reemplaza 'your_public_key' con tu clave real)
+        (function() {
+            emailjs.init("your_public_key");
+        })();
+
         // Iniciar inmediatamente cuando la página cargue
         window.addEventListener('load', function() {
             const audioElement = document.getElementById('background-music');
@@ -185,6 +221,14 @@
         });
 
         document.addEventListener('DOMContentLoaded', function() {
+            // Check if user is already logged in
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            if (currentUser) {
+                // Redirect to dashboard if already logged in
+                window.location.href = 'dashboard.html';
+                return;
+            }
+
             const audioElement = document.getElementById('background-music');
             const playPauseBtn = document.getElementById('play-pause-btn');
             const volumeSlider = document.getElementById('volume-slider');
@@ -247,12 +291,140 @@
                 gradientOverlay.style.setProperty('--mouse-y', `${y}%`);
             });
             
-            // Para el botón de enviar código
-            document.getElementById('send-code-btn').addEventListener('click', function() {
-                document.getElementById('email-status').innerHTML = 
-                    '<p class="text-green-400">Verification code sent!</p>';
+            // Authentication events
+            document.getElementById('send-code-btn').addEventListener('click', sendVerificationCode);
+            document.getElementById('verify-btn').addEventListener('click', verifyCode);
+            document.getElementById('resend-code-btn').addEventListener('click', resendVerificationCode);
+            document.getElementById('close-modal-btn').addEventListener('click', closeVerificationModal);
+
+            // Allow pressing Enter in email input
+            document.getElementById('email-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendVerificationCode();
+                }
+            });
+
+            // Allow pressing Enter in verification input
+            document.getElementById('verification-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    verifyCode();
+                }
             });
         });
+
+        // Authentication Functions
+        function sendVerificationCode() {
+            const email = document.getElementById('email-input').value;
+            const emailStatus = document.getElementById('email-status');
+            
+            if (!email || !validateEmail(email)) {
+                emailStatus.innerHTML = '<p class="text-red-400">Please enter a valid email address</p>';
+                return;
+            }
+            
+            // Generate a random 6-digit code
+            const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+            
+            // Store the code and email in localStorage for verification
+            localStorage.setItem('verificationCode', verificationCode);
+            localStorage.setItem('pendingEmail', email);
+            
+            // Send email using EmailJS
+            const templateParams = {
+                to_email: email,
+                verification_code: verificationCode
+            };
+            
+            emailjs.send('your_service_id', 'your_template_id', templateParams)
+                .then(function(response) {
+                    console.log('Email sent successfully:', response);
+                    
+                    // Show verification modal
+                    document.getElementById('verification-modal').classList.remove('hidden');
+                    
+                    // Update email status
+                    document.getElementById('email-status').innerHTML = 
+                        '<p class="text-green-400">Verification code sent! Check your email.</p>';
+                })
+                .catch(function(error) {
+                    console.error('Email sending failed:', error);
+                    emailStatus.innerHTML = '<p class="text-red-400">Failed to send verification code. Please try again.</p>';
+                });
+        }
+
+        function verifyCode() {
+            const enteredCode = document.getElementById('verification-input').value;
+            const storedCode = localStorage.getItem('verificationCode');
+            const email = localStorage.getItem('pendingEmail');
+            
+            if (!enteredCode) {
+                alert('Please enter the verification code');
+                return;
+            }
+            
+            if (enteredCode === storedCode) {
+                // Code is correct - create user session
+                const user = {
+                    email: email,
+                    loginTime: new Date().toISOString()
+                };
+                
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                
+                // Clear temporary verification data
+                localStorage.removeItem('verificationCode');
+                localStorage.removeItem('pendingEmail');
+                
+                // Redirect to dashboard
+                window.location.href = 'dashboard.html';
+            } else {
+                alert('Invalid verification code. Please try again.');
+            }
+        }
+
+        function resendVerificationCode() {
+            const email = localStorage.getItem('pendingEmail');
+            
+            if (!email) {
+                alert('No pending verification found. Please enter your email again.');
+                return;
+            }
+            
+            // Generate a new code
+            const newCode = Math.floor(100000 + Math.random() * 900000).toString();
+            localStorage.setItem('verificationCode', newCode);
+            
+            // Send new code via EmailJS
+            const templateParams = {
+                to_email: email,
+                verification_code: newCode
+            };
+            
+            emailjs.send('your_service_id', 'your_template_id', templateParams)
+                .then(function(response) {
+                    console.log('New code sent successfully:', response);
+                    alert('A new verification code has been sent to your email.');
+                })
+                .catch(function(error) {
+                    console.error('Failed to resend code:', error);
+                    alert('Failed to resend verification code. Please try again.');
+                });
+        }
+
+        function closeVerificationModal() {
+            document.getElementById('verification-modal').classList.add('hidden');
+        }
+
+        function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+
+        // Function to handle successful login
+        function handleSuccessfulLogin() {
+            // Redirect to dashboard after successful login
+            window.location.href = 'dashboard.html';
+        }
     </script>
 </body>
 </html>
