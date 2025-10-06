@@ -1,0 +1,127 @@
+<!--
+Archivo: index.html
+Descripción: Ejemplo completo (single-file) para publicar en GitHub Pages y permitir "Iniciar sesión con Google" usando Google Identity Services (ID token / OpenID Connect).
+Pasos rápidos:
+ 1) Crea un repositorio en GitHub (por ejemplo: `mi-usuario/mi-web`).
+ 2) Habilita GitHub Pages en Settings -> Pages -> Branch: `main` (o `gh-pages`) y confirma la URL (p. ej. https://mi-usuario.github.io/mi-web/).
+ 3) En Google Cloud Console -> APIs & Services -> Credentials -> Create Credentials -> OAuth client ID -> Web application.
+    - Añade ORIGIN autorizado: https://MI-USUARIO.github.io  (y también https://MI-USUARIO.github.io/MI-REPO si usas pages con ruta)
+    - Nota: No metas client secret en el frontend. Copia el CLIENT_ID aquí abajo.
+ 4) Reemplaza "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com" en la variable CLIENT_ID más abajo.
+ 5) Sube este index.html al repo raíz (o carpeta `docs/`) y publica con GitHub Pages.
+
+Seguridad:
+ - Este ejemplo obtiene un ID token (JWT). En producción debes verificar el ID token en tu servidor (comprobar firma y `aud`, `iss`, `exp`) usando las claves públicas de Google.
+ - No uses client secret en la web estática.
+ - Si necesitas scopes adicionales (acceso a APIs de Google) considera implementar un backend seguro y usar el flujo OAuth2 en servidor.
+-->
+
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Iniciar sesión con Google - GitHub Pages</title>
+  <style>
+    body{font-family: system-ui,Segoe UI,Roboto,'Helvetica Neue',Arial;max-width:780px;margin:40px auto;padding:0 16px}
+    header{display:flex;gap:12px;align-items:center}
+    img.avatar{width:72px;height:72px;border-radius:50%}
+    .card{border:1px solid #eee;padding:16px;border-radius:8px;margin-top:20px}
+    button{padding:8px 12px;border-radius:6px;border:1px solid #ccc;background:#fafafa;cursor:pointer}
+    #g_id_onload{display:none}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Demo: Iniciar sesión con Google (GitHub Pages)</h1>
+  </header>
+
+  <p>Este sitio estático usa <strong>Google Identity Services</strong> para obtener un <em>ID token</em> (credencial OpenID Connect). Reemplaza el <code>CLIENT_ID</code> en el código.</p>
+
+  <!-- Contenedor donde Google dibuja el botón -->
+  <div id="buttonDiv"></div>
+
+  <div class="card" id="profile" style="display:none">
+    <h3>Usuario</h3>
+    <img id="pic" class="avatar" src="" alt="Foto" />
+    <p><strong id="name"></strong></p>
+    <p id="email"></p>
+    <p>ID token (parcial): <code id="tokenPreview"></code></p>
+    <div style="margin-top:8px">
+      <button id="signOutBtn">Cerrar sesión</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Notas</h3>
+    <ul>
+      <li>Si quieres verificar el ID token en el servidor, envía el token a tu backend y valida la firma y claims contra las claves públicas de Google.</li>
+      <li>Este ejemplo <em>decodifica</em> el token en el cliente sólo para mostrar datos; eso <strong>no</strong> reemplaza la verificación en el servidor.</li>
+    </ul>
+  </div>
+
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script>
+    // REEMPLAZA este CLIENT_ID por el tuyo (obtenido en Google Cloud Console)
+    const CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
+
+    // Callback que Google llama con la credencial (ID token)
+    function handleCredentialResponse(response) {
+      // response.credential es el ID token (JWT)
+      const id_token = response.credential;
+
+      // Decodificar el JWT (payload) de forma rápida en el cliente para obtener nombre/email.
+      // Nota: esto NO verifica la firma. Para seguridad, verifica en el servidor.
+      const payload = JSON.parse(atob(id_token.split('.')[1]));
+
+      // Mostrar en UI
+      document.getElementById('profile').style.display = 'block';
+      document.getElementById('pic').src = payload.picture || '';
+      document.getElementById('name').textContent = payload.name || payload.email || 'Usuario';
+      document.getElementById('email').textContent = payload.email || '';
+      document.getElementById('tokenPreview').textContent = id_token.slice(0, 60) + '...';
+
+      // Guardar id_token si quieres enviar al servidor
+      window._currentIdToken = id_token;
+
+      // Opcional: desactivar botón de auto select para que no vuelva a iniciar sesión automáticamente
+      // google.accounts.id.disableAutoSelect();
+    }
+
+    // Inicializar el client de Google Identity Services para botones de Sign in with Google
+    window.onload = () => {
+      if (CLIENT_ID.includes('YOUR_GOOGLE_CLIENT_ID')) {
+        console.warn('Recuerda reemplazar CLIENT_ID en el archivo con tu propio client ID.');
+      }
+
+      google.accounts.id.initialize({
+        client_id: CLIENT_ID,
+        callback: handleCredentialResponse,
+        // auto_select: false, // si quieres que Google intente auto-seleccionar
+      });
+
+      // Renderizar el botón estándar
+      google.accounts.id.renderButton(
+        document.getElementById('buttonDiv'),
+        { theme: 'outline', size: 'large' } // customization
+      );
+
+      // (Opcional) Mostrar One-tap prompt
+      // google.accounts.id.prompt();
+
+      document.getElementById('signOutBtn').addEventListener('click', () => {
+        // Cerrar sesión (cliente): limpiar UI y pedir a Google que deje de auto-seleccionar
+        window._currentIdToken = null;
+        document.getElementById('profile').style.display = 'none';
+        google.accounts.id.disableAutoSelect();
+
+        // Si quieres revocar el token en la cuenta Google (p. ej. cuando obtuviste access_token),
+        // tendrías que llamar al endpoint de revocación pasando el token: 
+        // fetch('https://oauth2.googleapis.com/revoke?token=' + token, {method: 'POST'})
+        //   .then(...)
+      });
+    };
+  </script>
+</body>
+</html>
