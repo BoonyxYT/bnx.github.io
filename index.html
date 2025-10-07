@@ -142,7 +142,7 @@
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
     <!-- Background Music -->
-    <audio id="background-music" loop>
+    <audio id="background-music" preload="auto">
         <source src="https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3" type="audio/mpeg">
         Tu navegador no soporta el elemento de audio.
     </audio>
@@ -215,9 +215,6 @@
             </div>
             <div id="email-status" class="email-status"></div>
         </div>
-
-        <!-- Debug info (opcional) -->
-        <div id="debug-info" class="mt-4 p-4 bg-black/50 text-white text-xs rounded-lg hidden"></div>
     </div>
 
     <script>
@@ -226,6 +223,7 @@
         let particles = [];
         let particleAnimationId;
         let audioElement;
+        let audioInitialized = false;
 
         // Función para manejar login exitoso
         function handleSuccessfulLogin() {
@@ -241,62 +239,84 @@
             window.location.href = 'dashboard.html';
         }
 
-        // Función para iniciar la música
-        function startMusic() {
-            console.log("Intentando iniciar música...");
+        // Función para inicializar el audio
+        function initializeAudio() {
+            if (audioInitialized) return;
             
-            // Asegurarse de que el audio esté cargado
-            audioElement.load();
-            
-            // Intentar reproducir
-            const playPromise = audioElement.play();
-            
-            if (playPromise !== undefined) {
-                playPromise.then(() => {
-                    console.log("Música iniciada correctamente");
-                    isPlaying = true;
-                    updateMusicUI();
-                    document.getElementById('autoplay-overlay').classList.add('hidden');
-                }).catch(error => {
-                    console.error("Error al reproducir música:", error);
-                    document.getElementById('autoplay-overlay').classList.remove('hidden');
-                });
-            }
-        }
-
-        // Configurar eventos cuando el DOM esté listo
-        document.addEventListener('DOMContentLoaded', function() {
             audioElement = document.getElementById('background-music');
-            const playPauseBtn = document.getElementById('play-pause-btn');
             const volumeSlider = document.getElementById('volume-slider');
-            const startMusicBtn = document.getElementById('start-music-btn');
-            const autoplayOverlay = document.getElementById('autoplay-overlay');
-            const sendCodeBtn = document.getElementById('send-code-btn');
-            const verifyBtn = document.getElementById('verify-btn');
-            const cancelVerifyBtn = document.getElementById('cancel-verify-btn');
-            const resendCodeBtn = document.getElementById('resend-code-btn');
-            const verificationModal = document.getElementById('verification-modal');
-
-            // Inicializar componentes
-            createParticles();
-            startParticleAnimation();
             
             // Configurar el volumen inicial
             audioElement.volume = volumeSlider.value / 100;
             
             // Configurar eventos de audio
+            audioElement.addEventListener('loadeddata', function() {
+                console.log("Audio cargado correctamente");
+            });
+            
             audioElement.addEventListener('canplaythrough', function() {
-                console.log("Audio listo para reproducirse");
+                console.log("Audio listo para reproducirse completamente");
             });
             
             audioElement.addEventListener('error', function(e) {
                 console.error("Error en el audio:", e);
                 console.error("Código de error:", audioElement.error);
+                document.getElementById('autoplay-overlay').classList.remove('hidden');
             });
+            
+            audioInitialized = true;
+        }
 
+        // Función para iniciar la música
+        function startMusic() {
+            if (!audioInitialized) {
+                initializeAudio();
+            }
+            
+            console.log("Intentando iniciar música...");
+            
+            // Detener cualquier reproducción anterior
+            audioElement.pause();
+            audioElement.currentTime = 0;
+            
+            // Intentar reproducir después de un breve retraso
+            setTimeout(() => {
+                const playPromise = audioElement.play();
+                
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        console.log("Música iniciada correctamente");
+                        isPlaying = true;
+                        updateMusicUI();
+                        document.getElementById('autoplay-overlay').classList.add('hidden');
+                    }).catch(error => {
+                        console.error("Error al reproducir música:", error);
+                        document.getElementById('autoplay-overlay').classList.remove('hidden');
+                    });
+                }
+            }, 100);
+        }
+
+        // Configurar eventos cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', function() {
+            const playPauseBtn = document.getElementById('play-pause-btn');
+            const volumeSlider = document.getElementById('volume-slider');
+            const startMusicBtn = document.getElementById('start-music-btn');
+            const sendCodeBtn = document.getElementById('send-code-btn');
+            const verifyBtn = document.getElementById('verify-btn');
+            const cancelVerifyBtn = document.getElementById('cancel-verify-btn');
+            const resendCodeBtn = document.getElementById('resend-code-btn');
+
+            // Inicializar componentes
+            createParticles();
+            startParticleAnimation();
+            initializeAudio();
+            
             // Control de volumen
             volumeSlider.addEventListener('input', function() {
-                audioElement.volume = this.value / 100;
+                if (audioElement) {
+                    audioElement.volume = this.value / 100;
+                }
             });
 
             // Botón de play/pause
