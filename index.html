@@ -132,8 +132,8 @@
             transition: transform 0.1s linear;
         }
 
-        /* Modal de captcha */
-        .captcha-modal {
+        /* Modal de verificación */
+        .verification-modal {
             position: fixed;
             top: 0;
             left: 0;
@@ -146,7 +146,7 @@
             z-index: 2000;
         }
 
-        .captcha-content {
+        .verification-content {
             background: white;
             padding: 2rem;
             border-radius: 1rem;
@@ -154,22 +154,20 @@
             width: 90%;
         }
         
-        .captcha-display {
+        .verification-code {
             background: #f0f9ff;
             border: 2px dashed #4facfe;
-            padding: 1.5rem;
+            padding: 1rem;
             border-radius: 0.5rem;
             text-align: center;
-            font-size: 2rem;
+            font-size: 1.5rem;
             font-weight: bold;
             color: #1e3a8a;
             margin: 1rem 0;
-            letter-spacing: 5px;
-            font-family: 'Courier New', monospace;
         }
 
-        /* Estilos para el estado del captcha */
-        .captcha-status {
+        /* Estilos para el estado del email */
+        .email-status {
             display: none;
             padding: 1rem;
             border-radius: 0.5rem;
@@ -214,28 +212,27 @@
         </div>
     </div>
 
-    <!-- Modal de captcha -->
-    <div id="captcha-modal" class="captcha-modal hidden">
-        <div class="captcha-content">
+    <!-- Modal de verificación -->
+    <div id="verification-modal" class="verification-modal hidden">
+        <div class="verification-content">
             <h2 class="text-2xl font-bold mb-4 text-cyan-500">Verification Required</h2>
-            <p class="mb-4 text-gray-600">Please enter the numbers you see below:</p>
-            <div class="captcha-display" id="captcha-display"></div>
-            <input type="text" id="captcha-input" placeholder="Enter numbers" 
+            <p class="mb-2 text-gray-600">We've sent a verification code to your email</p>
+            <p class="mb-4 text-gray-600">Enter the verification code below:</p>
+            <input type="text" id="verification-input" placeholder="Enter code" 
                    class="w-full px-4 py-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-400 focus:outline-none">
             <div class="flex gap-2">
-                <button id="verify-captcha-btn" class="flex-1 bg-cyan-500 text-white px-4 py-2 rounded-lg hover:bg-cyan-600 transition-colors">
+                <button id="verify-btn" class="flex-1 bg-cyan-500 text-white px-4 py-2 rounded-lg hover:bg-cyan-600 transition-colors">
                     Verify
                 </button>
-                <button id="cancel-captcha-btn" class="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors">
+                <button id="cancel-verify-btn" class="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors">
                     Cancel
                 </button>
             </div>
             <div class="mt-4 text-center">
-                <button id="refresh-captcha-btn" class="text-cyan-500 hover:text-cyan-600 text-sm underline">
-                    Refresh Numbers
+                <button id="resend-code-btn" class="text-cyan-500 hover:text-cyan-600 text-sm underline">
+                    Resend Verification Code
                 </button>
             </div>
-            <div id="captcha-status" class="captcha-status"></div>
         </div>
     </div>
 
@@ -248,15 +245,21 @@
 
         <div id="auth-section">
             <div class="flex flex-col gap-4">
-                <button id="enter-btn" 
+                <input type="email" id="email-input" placeholder="Enter your email" 
+                       class="px-4 py-3.5 rounded-lg bg-white/90 border-0 text-base text-black focus:ring-2 focus:ring-cyan-400 focus:outline-none">
+                <button id="send-code-btn" 
                         class="px-4 py-3.5 rounded-lg bg-cyan-400 text-white font-medium cursor-pointer transition-all hover:bg-cyan-500 transform hover:-translate-y-0.5">
-                    Entrar
+                    Send Verification Code
                 </button>
             </div>
-            <div id="captcha-status-main" class="captcha-status"></div>
+            <div id="email-status" class="email-status"></div>
         </div>
+
+        <!-- Debug info (opcional) -->
+        <div id="debug-info" class="mt-4 p-4 bg-black/50 text-white text-xs rounded-lg hidden"></div>
     </div>
 
+    <script src="auth.js"></script>
     <script>
         // Variables globales
         let audioContext;
@@ -270,56 +273,12 @@
         let audioElement;
         let audioInitialized = false;
         let particleAnimationId;
-        let captchaCode = '';
-
-        // Función para generar un código de captcha numérico
-        function generateCaptcha() {
-            const length = 6;
-            let code = '';
-            for (let i = 0; i < length; i++) {
-                code += Math.floor(Math.random() * 10); // Solo números del 0 al 9
-            }
-            captchaCode = code;
-            document.getElementById('captcha-display').textContent = code;
-            return code;
-        }
-
-        // Función para mostrar el modal de captcha
-        function showCaptchaModal() {
-            generateCaptcha();
-            document.getElementById('captcha-modal').classList.remove('hidden');
-            document.getElementById('captcha-input').value = '';
-            document.getElementById('captcha-status').style.display = 'none';
-        }
-
-        // Función para ocultar el modal de captcha
-        function hideCaptchaModal() {
-            document.getElementById('captcha-modal').classList.add('hidden');
-        }
-
-        // Función para verificar el captcha
-        function verifyCaptcha() {
-            const userInput = document.getElementById('captcha-input').value;
-            const captchaStatus = document.getElementById('captcha-status');
-            
-            if (userInput === captchaCode) {
-                captchaStatus.innerHTML = '<p class="text-green-500">✅ Verification successful! Redirecting...</p>';
-                captchaStatus.style.display = 'block';
-                
-                setTimeout(redirectToDashboard, 1500);
-            } else {
-                captchaStatus.innerHTML = '<p class="text-red-500">❌ Incorrect numbers. Please try again.</p>';
-                captchaStatus.style.display = 'block';
-                generateCaptcha(); // Generar nuevo captcha
-                document.getElementById('captcha-input').value = '';
-            }
-        }
 
         // Función para manejar login exitoso
         function handleSuccessfulLogin() {
-            document.getElementById('captcha-status-main').innerHTML = 
+            document.getElementById('email-status').innerHTML = 
                 '<p class="text-green-400">✅ Verification successful! Redirecting...</p>';
-            document.getElementById('captcha-status-main').style.display = 'block';
+            document.getElementById('email-status').style.display = 'block';
             
             setTimeout(redirectToDashboard, 1500);
         }
@@ -411,11 +370,11 @@
             const volumeSlider = document.getElementById('volume-slider');
             const startMusicBtn = document.getElementById('start-music-btn');
             const autoplayOverlay = document.getElementById('autoplay-overlay');
-            const enterBtn = document.getElementById('enter-btn');
-            const verifyCaptchaBtn = document.getElementById('verify-captcha-btn');
-            const cancelCaptchaBtn = document.getElementById('cancel-captcha-btn');
-            const refreshCaptchaBtn = document.getElementById('refresh-captcha-btn');
-            const captchaModal = document.getElementById('captcha-modal');
+            const sendCodeBtn = document.getElementById('send-code-btn');
+            const verifyBtn = document.getElementById('verify-btn');
+            const cancelVerifyBtn = document.getElementById('cancel-verify-btn');
+            const resendCodeBtn = document.getElementById('resend-code-btn');
+            const verificationModal = document.getElementById('verification-modal');
 
             // Inicializar componentes
             createVisualizerBars();
@@ -456,32 +415,30 @@
                 }
             });
 
-            // Botón de entrar - muestra el captcha
-            enterBtn.addEventListener('click', function() {
-                showCaptchaModal();
+            // Botón de enviar código de verificación - USA LA FUNCIÓN DE auth.js
+            sendCodeBtn.addEventListener('click', function() {
+                sendVerificationCode();
             });
 
-            // Botón de verificar captcha
-            verifyCaptchaBtn.addEventListener('click', function() {
-                verifyCaptcha();
+            // Botón de verificar código - USA LA FUNCIÓN DE auth.js
+            verifyBtn.addEventListener('click', function() {
+                verifyCode();
             });
 
-            // Botón de cancelar captcha
-            cancelCaptchaBtn.addEventListener('click', function() {
-                hideCaptchaModal();
+            // Botón de cancelar verificación - USA LA FUNCIÓN DE auth.js
+            cancelVerifyBtn.addEventListener('click', function() {
+                closeVerificationModal();
             });
 
-            // Botón de refrescar captcha
-            refreshCaptchaBtn.addEventListener('click', function() {
-                generateCaptcha();
-                document.getElementById('captcha-input').value = '';
-                document.getElementById('captcha-status').style.display = 'none';
+            // Botón de reenviar código - USA LA FUNCIÓN DE auth.js
+            resendCodeBtn.addEventListener('click', function() {
+                resendVerificationCode();
             });
 
-            // Permitir Enter en el campo de captcha
-            document.getElementById('captcha-input').addEventListener('keypress', function(e) {
+            // Permitir Enter en el campo de verificación
+            document.getElementById('verification-input').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
-                    verifyCaptcha();
+                    verifyCode();
                 }
             });
 
