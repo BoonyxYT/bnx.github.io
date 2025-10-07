@@ -178,7 +178,7 @@
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
     <!-- Background Music -->
-    <audio id="background-music" preload="none" loop>
+    <audio id="background-music" preload="auto" loop>
         <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_8e5b8c8d34.mp3?filename=lofi-chill-medium-version-159456.mp3">
         Tu navegador no soporta el elemento de audio.
     </audio>
@@ -308,41 +308,12 @@
             
             audioElement.addEventListener('error', function(e) {
                 console.error("Error en el audio principal:", audioElement.error);
-                useFallbackAudio();
             });
-            
-            // Precargar el audio
-            audioElement.load();
             
             audioInitialized = true;
         }
 
-        // Función para usar audio de respaldo
-        function useFallbackAudio() {
-            console.log("Intentando con fuente de audio alternativa...");
-            const fallbackAudio = new Audio();
-            fallbackAudio.src = "https://cdn.pixabay.com/download/audio/2022/03/15/audio_8e5b8c8d34.mp3?filename=lofi-chill-medium-version-159456.mp3";
-            fallbackAudio.loop = true;
-            fallbackAudio.volume = 0.5;
-            
-            const playPromise = fallbackAudio.play();
-            if (playPromise !== undefined) {
-                playPromise.then(() => {
-                    console.log("Audio alternativo funcionando");
-                    // Reemplazar el audio original con el alternativo
-                    audioElement = fallbackAudio;
-                    isPlaying = true;
-                    updateMusicUI();
-                    document.getElementById('autoplay-overlay').classList.add('hidden');
-                    setupAudioAnalyzer(audioElement);
-                    startVisualizer();
-                }).catch(error => {
-                    console.error("Audio alternativo también falló:", error);
-                });
-            }
-        }
-
-        // Función simplificada para iniciar la música - VERSIÓN CORREGIDA
+        // Función simplificada para iniciar la música
         function startMusic() {
             if (!audioInitialized) {
                 initializeAudio();
@@ -350,30 +321,24 @@
             
             console.log("Intentando iniciar música...");
             
-            // Forzar la carga del audio primero
-            audioElement.load();
+            // Intentar reproducir
+            const playPromise = audioElement.play();
             
-            // Intentar reproducir después de un pequeño delay para permitir la carga
-            setTimeout(() => {
-                const playPromise = audioElement.play();
-                
-                if (playPromise !== undefined) {
-                    playPromise.then(() => {
-                        console.log("Música iniciada correctamente");
-                        isPlaying = true;
-                        updateMusicUI();
-                        document.getElementById('autoplay-overlay').classList.add('hidden');
-                        setupAudioAnalyzer(audioElement);
-                        startVisualizer();
-                    }).catch(error => {
-                        console.error("Error al reproducir música:", error);
-                        // Mostrar overlay si falla
-                        document.getElementById('autoplay-overlay').classList.remove('hidden');
-                        // Intentar con una fuente de audio alternativa si la principal falla
-                        useFallbackAudio();
-                    });
-                }
-            }, 500);
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    console.log("Música iniciada correctamente");
+                    isPlaying = true;
+                    updateMusicUI();
+                    // CORRECCIÓN: Ocultar el overlay cuando la música se inicie correctamente
+                    document.getElementById('autoplay-overlay').classList.add('hidden');
+                    setupAudioAnalyzer(audioElement);
+                    startVisualizer();
+                }).catch(error => {
+                    console.error("Error al reproducir música:", error);
+                    // Mostrar overlay si falla
+                    document.getElementById('autoplay-overlay').classList.remove('hidden');
+                });
+            }
         }
 
         // Configurar eventos cuando el DOM esté listo
@@ -394,8 +359,10 @@
             startParticleAnimation();
             initializeAudio();
             
-            // Mostrar overlay de autoplay inicialmente
-            document.getElementById('autoplay-overlay').classList.remove('hidden');
+            // Intentar reproducir automáticamente al cargar (puede fallar por políticas de autoplay)
+            setTimeout(() => {
+                startMusic();
+            }, 1000);
             
             // Control de volumen
             volumeSlider.addEventListener('input', function() {
@@ -418,16 +385,9 @@
                 updateMusicUI();
             });
 
-            // Botón de iniciar música desde el overlay
+            // Botón de iniciar música desde el overlay - CORRECCIÓN: Usar la función startMusic
             startMusicBtn.addEventListener('click', function() {
                 startMusic();
-            });
-
-            // Clic en cualquier parte del overlay para iniciar música
-            autoplayOverlay.addEventListener('click', function(e) {
-                if (e.target === autoplayOverlay) {
-                    startMusic();
-                }
             });
 
             // Botones de autenticación (funciones placeholder)
@@ -615,3 +575,4 @@
     </script>
 </body>
 </html>
+
