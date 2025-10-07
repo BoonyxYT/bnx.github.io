@@ -142,7 +142,7 @@
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
     <!-- Background Music -->
-    <audio id="background-music" preload="auto">
+    <audio id="background-music">
         <source src="https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3" type="audio/mpeg">
         Tu navegador no soporta el elemento de audio.
     </audio>
@@ -224,6 +224,7 @@
         let particleAnimationId;
         let audioElement;
         let audioInitialized = false;
+        let isAttemptingPlay = false;
 
         // Función para manejar login exitoso
         function handleSuccessfulLogin() {
@@ -262,6 +263,12 @@
                 console.error("Error en el audio:", e);
                 console.error("Código de error:", audioElement.error);
                 document.getElementById('autoplay-overlay').classList.remove('hidden');
+                isAttemptingPlay = false;
+            });
+            
+            audioElement.addEventListener('abort', function(e) {
+                console.log("Reproducción abortada:", e);
+                isAttemptingPlay = false;
             });
             
             audioInitialized = true;
@@ -269,17 +276,23 @@
 
         // Función para iniciar la música
         function startMusic() {
+            if (isAttemptingPlay) {
+                console.log("Ya se está intentando reproducir música");
+                return;
+            }
+            
             if (!audioInitialized) {
                 initializeAudio();
             }
             
             console.log("Intentando iniciar música...");
+            isAttemptingPlay = true;
             
             // Detener cualquier reproducción anterior
             audioElement.pause();
             audioElement.currentTime = 0;
             
-            // Intentar reproducir después de un breve retraso
+            // Esperar un momento para asegurar que el audio esté listo
             setTimeout(() => {
                 const playPromise = audioElement.play();
                 
@@ -287,14 +300,16 @@
                     playPromise.then(() => {
                         console.log("Música iniciada correctamente");
                         isPlaying = true;
+                        isAttemptingPlay = false;
                         updateMusicUI();
                         document.getElementById('autoplay-overlay').classList.add('hidden');
                     }).catch(error => {
                         console.error("Error al reproducir música:", error);
+                        isAttemptingPlay = false;
                         document.getElementById('autoplay-overlay').classList.remove('hidden');
                     });
                 }
-            }, 100);
+            }, 300);
         }
 
         // Configurar eventos cuando el DOM esté listo
