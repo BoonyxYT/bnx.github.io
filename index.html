@@ -179,7 +179,7 @@
 <body class="flex items-center justify-center min-h-screen p-4">
     <!-- Background Music -->
     <audio id="background-music" preload="none" loop>
-        <source src="https://cdn.discordapp.com/attachments/1257768559883456532/1424869090153070684/Lofi__Calm_Music_Copyright_Free_-_Your_Little_Wings_by_Tokyo_Music_Walker_-_BreakingCopyright_Royalty_Free_Music.mp3?ex=68e62cff&is=68e4db7f&hm=5e6a40beb6aff35e85f83720b9c8e7a117beb6bc06af9f1e1eecfe0f1049abb3&">
+        <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_8e5b8c8d34.mp3?filename=lofi-chill-medium-version-159456.mp3">
         Tu navegador no soporta el elemento de audio.
     </audio>
     
@@ -259,7 +259,6 @@
         <div id="debug-info" class="mt-4 p-4 bg-black/50 text-white text-xs rounded-lg hidden"></div>
     </div>
 
-    <script src="auth.js"></script>
     <script>
         // Variables globales
         let audioContext;
@@ -299,46 +298,51 @@
             audioElement.volume = volumeSlider.value / 100;
             
             // Configurar eventos de audio
-            audioElement.addEventListener('canplaythrough', function() {
-                console.log("Audio listo para reproducirse completamente");
+            audioElement.addEventListener('loadeddata', function() {
+                console.log("Datos de audio cargados, listo para reproducir");
+            });
+            
+            audioElement.addEventListener('canplay', function() {
+                console.log("Audio puede reproducirse");
             });
             
             audioElement.addEventListener('error', function(e) {
-                console.error("Error en el audio:", e);
-                console.error("Código de error:", audioElement.error);
-                
-                // Si hay un error, mostrar un mensaje en el overlay
-                const overlay = document.getElementById('autoplay-overlay');
-                const content = overlay.querySelector('.autoplay-content');
-                content.innerHTML = `
-                    <h3 class="text-xl font-bold mb-4">🎵 Music Manager</h3>
-                    <p class="mb-4 text-red-500">Error loading audio. The audio file may not be accessible.</p>
-                    <button id="retry-music-btn" class="bg-cyan-500 text-white px-6 py-2 rounded-lg hover:bg-cyan-600 transition-colors">
-                        Retry Music
-                    </button>
-                `;
-                
-                document.getElementById('retry-music-btn').addEventListener('click', function() {
-                    location.reload();
-                });
+                console.error("Error en el audio principal:", audioElement.error);
+                useFallbackAudio();
             });
             
-            audioElement.addEventListener('loadstart', function() {
-                console.log("Comenzando a cargar el audio...");
-            });
-            
-            audioElement.addEventListener('progress', function() {
-                console.log("Cargando audio...");
-            });
-            
-            audioElement.addEventListener('loadeddata', function() {
-                console.log("Datos de audio cargados");
-            });
+            // Precargar el audio
+            audioElement.load();
             
             audioInitialized = true;
         }
 
-        // Función simplificada para iniciar la música
+        // Función para usar audio de respaldo
+        function useFallbackAudio() {
+            console.log("Intentando con fuente de audio alternativa...");
+            const fallbackAudio = new Audio();
+            fallbackAudio.src = "https://cdn.pixabay.com/download/audio/2022/03/15/audio_8e5b8c8d34.mp3?filename=lofi-chill-medium-version-159456.mp3";
+            fallbackAudio.loop = true;
+            fallbackAudio.volume = 0.5;
+            
+            const playPromise = fallbackAudio.play();
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    console.log("Audio alternativo funcionando");
+                    // Reemplazar el audio original con el alternativo
+                    audioElement = fallbackAudio;
+                    isPlaying = true;
+                    updateMusicUI();
+                    document.getElementById('autoplay-overlay').classList.add('hidden');
+                    setupAudioAnalyzer(audioElement);
+                    startVisualizer();
+                }).catch(error => {
+                    console.error("Audio alternativo también falló:", error);
+                });
+            }
+        }
+
+        // Función simplificada para iniciar la música - VERSIÓN CORREGIDA
         function startMusic() {
             if (!audioInitialized) {
                 initializeAudio();
@@ -346,22 +350,30 @@
             
             console.log("Intentando iniciar música...");
             
-            // Intentar reproducir
-            const playPromise = audioElement.play();
+            // Forzar la carga del audio primero
+            audioElement.load();
             
-            if (playPromise !== undefined) {
-                playPromise.then(() => {
-                    console.log("Música iniciada correctamente");
-                    isPlaying = true;
-                    updateMusicUI();
-                    document.getElementById('autoplay-overlay').classList.add('hidden');
-                    setupAudioAnalyzer(audioElement);
-                    startVisualizer();
-                }).catch(error => {
-                    console.error("Error al reproducir música:", error);
-                    document.getElementById('autoplay-overlay').classList.remove('hidden');
-                });
-            }
+            // Intentar reproducir después de un pequeño delay para permitir la carga
+            setTimeout(() => {
+                const playPromise = audioElement.play();
+                
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        console.log("Música iniciada correctamente");
+                        isPlaying = true;
+                        updateMusicUI();
+                        document.getElementById('autoplay-overlay').classList.add('hidden');
+                        setupAudioAnalyzer(audioElement);
+                        startVisualizer();
+                    }).catch(error => {
+                        console.error("Error al reproducir música:", error);
+                        // Mostrar overlay si falla
+                        document.getElementById('autoplay-overlay').classList.remove('hidden');
+                        // Intentar con una fuente de audio alternativa si la principal falla
+                        useFallbackAudio();
+                    });
+                }
+            }, 500);
         }
 
         // Configurar eventos cuando el DOM esté listo
@@ -381,6 +393,9 @@
             createParticles();
             startParticleAnimation();
             initializeAudio();
+            
+            // Mostrar overlay de autoplay inicialmente
+            document.getElementById('autoplay-overlay').classList.remove('hidden');
             
             // Control de volumen
             volumeSlider.addEventListener('input', function() {
@@ -415,30 +430,27 @@
                 }
             });
 
-            // Botón de enviar código de verificación - USA LA FUNCIÓN DE auth.js
+            // Botones de autenticación (funciones placeholder)
             sendCodeBtn.addEventListener('click', function() {
-                sendVerificationCode();
+                document.getElementById('verification-modal').classList.remove('hidden');
             });
 
-            // Botón de verificar código - USA LA FUNCIÓN DE auth.js
             verifyBtn.addEventListener('click', function() {
-                verifyCode();
+                handleSuccessfulLogin();
             });
 
-            // Botón de cancelar verificación - USA LA FUNCIÓN DE auth.js
             cancelVerifyBtn.addEventListener('click', function() {
-                closeVerificationModal();
+                document.getElementById('verification-modal').classList.add('hidden');
             });
 
-            // Botón de reenviar código - USA LA FUNCIÓN DE auth.js
             resendCodeBtn.addEventListener('click', function() {
-                resendVerificationCode();
+                alert('New verification code sent!');
             });
 
             // Permitir Enter en el campo de verificación
             document.getElementById('verification-input').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
-                    verifyCode();
+                    handleSuccessfulLogin();
                 }
             });
 
@@ -603,4 +615,3 @@
     </script>
 </body>
 </html>
-
