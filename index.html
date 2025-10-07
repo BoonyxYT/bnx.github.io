@@ -174,6 +174,28 @@
             margin: 1rem 0;
             text-align: center;
         }
+        
+        /* Auto-redirect overlay */
+        .auto-redirect-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+        }
+        
+        .auto-redirect-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            text-align: center;
+            max-width: 400px;
+        }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
@@ -209,6 +231,22 @@
             <button id="start-music-btn" class="bg-cyan-500 text-white px-6 py-2 rounded-lg hover:bg-cyan-600 transition-colors">
                 Start Music
             </button>
+        </div>
+    </div>
+
+    <!-- Auto-redirect Overlay -->
+    <div id="auto-redirect-overlay" class="auto-redirect-overlay hidden">
+        <div class="auto-redirect-content">
+            <h3 class="text-xl font-bold mb-4 text-cyan-500">Welcome Back!</h3>
+            <p class="mb-4">You are already logged in. Redirecting to dashboard...</p>
+            <div class="flex justify-center">
+                <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cyan-500"></div>
+            </div>
+            <div class="mt-4">
+                <button id="cancel-redirect-btn" class="text-cyan-500 hover:text-cyan-600 underline">
+                    Cancel and stay here
+                </button>
+            </div>
         </div>
     </div>
 
@@ -259,7 +297,6 @@
         <div id="debug-info" class="mt-4 p-4 bg-black/50 text-white text-xs rounded-lg hidden"></div>
     </div>
 
-    <script src="auth.js"></script>
     <script>
         // Variables globales
         let audioContext;
@@ -273,9 +310,20 @@
         let audioElement;
         let audioInitialized = false;
         let particleAnimationId;
+        
+        // Variables para la persistencia de sesión
+        const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 horas en milisegundos
 
         // Función para manejar login exitoso
         function handleSuccessfulLogin() {
+            // Guardar sesión en localStorage
+            const sessionData = {
+                loggedIn: true,
+                timestamp: new Date().getTime(),
+                email: document.getElementById('email-input').value
+            };
+            localStorage.setItem('musicManagerSession', JSON.stringify(sessionData));
+            
             document.getElementById('email-status').innerHTML = 
                 '<p class="text-green-400">✅ Verification successful! Redirecting...</p>';
             document.getElementById('email-status').style.display = 'block';
@@ -286,6 +334,40 @@
         // Función para redirigir al dashboard
         function redirectToDashboard() {
             window.location.href = 'dashboard.html';
+        }
+
+        // Función para verificar si hay una sesión activa
+        function checkExistingSession() {
+            const sessionData = localStorage.getItem('musicManagerSession');
+            if (!sessionData) return false;
+            
+            try {
+                const session = JSON.parse(sessionData);
+                
+                // Verificar si la sesión ha expirado
+                const currentTime = new Date().getTime();
+                if (currentTime - session.timestamp > SESSION_DURATION) {
+                    // Sesión expirada, eliminar del localStorage
+                    localStorage.removeItem('musicManagerSession');
+                    return false;
+                }
+                
+                return session;
+            } catch (e) {
+                console.error('Error parsing session data:', e);
+                localStorage.removeItem('musicManagerSession');
+                return false;
+            }
+        }
+
+        // Función para mostrar el overlay de redirección automática
+        function showAutoRedirectOverlay() {
+            document.getElementById('auto-redirect-overlay').classList.remove('hidden');
+            
+            // Configurar la redirección automática después de 3 segundos
+            setTimeout(() => {
+                redirectToDashboard();
+            }, 3000);
         }
 
         // Función para inicializar el audio
@@ -375,6 +457,17 @@
             const cancelVerifyBtn = document.getElementById('cancel-verify-btn');
             const resendCodeBtn = document.getElementById('resend-code-btn');
             const verificationModal = document.getElementById('verification-modal');
+            const cancelRedirectBtn = document.getElementById('cancel-redirect-btn');
+            
+            // Verificar si ya hay una sesión activa
+            const existingSession = checkExistingSession();
+            if (existingSession) {
+                // Si hay sesión activa, mostrar el overlay de redirección
+                showAutoRedirectOverlay();
+                
+                // Prellenar el email si está disponible
+                document.getElementById('email-input').value = existingSession.email || '';
+            }
 
             // Inicializar componentes
             createVisualizerBars();
@@ -415,22 +508,27 @@
                 }
             });
 
-            // Botón de enviar código de verificación - USA LA FUNCIÓN DE auth.js
+            // Botón de cancelar redirección automática
+            cancelRedirectBtn.addEventListener('click', function() {
+                document.getElementById('auto-redirect-overlay').classList.add('hidden');
+            });
+
+            // Botón de enviar código de verificación - FUNCIONES SIMULADAS
             sendCodeBtn.addEventListener('click', function() {
                 sendVerificationCode();
             });
 
-            // Botón de verificar código - USA LA FUNCIÓN DE auth.js
+            // Botón de verificar código - FUNCIONES SIMULADAS
             verifyBtn.addEventListener('click', function() {
                 verifyCode();
             });
 
-            // Botón de cancelar verificación - USA LA FUNCIÓN DE auth.js
+            // Botón de cancelar verificación - FUNCIONES SIMULADAS
             cancelVerifyBtn.addEventListener('click', function() {
                 closeVerificationModal();
             });
 
-            // Botón de reenviar código - USA LA FUNCIÓN DE auth.js
+            // Botón de reenviar código - FUNCIONES SIMULADAS
             resendCodeBtn.addEventListener('click', function() {
                 resendVerificationCode();
             });
@@ -455,6 +553,52 @@
                 gradientOverlay.style.setProperty('--mouse-y', `${y}%`);
             });
         });
+
+        // ========== FUNCIONES DE AUTENTICACIÓN SIMULADAS ==========
+        // Estas funciones reemplazan a auth.js para que el ejemplo funcione por sí solo
+        
+        function sendVerificationCode() {
+            const email = document.getElementById('email-input').value;
+            if (!email) {
+                document.getElementById('email-status').innerHTML = 
+                    '<p class="text-red-400">❌ Please enter your email address</p>';
+                document.getElementById('email-status').style.display = 'block';
+                return;
+            }
+            
+            // Simular envío de código
+            document.getElementById('email-status').innerHTML = 
+                '<p class="text-yellow-400">📧 Verification code sent! Check your email.</p>';
+            document.getElementById('email-status').style.display = 'block';
+            
+            // Mostrar modal de verificación después de un breve retraso
+            setTimeout(() => {
+                document.getElementById('verification-modal').classList.remove('hidden');
+            }, 1000);
+        }
+
+        function verifyCode() {
+            const code = document.getElementById('verification-input').value;
+            if (code === "123456") { // Código de prueba
+                handleSuccessfulLogin();
+            } else {
+                document.getElementById('email-status').innerHTML = 
+                    '<p class="text-red-400">❌ Invalid verification code. Try again.</p>';
+                document.getElementById('email-status').style.display = 'block';
+            }
+        }
+
+        function closeVerificationModal() {
+            document.getElementById('verification-modal').classList.add('hidden');
+        }
+
+        function resendVerificationCode() {
+            document.getElementById('email-status').innerHTML = 
+                '<p class="text-yellow-400">📧 New verification code sent!</p>';
+            document.getElementById('email-status').style.display = 'block';
+        }
+        
+        // ========== FIN DE FUNCIONES DE AUTENTICACIÓN SIMULADAS ==========
 
         function updateMusicUI() {
             const playIcon = document.getElementById('play-icon');
