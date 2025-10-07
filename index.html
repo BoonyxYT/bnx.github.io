@@ -77,6 +77,42 @@
             max-width: 400px;
         }
         
+        /* Visualizador de barras rítmicas */
+        .visualizer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 150px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 3px;
+            padding: 20px;
+            z-index: 1;
+            pointer-events: none;
+        }
+        
+        .bar {
+            width: 12px;
+            background: linear-gradient(to top, #00f2fe, #4facfe);
+            border-radius: 6px 6px 0 0;
+            transition: height 0.1s ease;
+            box-shadow: 0 0 10px rgba(79, 172, 254, 0.5);
+            min-height: 5px;
+        }
+        
+        /* Barras más pequeñas para móviles */
+        @media (max-width: 768px) {
+            .visualizer {
+                height: 100px;
+                gap: 2px;
+            }
+            .bar {
+                width: 8px;
+            }
+        }
+        
         /* Efecto de partículas */
         .particles {
             position: fixed;
@@ -147,6 +183,9 @@
         Tu navegador no soporta el elemento de audio.
     </audio>
     
+    <!-- Visualizador de barras rítmicas -->
+    <div class="visualizer" id="visualizer"></div>
+    
     <!-- Partículas flotantes -->
     <div class="particles" id="particles"></div>
     
@@ -215,16 +254,25 @@
             </div>
             <div id="email-status" class="email-status"></div>
         </div>
+
+        <!-- Debug info (opcional) -->
+        <div id="debug-info" class="mt-4 p-4 bg-black/50 text-white text-xs rounded-lg hidden"></div>
     </div>
 
     <script src="auth.js"></script>
     <script>
         // Variables globales
-        let isPlaying = false;
+        let audioContext;
+        let analyser;
+        let dataArray;
+        let bufferLength;
+        let bars = [];
+        let animationId;
         let particles = [];
-        let particleAnimationId;
+        let isPlaying = false;
         let audioElement;
         let audioInitialized = false;
+        let particleAnimationId;
 
         // Función para manejar login exitoso
         function handleSuccessfulLogin() {
@@ -307,6 +355,8 @@
                     isPlaying = true;
                     updateMusicUI();
                     document.getElementById('autoplay-overlay').classList.add('hidden');
+                    setupAudioAnalyzer(audioElement);
+                    startVisualizer();
                 }).catch(error => {
                     console.error("Error al reproducir música:", error);
                     document.getElementById('autoplay-overlay').classList.remove('hidden');
@@ -319,12 +369,15 @@
             const playPauseBtn = document.getElementById('play-pause-btn');
             const volumeSlider = document.getElementById('volume-slider');
             const startMusicBtn = document.getElementById('start-music-btn');
+            const autoplayOverlay = document.getElementById('autoplay-overlay');
             const sendCodeBtn = document.getElementById('send-code-btn');
             const verifyBtn = document.getElementById('verify-btn');
             const cancelVerifyBtn = document.getElementById('cancel-verify-btn');
             const resendCodeBtn = document.getElementById('resend-code-btn');
+            const verificationModal = document.getElementById('verification-modal');
 
             // Inicializar componentes
+            createVisualizerBars();
             createParticles();
             startParticleAnimation();
             initializeAudio();
@@ -341,6 +394,9 @@
                 if (isPlaying) {
                     audioElement.pause();
                     isPlaying = false;
+                    if (animationId) {
+                        cancelAnimationFrame(animationId);
+                    }
                 } else {
                     startMusic();
                 }
@@ -350,6 +406,13 @@
             // Botón de iniciar música desde el overlay
             startMusicBtn.addEventListener('click', function() {
                 startMusic();
+            });
+
+            // Clic en cualquier parte del overlay para iniciar música
+            autoplayOverlay.addEventListener('click', function(e) {
+                if (e.target === autoplayOverlay) {
+                    startMusic();
+                }
             });
 
             // Botón de enviar código de verificación - USA LA FUNCIÓN DE auth.js
@@ -406,6 +469,19 @@
                 playIcon.classList.remove('hidden');
                 pauseIcon.classList.add('hidden');
                 musicStatus.textContent = "Paused";
+            }
+        }
+
+        function createVisualizerBars() {
+            const visualizer = document.getElementById('visualizer');
+            const barCount = Math.floor(window.innerWidth / 15);
+            
+            for (let i = 0; i < barCount; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'bar';
+                bar.style.height = '5px';
+                visualizer.appendChild(bar);
+                bars.push(bar);
             }
         }
 
@@ -476,6 +552,48 @@
             animateParticles();
         }
 
+        function setupAudioAnalyzer(audioElement) {
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                const source = audioContext.createMediaElementSource(audioElement);
+                source.connect(analyser);
+                analyser.connect(audioContext.destination);
+                
+                analyser.fftSize = 256;
+                bufferLength = analyser.frequencyBinCount;
+                dataArray = new Uint8Array(bufferLength);
+            } catch (error) {
+                console.log("Audio analyzer setup failed:", error);
+            }
+        }
+
+        function startVisualizer() {
+            if (!analyser) return;
+            
+            function animate() {
+                analyser.getByteFrequencyData(dataArray);
+                
+                for (let i = 0; i < bars.length; i++) {
+                    const barIndex = Math.floor((i / bars.length) * bufferLength);
+                    const value = dataArray[barIndex];
+                    const height = (value / 255) * 100 + 5;
+                    bars[i].style.height = `${height}px`;
+                    
+                    const intensity = value / 255;
+                    bars[i].style.background = `linear-gradient(to top, 
+                        hsl(${200 + intensity * 60}, 100%, ${50 + intensity * 30}%), 
+                        hsl(${200 + intensity * 40}, 100%, ${60 + intensity * 20}%))`;
+                    
+                    bars[i].style.boxShadow = `0 0 ${5 + intensity * 15}px hsl(${200 + intensity * 60}, 100%, 50%)`;
+                }
+                
+                animationId = requestAnimationFrame(animate);
+            }
+            
+            animate();
+        }
+
         // Función para detener la animación de partículas (si es necesario)
         function stopParticleAnimation() {
             if (particleAnimationId) {
@@ -485,5 +603,3 @@
     </script>
 </body>
 </html>
-
-
