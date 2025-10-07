@@ -217,6 +217,7 @@
         </div>
     </div>
 
+    <script src="auth.js"></script>
     <script>
         // Variables globales
         let isPlaying = false;
@@ -351,47 +352,30 @@
                 startMusic();
             });
 
-            // Botón de enviar código de verificación
+            // Botón de enviar código de verificación - USA LA FUNCIÓN DE auth.js
             sendCodeBtn.addEventListener('click', function() {
-                // Simulación de envío de código
-                document.getElementById('email-status').innerHTML = 
-                    '<p class="text-yellow-400">📧 Verification code sent! Check your email.</p>';
-                document.getElementById('email-status').style.display = 'block';
-                
-                // Mostrar modal de verificación después de un breve retraso
-                setTimeout(() => {
-                    document.getElementById('verification-modal').classList.remove('hidden');
-                }, 1000);
+                sendVerificationCode();
             });
 
-            // Botón de verificar código
+            // Botón de verificar código - USA LA FUNCIÓN DE auth.js
             verifyBtn.addEventListener('click', function() {
-                const code = document.getElementById('verification-input').value;
-                if (code === "123456") { // Código de prueba
-                    handleSuccessfulLogin();
-                } else {
-                    document.getElementById('email-status').innerHTML = 
-                        '<p class="text-red-400">❌ Invalid verification code. Try again.</p>';
-                    document.getElementById('email-status').style.display = 'block';
-                }
+                verifyCode();
             });
 
-            // Botón de cancelar verificación
+            // Botón de cancelar verificación - USA LA FUNCIÓN DE auth.js
             cancelVerifyBtn.addEventListener('click', function() {
-                document.getElementById('verification-modal').classList.add('hidden');
+                closeVerificationModal();
             });
 
-            // Botón de reenviar código
+            // Botón de reenviar código - USA LA FUNCIÓN DE auth.js
             resendCodeBtn.addEventListener('click', function() {
-                document.getElementById('email-status').innerHTML = 
-                    '<p class="text-yellow-400">📧 New verification code sent!</p>';
-                document.getElementById('email-status').style.display = 'block';
+                resendVerificationCode();
             });
 
             // Permitir Enter en el campo de verificación
             document.getElementById('verification-input').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
-                    verifyBtn.click();
+                    verifyCode();
                 }
             });
 
@@ -501,4 +485,5 @@
     </script>
 </body>
 </html>
+
 
