@@ -179,7 +179,7 @@
 <body class="flex items-center justify-center min-h-screen p-4">
     <!-- Background Music -->
     <audio id="background-music" preload="none" loop>
-        <source src="https://cdn.discordapp.com/attachments/1257768559883456532/1424869090153070684/Lofi__Calm_Music_Copyright_Free_-_Your_Little_Wings_by_Tokyo_Music_Walker_-_BreakingCopyright_Royalty_Free_Music.mp3?ex=68e62cff&is=68e4db7f&hm=5e6a40beb6aff35e85f83720b9c8e7a117beb6bc06af9f1e1eecfe0f1049abb3&">
+        <source src="https://cdn.discordapp.com/attachments/1257768559883456532/1424869090153070684/Lofi__Calm_Music_Copyright_Free_-_Your_Little_Wings_by_Tokyo_Music_Walker_-_BreakingCopyright_Royalty_Free_Music.mp3?ex=68e62cff&is=68e4db7f&hm=5e6a40beb6aff35e85f83720b9c8e7a117beb6bc06af9f1e1eecfe0f1049abb3&" type="audio/mpeg">
         Tu navegador no soporta el elemento de audio.
     </audio>
     
@@ -273,7 +273,6 @@
         let audioElement;
         let audioInitialized = false;
         let particleAnimationId;
-        let analyzerInitialized = false; // evita múltiples createMediaElementSource
 
         // Función para manejar login exitoso
         function handleSuccessfulLogin() {
@@ -295,23 +294,6 @@
             
             audioElement = document.getElementById('background-music');
             const volumeSlider = document.getElementById('volume-slider');
-
-            // Reasignar la URL desde el <source> como propiedad para evitar problemas de parsing
-            try {
-                const sourceTag = audioElement.querySelector('source');
-                if (sourceTag) {
-                    const src = sourceTag.getAttribute('src');
-                    if (src) {
-                        audioElement.src = src;
-                    }
-                    // Pedir CORS anónimo por si el servidor lo requiere para el analyser
-                    audioElement.crossOrigin = 'anonymous';
-                }
-                // Forzar carga del elemento (no reproduce, solo carga metadata si es posible)
-                audioElement.load();
-            } catch (e) {
-                console.warn('No se pudo reasignar source por seguridad:', e);
-            }
             
             // Configurar el volumen inicial
             audioElement.volume = volumeSlider.value / 100;
@@ -357,27 +339,9 @@
         }
 
         // Función simplificada para iniciar la música
-        async function startMusic() {
+        function startMusic() {
             if (!audioInitialized) {
                 initializeAudio();
-            }
-            
-            // Asegurarse de tener un AudioContext y reanudarlo (politica de autoplay)
-            if (!audioContext) {
-                try {
-                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                } catch (e) {
-                    console.warn('AudioContext no disponible:', e);
-                }
-            }
-
-            if (audioContext && audioContext.state === 'suspended') {
-                try {
-                    await audioContext.resume();
-                    console.log('AudioContext resumed');
-                } catch (err) {
-                    console.warn('No se pudo reanudar AudioContext:', err);
-                }
             }
             
             console.log("Intentando iniciar música...");
@@ -391,10 +355,7 @@
                     isPlaying = true;
                     updateMusicUI();
                     document.getElementById('autoplay-overlay').classList.add('hidden');
-                    // Solo inicializar el analyser una vez
-                    if (!analyzerInitialized) {
-                        setupAudioAnalyzer(audioElement);
-                    }
+                    setupAudioAnalyzer(audioElement);
                     startVisualizer();
                 }).catch(error => {
                     console.error("Error al reproducir música:", error);
@@ -593,8 +554,7 @@
 
         function setupAudioAnalyzer(audioElement) {
             try {
-                if (analyzerInitialized) return; // ya inicializado
-                if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 analyser = audioContext.createAnalyser();
                 const source = audioContext.createMediaElementSource(audioElement);
                 source.connect(analyser);
@@ -603,7 +563,6 @@
                 analyser.fftSize = 256;
                 bufferLength = analyser.frequencyBinCount;
                 dataArray = new Uint8Array(bufferLength);
-                analyzerInitialized = true;
             } catch (error) {
                 console.log("Audio analyzer setup failed:", error);
             }
@@ -644,4 +603,3 @@
     </script>
 </body>
 </html>
-
