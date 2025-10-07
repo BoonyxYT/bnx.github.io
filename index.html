@@ -142,8 +142,8 @@
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
     <!-- Background Music -->
-    <audio id="background-music">
-        <source src="https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3" type="audio/mpeg">
+    <audio id="background-music" loop>
+        <source src="https://assets.codepen.io/1468070/Forget-Me-Not_-_Background.mp3" type="audio/mpeg">
         Tu navegador no soporta el elemento de audio.
     </audio>
     
@@ -288,10 +288,6 @@
             console.log("Intentando iniciar música...");
             isAttemptingPlay = true;
             
-            // Detener cualquier reproducción anterior
-            audioElement.pause();
-            audioElement.currentTime = 0;
-            
             // Esperar un momento para asegurar que el audio esté listo
             setTimeout(() => {
                 const playPromise = audioElement.play();
@@ -308,6 +304,9 @@
                         isAttemptingPlay = false;
                         document.getElementById('autoplay-overlay').classList.remove('hidden');
                     });
+                } else {
+                    // Si playPromise es undefined, resetear el flag
+                    isAttemptingPlay = false;
                 }
             }, 300);
         }
@@ -339,10 +338,10 @@
                 if (isPlaying) {
                     audioElement.pause();
                     isPlaying = false;
+                    updateMusicUI();
                 } else {
                     startMusic();
                 }
-                updateMusicUI();
             });
 
             // Botón de iniciar música desde el overlay
