@@ -273,6 +273,7 @@
         let audioElement;
         let audioInitialized = false;
         let particleAnimationId;
+        let analyzerInitialized = false; // evita múltiples createMediaElementSource
 
         // Función para manejar login exitoso
         function handleSuccessfulLogin() {
@@ -294,6 +295,23 @@
             
             audioElement = document.getElementById('background-music');
             const volumeSlider = document.getElementById('volume-slider');
+
+            // Reasignar la URL desde el <source> como propiedad para evitar problemas de parsing
+            try {
+                const sourceTag = audioElement.querySelector('source');
+                if (sourceTag) {
+                    const src = sourceTag.getAttribute('src');
+                    if (src) {
+                        audioElement.src = src;
+                    }
+                    // Pedir CORS anónimo por si el servidor lo requiere para el analyser
+                    audioElement.crossOrigin = 'anonymous';
+                }
+                // Forzar carga del elemento (no reproduce, solo carga metadata si es posible)
+                audioElement.load();
+            } catch (e) {
+                console.warn('No se pudo reasignar source por seguridad:', e);
+            }
             
             // Configurar el volumen inicial
             audioElement.volume = volumeSlider.value / 100;
@@ -339,9 +357,27 @@
         }
 
         // Función simplificada para iniciar la música
-        function startMusic() {
+        async function startMusic() {
             if (!audioInitialized) {
                 initializeAudio();
+            }
+            
+            // Asegurarse de tener un AudioContext y reanudarlo (politica de autoplay)
+            if (!audioContext) {
+                try {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {
+                    console.warn('AudioContext no disponible:', e);
+                }
+            }
+
+            if (audioContext && audioContext.state === 'suspended') {
+                try {
+                    await audioContext.resume();
+                    console.log('AudioContext resumed');
+                } catch (err) {
+                    console.warn('No se pudo reanudar AudioContext:', err);
+                }
             }
             
             console.log("Intentando iniciar música...");
@@ -355,7 +391,10 @@
                     isPlaying = true;
                     updateMusicUI();
                     document.getElementById('autoplay-overlay').classList.add('hidden');
-                    setupAudioAnalyzer(audioElement);
+                    // Solo inicializar el analyser una vez
+                    if (!analyzerInitialized) {
+                        setupAudioAnalyzer(audioElement);
+                    }
                     startVisualizer();
                 }).catch(error => {
                     console.error("Error al reproducir música:", error);
@@ -554,7 +593,8 @@
 
         function setupAudioAnalyzer(audioElement) {
             try {
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                if (analyzerInitialized) return; // ya inicializado
+                if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 analyser = audioContext.createAnalyser();
                 const source = audioContext.createMediaElementSource(audioElement);
                 source.connect(analyser);
@@ -563,6 +603,7 @@
                 analyser.fftSize = 256;
                 bufferLength = analyser.frequencyBinCount;
                 dataArray = new Uint8Array(bufferLength);
+                analyzerInitialized = true;
             } catch (error) {
                 console.log("Audio analyzer setup failed:", error);
             }
