@@ -77,42 +77,6 @@
             max-width: 400px;
         }
         
-        /* Visualizador de barras rítmicas */
-        .visualizer {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 150px;
-            display: flex;
-            align-items: flex-end;
-            justify-content: center;
-            gap: 3px;
-            padding: 20px;
-            z-index: 1;
-            pointer-events: none;
-        }
-        
-        .bar {
-            width: 12px;
-            background: linear-gradient(to top, #00f2fe, #4facfe);
-            border-radius: 6px 6px 0 0;
-            transition: height 0.1s ease;
-            box-shadow: 0 0 10px rgba(79, 172, 254, 0.5);
-            min-height: 5px;
-        }
-        
-        /* Barras más pequeñas para móviles */
-        @media (max-width: 768px) {
-            .visualizer {
-                height: 100px;
-                gap: 2px;
-            }
-            .bar {
-                width: 8px;
-            }
-        }
-        
         /* Efecto de partículas */
         .particles {
             position: fixed;
@@ -180,9 +144,6 @@
     <audio id="background-music" loop>
         <source src="https://assets.codepen.io/1468070/Forget-Me-Not_-_Background.mp3" type="audio/mpeg">
     </audio>
-    
-    <!-- Visualizador de barras rítmicas -->
-    <div class="visualizer" id="visualizer"></div>
     
     <!-- Partículas flotantes -->
     <div class="particles" id="particles"></div>
@@ -260,14 +221,8 @@
     <script src="auth.js"></script>
     <script>
         // Variables globales
-        let audioContext;
-        let analyser;
-        let dataArray;
-        let bufferLength;
-        let bars = [];
-        let animationId;
-        let particles = [];
         let isPlaying = false;
+        let particles = [];
 
         // Función para manejar login exitoso
         function handleSuccessfulLogin() {
@@ -290,20 +245,30 @@
             
             audioElement.volume = 0.5;
             
-            setTimeout(() => {
-                audioElement.play().then(() => {
-                    console.log("🎵 Music started automatically!");
-                    isPlaying = true;
-                    updateMusicUI();
-                    setupAudioAnalyzer(audioElement);
-                    startVisualizer();
-                }).catch(error => {
-                    console.log("Autoplay blocked:", error);
-                    autoplayOverlay.classList.remove('hidden');
-                    isPlaying = false;
-                    updateMusicUI();
-                });
-            }, 1000);
+            // Esperar a que el audio esté listo
+            audioElement.addEventListener('canplaythrough', function() {
+                const playPromise = audioElement.play();
+                
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        console.log("🎵 Music started automatically!");
+                        isPlaying = true;
+                        updateMusicUI();
+                        autoplayOverlay.classList.add('hidden');
+                    }).catch(error => {
+                        console.log("Autoplay blocked:", error);
+                        autoplayOverlay.classList.remove('hidden');
+                        isPlaying = false;
+                        updateMusicUI();
+                    });
+                }
+            });
+            
+            // Si hay un error cargando el audio, mostrar el overlay
+            audioElement.addEventListener('error', function() {
+                console.log("Error loading audio");
+                autoplayOverlay.classList.remove('hidden');
+            });
         }
 
         // Configurar eventos cuando el DOM esté listo
@@ -320,7 +285,6 @@
             const verificationModal = document.getElementById('verification-modal');
 
             // Inicializar componentes
-            createVisualizerBars();
             createParticles();
             
             // Intentar reproducir música automáticamente
@@ -336,18 +300,13 @@
                 if (isPlaying) {
                     audioElement.pause();
                     isPlaying = false;
-                    if (animationId) {
-                        cancelAnimationFrame(animationId);
-                    }
                 } else {
                     audioElement.play().then(() => {
                         isPlaying = true;
-                        if (!analyser) {
-                            setupAudioAnalyzer(audioElement);
-                        }
-                        startVisualizer();
+                        autoplayOverlay.classList.add('hidden');
                     }).catch(error => {
                         console.log("Play failed:", error);
+                        autoplayOverlay.classList.remove('hidden');
                     });
                 }
                 updateMusicUI();
@@ -411,8 +370,6 @@
             audioElement.play().then(() => {
                 isPlaying = true;
                 autoplayOverlay.classList.add('hidden');
-                setupAudioAnalyzer(audioElement);
-                startVisualizer();
                 updateMusicUI();
             }).catch(error => {
                 console.log("Manual play failed:", error);
@@ -432,19 +389,6 @@
                 playIcon.classList.remove('hidden');
                 pauseIcon.classList.add('hidden');
                 musicStatus.textContent = "Paused";
-            }
-        }
-
-        function createVisualizerBars() {
-            const visualizer = document.getElementById('visualizer');
-            const barCount = Math.floor(window.innerWidth / 15);
-            
-            for (let i = 0; i < barCount; i++) {
-                const bar = document.createElement('div');
-                bar.className = 'bar';
-                bar.style.height = '5px';
-                visualizer.appendChild(bar);
-                bars.push(bar);
             }
         }
 
@@ -477,49 +421,6 @@
             });
         }
 
-        function setupAudioAnalyzer(audioElement) {
-            try {
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                analyser = audioContext.createAnalyser();
-                const source = audioContext.createMediaElementSource(audioElement);
-                source.connect(analyser);
-                analyser.connect(audioContext.destination);
-                
-                analyser.fftSize = 256;
-                bufferLength = analyser.frequencyBinCount;
-                dataArray = new Uint8Array(bufferLength);
-            } catch (error) {
-                console.log("Audio analyzer setup failed:", error);
-            }
-        }
-
-        function startVisualizer() {
-            if (!analyser) return;
-            
-            function animate() {
-                analyser.getByteFrequencyData(dataArray);
-                
-                for (let i = 0; i < bars.length; i++) {
-                    const barIndex = Math.floor((i / bars.length) * bufferLength);
-                    const value = dataArray[barIndex];
-                    const height = (value / 255) * 100 + 5;
-                    bars[i].style.height = `${height}px`;
-                    
-                    const intensity = value / 255;
-                    bars[i].style.background = `linear-gradient(to top, 
-                        hsl(${200 + intensity * 60}, 100%, ${50 + intensity * 30}%), 
-                        hsl(${200 + intensity * 40}, 100%, ${60 + intensity * 20}%))`;
-                    
-                    bars[i].style.boxShadow = `0 0 ${5 + intensity * 15}px hsl(${200 + intensity * 60}, 100%, 50%)`;
-                }
-                
-                updateParticles();
-                animationId = requestAnimationFrame(animate);
-            }
-            
-            animate();
-        }
-
         function updateParticles() {
             particles.forEach(particle => {
                 particle.x += particle.speedX;
@@ -530,15 +431,10 @@
                 
                 particle.element.style.left = `${particle.x}px`;
                 particle.element.style.top = `${particle.y}px`;
-                
-                if (dataArray && dataArray.length > 0) {
-                    const avgFrequency = dataArray.slice(0, 10).reduce((a, b) => a + b) / 10;
-                    const opacity = 0.3 + (avgFrequency / 255) * 0.7;
-                    particle.element.style.opacity = opacity;
-                }
             });
         }
     </script>
 </body>
 </html>
+
 
