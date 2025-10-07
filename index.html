@@ -371,14 +371,6 @@
                 gradientOverlay.style.setProperty('--mouse-x', `${x}%`);
                 gradientOverlay.style.setProperty('--mouse-y', `${y}%`);
             });
-            
-            // Intentar iniciar música automáticamente después de un tiempo
-            setTimeout(() => {
-                if (!isPlaying) {
-                    console.log("Intentando autoplay después de tiempo de espera");
-                    startMusic();
-                }
-            }, 2000);
         });
 
         function updateMusicUI() {
@@ -473,6 +465,3 @@
     </script>
 </body>
 </html>
-
-
-
