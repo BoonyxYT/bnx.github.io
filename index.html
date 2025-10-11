@@ -33,48 +33,8 @@
             z-index: -1;
         }
         
-        .music-player {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 50px;
-            padding: 10px 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            z-index: 100;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        }
-        
-        .volume-slider {
-            width: 80px;
-        }
-        
         .hidden {
             display: none;
-        }
-        
-        .autoplay-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        
-        .autoplay-content {
-            background: white;
-            padding: 2rem;
-            border-radius: 1rem;
-            text-align: center;
-            max-width: 400px;
         }
         
         /* Visualizador de barras rítmicas */
@@ -177,40 +137,11 @@
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
-    <!-- Background Music -->
-    <audio id="background-music" preload="none" loop>
-        <source src="https://cdn.discordapp.com/attachments/1257768559883456532/1424869090153070684/Lofi__Calm_Music_Copyright_Free_-_Your_Little_Wings_by_Tokyo_Music_Walker_-_BreakingCopyright_Royalty_Free_Music.mp3?ex=68e62cff&is=68e4db7f&hm=5e6a40beb6aff35e85f83720b9c8e7a117beb6bc06af9f1e1eecfe0f1049abb3&" type="audio/mpeg">
-        Tu navegador no soporta el elemento de audio.
-    </audio>
-    
     <!-- Visualizador de barras rítmicas -->
     <div class="visualizer" id="visualizer"></div>
     
     <!-- Partículas flotantes -->
     <div class="particles" id="particles"></div>
-    
-    <!-- Music Player Controls -->
-    <div class="music-player">
-        <button id="play-pause-btn" class="text-white hover:text-cyan-300 transition-colors text-lg w-8 h-8 flex items-center justify-center">
-            <i id="play-icon" class="fas fa-play"></i>
-            <i id="pause-icon" class="fas fa-pause hidden"></i>
-        </button>
-        <div class="volume-slider">
-            <input id="volume-slider" type="range" min="0" max="100" value="50" class="w-full">
-        </div>
-        <span id="music-status" class="text-white text-sm">Paused</span>
-    </div>
-
-    <!-- Overlay para autoplay bloqueado -->
-    <div id="autoplay-overlay" class="autoplay-overlay">
-        <div class="autoplay-content">
-            <h3 class="text-xl font-bold mb-4">🎵 Music Manager</h3>
-            <p class="mb-4">Click the button below to start the background music</p>
-            <button id="start-music-btn" class="bg-cyan-500 text-white px-6 py-2 rounded-lg hover:bg-cyan-600 transition-colors">
-                Start Music
-            </button>
-        </div>
-    </div>
 
     <!-- Modal de verificación -->
     <div id="verification-modal" class="verification-modal hidden">
@@ -259,20 +190,11 @@
         <div id="debug-info" class="mt-4 p-4 bg-black/50 text-white text-xs rounded-lg hidden"></div>
     </div>
 
-    <script src="auth.js"></script>
     <script>
-        // Variables globales
-        let audioContext;
-        let analyser;
-        let dataArray;
-        let bufferLength;
-        let bars = [];
-        let animationId;
+        // Variables globales para las partículas y visualizador
         let particles = [];
-        let isPlaying = false;
-        let audioElement;
-        let audioInitialized = false;
         let particleAnimationId;
+        let bars = [];
 
         // Función para manejar login exitoso
         function handleSuccessfulLogin() {
@@ -288,149 +210,87 @@
             window.location.href = 'dashboard.html';
         }
 
-        // Función para inicializar el audio
-        function initializeAudio() {
-            if (audioInitialized) return;
+        // Función para enviar código de verificación
+        function sendVerificationCode() {
+            const email = document.getElementById('email-input').value;
+            const emailStatus = document.getElementById('email-status');
             
-            audioElement = document.getElementById('background-music');
-            const volumeSlider = document.getElementById('volume-slider');
+            if (!email) {
+                emailStatus.innerHTML = '<p class="text-red-400">⚠️ Please enter your email address</p>';
+                emailStatus.style.display = 'block';
+                return;
+            }
             
-            // Configurar el volumen inicial
-            audioElement.volume = volumeSlider.value / 100;
+            // Simular envío de código
+            emailStatus.innerHTML = '<p class="text-cyan-400">📧 Sending verification code...</p>';
+            emailStatus.style.display = 'block';
             
-            // Configurar eventos de audio
-            audioElement.addEventListener('canplaythrough', function() {
-                console.log("Audio listo para reproducirse completamente");
-            });
-            
-            audioElement.addEventListener('error', function(e) {
-                console.error("Error en el audio:", e);
-                console.error("Código de error:", audioElement.error);
-                
-                // Si hay un error, mostrar un mensaje en el overlay
-                const overlay = document.getElementById('autoplay-overlay');
-                const content = overlay.querySelector('.autoplay-content');
-                content.innerHTML = `
-                    <h3 class="text-xl font-bold mb-4">🎵 Music Manager</h3>
-                    <p class="mb-4 text-red-500">Error loading audio. The audio file may not be accessible.</p>
-                    <button id="retry-music-btn" class="bg-cyan-500 text-white px-6 py-2 rounded-lg hover:bg-cyan-600 transition-colors">
-                        Retry Music
-                    </button>
-                `;
-                
-                document.getElementById('retry-music-btn').addEventListener('click', function() {
-                    location.reload();
-                });
-            });
-            
-            audioElement.addEventListener('loadstart', function() {
-                console.log("Comenzando a cargar el audio...");
-            });
-            
-            audioElement.addEventListener('progress', function() {
-                console.log("Cargando audio...");
-            });
-            
-            audioElement.addEventListener('loadeddata', function() {
-                console.log("Datos de audio cargados");
-            });
-            
-            audioInitialized = true;
+            setTimeout(() => {
+                // Simular éxito después de 1.5 segundos
+                emailStatus.innerHTML = '<p class="text-green-400">✅ Verification code sent! Check your email.</p>';
+                document.getElementById('verification-modal').classList.remove('hidden');
+            }, 1500);
         }
 
-        // Función simplificada para iniciar la música
-        function startMusic() {
-            if (!audioInitialized) {
-                initializeAudio();
+        // Función para verificar código
+        function verifyCode() {
+            const code = document.getElementById('verification-input').value;
+            
+            if (!code) {
+                alert('Please enter the verification code');
+                return;
             }
             
-            console.log("Intentando iniciar música...");
+            // Simular verificación exitosa
+            handleSuccessfulLogin();
+            closeVerificationModal();
+        }
+
+        // Función para cerrar el modal de verificación
+        function closeVerificationModal() {
+            document.getElementById('verification-modal').classList.add('hidden');
+            document.getElementById('verification-input').value = '';
+        }
+
+        // Función para reenviar código
+        function resendVerificationCode() {
+            const emailStatus = document.getElementById('email-status');
+            emailStatus.innerHTML = '<p class="text-cyan-400">📧 Resending verification code...</p>';
+            emailStatus.style.display = 'block';
             
-            // Intentar reproducir
-            const playPromise = audioElement.play();
-            
-            if (playPromise !== undefined) {
-                playPromise.then(() => {
-                    console.log("Música iniciada correctamente");
-                    isPlaying = true;
-                    updateMusicUI();
-                    document.getElementById('autoplay-overlay').classList.add('hidden');
-                    setupAudioAnalyzer(audioElement);
-                    startVisualizer();
-                }).catch(error => {
-                    console.error("Error al reproducir música:", error);
-                    document.getElementById('autoplay-overlay').classList.remove('hidden');
-                });
-            }
+            setTimeout(() => {
+                emailStatus.innerHTML = '<p class="text-green-400">✅ Verification code sent! Check your email.</p>';
+            }, 1500);
         }
 
         // Configurar eventos cuando el DOM esté listo
         document.addEventListener('DOMContentLoaded', function() {
-            const playPauseBtn = document.getElementById('play-pause-btn');
-            const volumeSlider = document.getElementById('volume-slider');
-            const startMusicBtn = document.getElementById('start-music-btn');
-            const autoplayOverlay = document.getElementById('autoplay-overlay');
             const sendCodeBtn = document.getElementById('send-code-btn');
             const verifyBtn = document.getElementById('verify-btn');
             const cancelVerifyBtn = document.getElementById('cancel-verify-btn');
             const resendCodeBtn = document.getElementById('resend-code-btn');
-            const verificationModal = document.getElementById('verification-modal');
 
-            // Inicializar componentes
+            // Inicializar componentes visuales
             createVisualizerBars();
             createParticles();
             startParticleAnimation();
-            initializeAudio();
             
-            // Control de volumen
-            volumeSlider.addEventListener('input', function() {
-                if (audioElement) {
-                    audioElement.volume = this.value / 100;
-                }
-            });
-
-            // Botón de play/pause
-            playPauseBtn.addEventListener('click', function() {
-                if (isPlaying) {
-                    audioElement.pause();
-                    isPlaying = false;
-                    if (animationId) {
-                        cancelAnimationFrame(animationId);
-                    }
-                } else {
-                    startMusic();
-                }
-                updateMusicUI();
-            });
-
-            // Botón de iniciar música desde el overlay
-            startMusicBtn.addEventListener('click', function() {
-                startMusic();
-            });
-
-            // Clic en cualquier parte del overlay para iniciar música
-            autoplayOverlay.addEventListener('click', function(e) {
-                if (e.target === autoplayOverlay) {
-                    startMusic();
-                }
-            });
-
-            // Botón de enviar código de verificación - USA LA FUNCIÓN DE auth.js
+            // Botón de enviar código de verificación
             sendCodeBtn.addEventListener('click', function() {
                 sendVerificationCode();
             });
 
-            // Botón de verificar código - USA LA FUNCIÓN DE auth.js
+            // Botón de verificar código
             verifyBtn.addEventListener('click', function() {
                 verifyCode();
             });
 
-            // Botón de cancelar verificación - USA LA FUNCIÓN DE auth.js
+            // Botón de cancelar verificación
             cancelVerifyBtn.addEventListener('click', function() {
                 closeVerificationModal();
             });
 
-            // Botón de reenviar código - USA LA FUNCIÓN DE auth.js
+            // Botón de reenviar código
             resendCodeBtn.addEventListener('click', function() {
                 resendVerificationCode();
             });
@@ -456,22 +316,6 @@
             });
         });
 
-        function updateMusicUI() {
-            const playIcon = document.getElementById('play-icon');
-            const pauseIcon = document.getElementById('pause-icon');
-            const musicStatus = document.getElementById('music-status');
-            
-            if (isPlaying) {
-                playIcon.classList.add('hidden');
-                pauseIcon.classList.remove('hidden');
-                musicStatus.textContent = "Playing";
-            } else {
-                playIcon.classList.remove('hidden');
-                pauseIcon.classList.add('hidden');
-                musicStatus.textContent = "Paused";
-            }
-        }
-
         function createVisualizerBars() {
             const visualizer = document.getElementById('visualizer');
             const barCount = Math.floor(window.innerWidth / 15);
@@ -483,6 +327,27 @@
                 visualizer.appendChild(bar);
                 bars.push(bar);
             }
+            
+            // Animar las barras del visualizador
+            animateVisualizer();
+        }
+
+        function animateVisualizer() {
+            // Simular animación de barras rítmicas
+            bars.forEach((bar, index) => {
+                const height = 5 + Math.sin(Date.now() / 200 + index) * 30;
+                bar.style.height = `${height}px`;
+                
+                // Cambiar color basado en la altura
+                const intensity = height / 100;
+                bar.style.background = `linear-gradient(to top, 
+                    hsl(${200 + intensity * 60}, 100%, ${50 + intensity * 30}%), 
+                    hsl(${200 + intensity * 40}, 100%, ${60 + intensity * 20}%))`;
+                
+                bar.style.boxShadow = `0 0 ${5 + intensity * 15}px hsl(${200 + intensity * 60}, 100%, 50%)`;
+            });
+            
+            requestAnimationFrame(animateVisualizer);
         }
 
         function createParticles() {
@@ -550,48 +415,6 @@
             }
             
             animateParticles();
-        }
-
-        function setupAudioAnalyzer(audioElement) {
-            try {
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                analyser = audioContext.createAnalyser();
-                const source = audioContext.createMediaElementSource(audioElement);
-                source.connect(analyser);
-                analyser.connect(audioContext.destination);
-                
-                analyser.fftSize = 256;
-                bufferLength = analyser.frequencyBinCount;
-                dataArray = new Uint8Array(bufferLength);
-            } catch (error) {
-                console.log("Audio analyzer setup failed:", error);
-            }
-        }
-
-        function startVisualizer() {
-            if (!analyser) return;
-            
-            function animate() {
-                analyser.getByteFrequencyData(dataArray);
-                
-                for (let i = 0; i < bars.length; i++) {
-                    const barIndex = Math.floor((i / bars.length) * bufferLength);
-                    const value = dataArray[barIndex];
-                    const height = (value / 255) * 100 + 5;
-                    bars[i].style.height = `${height}px`;
-                    
-                    const intensity = value / 255;
-                    bars[i].style.background = `linear-gradient(to top, 
-                        hsl(${200 + intensity * 60}, 100%, ${50 + intensity * 30}%), 
-                        hsl(${200 + intensity * 40}, 100%, ${60 + intensity * 20}%))`;
-                    
-                    bars[i].style.boxShadow = `0 0 ${5 + intensity * 15}px hsl(${200 + intensity * 60}, 100%, 50%)`;
-                }
-                
-                animationId = requestAnimationFrame(animate);
-            }
-            
-            animate();
         }
 
         // Función para detener la animación de partículas (si es necesario)
