@@ -6,7 +6,6 @@
     <title>Music Manager - Login</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
         body {
             background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
@@ -149,6 +148,13 @@
             <h2 class="text-2xl font-bold mb-4 text-cyan-500">Verification Required</h2>
             <p class="mb-2 text-gray-600">We've sent a verification code to your email</p>
             <p class="mb-4 text-gray-600">Enter the verification code below:</p>
+            
+            <!-- Código de verificación fijo para demostración -->
+            <div class="verification-code">
+                <p class="text-sm text-gray-600 mb-2">For demonstration, use this code:</p>
+                <div id="demo-code" class="text-2xl font-bold">123456</div>
+            </div>
+            
             <input type="text" id="verification-input" placeholder="Enter code" 
                    class="w-full px-4 py-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-400 focus:outline-none">
             <div class="flex gap-2">
@@ -186,8 +192,12 @@
             <div id="email-status" class="email-status"></div>
         </div>
 
-        <!-- Debug info (opcional) -->
-        <div id="debug-info" class="mt-4 p-4 bg-black/50 text-white text-xs rounded-lg hidden"></div>
+        <!-- Información de demostración -->
+        <div class="mt-6 p-4 bg-black/30 text-white text-sm rounded-lg">
+            <p class="font-medium mb-2">Demo Information:</p>
+            <p>• Use any email address (format: name@example.com)</p>
+            <p>• Verification code: <span class="font-bold">123456</span></p>
+        </div>
     </div>
 
     <script>
@@ -195,6 +205,9 @@
         let particles = [];
         let particleAnimationId;
         let bars = [];
+        
+        // Código de verificación fijo para demostración
+        const DEMO_CODE = "123456";
 
         // Función para manejar login exitoso
         function handleSuccessfulLogin() {
@@ -205,9 +218,81 @@
             setTimeout(redirectToDashboard, 1500);
         }
 
+        // Función para mostrar error de verificación
+        function showVerificationError() {
+            document.getElementById('email-status').innerHTML = 
+                '<p class="text-red-400">❌ Invalid verification code. Please try again.</p>';
+            document.getElementById('email-status').style.display = 'block';
+        }
+
         // Función para redirigir al dashboard
         function redirectToDashboard() {
-            window.location.href = 'dashboard.html';
+            // En un caso real, aquí redirigiríamos al dashboard
+            // window.location.href = 'dashboard.html';
+            
+            // Por ahora, mostraremos un mensaje de éxito
+            document.getElementById('email-status').innerHTML = 
+                '<p class="text-green-400">✅ Login successful! Dashboard would load here.</p>';
+                
+            // También podríamos cambiar el contenido de la página para simular el dashboard
+            simulateDashboard();
+        }
+
+        // Función para simular el dashboard (solo para demostración)
+        function simulateDashboard() {
+            const mainContent = document.querySelector('.bg-white\\/10');
+            mainContent.innerHTML = `
+                <div class="text-center mb-8">
+                    <i class="fas fa-music text-5xl text-cyan-300 mb-4"></i>
+                    <h1 class="text-3xl font-bold text-white">Music Manager Dashboard</h1>
+                    <p class="text-white/70 mt-2">Welcome to your music management system</p>
+                </div>
+                <div class="bg-black/30 p-6 rounded-xl text-white">
+                    <h2 class="text-xl font-bold mb-4">Your Playlists</h2>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center p-3 bg-white/10 rounded-lg">
+                            <div>
+                                <h3 class="font-medium">Chill Vibes</h3>
+                                <p class="text-sm text-white/70">15 songs</p>
+                            </div>
+                            <button class="bg-cyan-500 hover:bg-cyan-600 px-3 py-1 rounded-lg transition-colors">
+                                Manage
+                            </button>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-white/10 rounded-lg">
+                            <div>
+                                <h3 class="font-medium">Workout Mix</h3>
+                                <p class="text-sm text-white/70">22 songs</p>
+                            </div>
+                            <button class="bg-cyan-500 hover:bg-cyan-600 px-3 py-1 rounded-lg transition-colors">
+                                Manage
+                            </button>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-white/10 rounded-lg">
+                            <div>
+                                <h3 class="font-medium">Road Trip</h3>
+                                <p class="text-sm text-white/70">18 songs</p>
+                            </div>
+                            <button class="bg-cyan-500 hover:bg-cyan-600 px-3 py-1 rounded-lg transition-colors">
+                                Manage
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mt-6 flex gap-3">
+                        <button class="flex-1 bg-cyan-500 hover:bg-cyan-600 py-2 rounded-lg transition-colors">
+                            Create New Playlist
+                        </button>
+                        <button id="logout-btn" class="flex-1 bg-gray-500 hover:bg-gray-600 py-2 rounded-lg transition-colors">
+                            Logout
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // Agregar funcionalidad al botón de logout
+            document.getElementById('logout-btn').addEventListener('click', function() {
+                location.reload();
+            });
         }
 
         // Función para enviar código de verificación
@@ -215,8 +300,17 @@
             const email = document.getElementById('email-input').value;
             const emailStatus = document.getElementById('email-status');
             
+            // Validación básica de email
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            
             if (!email) {
                 emailStatus.innerHTML = '<p class="text-red-400">⚠️ Please enter your email address</p>';
+                emailStatus.style.display = 'block';
+                return;
+            }
+            
+            if (!emailRegex.test(email)) {
+                emailStatus.innerHTML = '<p class="text-red-400">⚠️ Please enter a valid email address</p>';
                 emailStatus.style.display = 'block';
                 return;
             }
@@ -229,6 +323,9 @@
                 // Simular éxito después de 1.5 segundos
                 emailStatus.innerHTML = '<p class="text-green-400">✅ Verification code sent! Check your email.</p>';
                 document.getElementById('verification-modal').classList.remove('hidden');
+                
+                // Mostrar el código de demostración
+                document.getElementById('demo-code').textContent = DEMO_CODE;
             }, 1500);
         }
 
@@ -237,13 +334,17 @@
             const code = document.getElementById('verification-input').value;
             
             if (!code) {
-                alert('Please enter the verification code');
+                showVerificationError();
                 return;
             }
             
-            // Simular verificación exitosa
-            handleSuccessfulLogin();
-            closeVerificationModal();
+            // Verificar si el código es correcto
+            if (code === DEMO_CODE) {
+                handleSuccessfulLogin();
+                closeVerificationModal();
+            } else {
+                showVerificationError();
+            }
         }
 
         // Función para cerrar el modal de verificación
