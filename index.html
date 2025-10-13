@@ -3,25 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Music Manager - Login</title>
+  <title>Music Manager - Verification</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     body {
       background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
       min-height: 100vh;
-      position: relative;
-      overflow: hidden;
-      margin: 0;
-      padding: 0;
       display: flex;
       align-items: center;
       justify-content: center;
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
     }
 
     .hidden { display: none; }
 
-    /* MODAL CAPTCHA */
+    /* Modal CAPTCHA */
     .verification-modal {
       position: fixed;
       top: 0; left: 0;
@@ -56,7 +55,7 @@
       user-select: none;
     }
 
-    .email-status {
+    .status-message {
       display: none;
       padding: 1rem;
       border-radius: 0.5rem;
@@ -68,7 +67,7 @@
 </head>
 <body>
 
-  <!-- Modal tipo CAPTCHA -->
+  <!-- Modal CAPTCHA -->
   <div id="verification-modal" class="verification-modal hidden">
     <div class="verification-content">
       <h2 class="text-2xl font-bold mb-4 text-cyan-500">Verification Required</h2>
@@ -89,84 +88,69 @@
   </div>
 
   <!-- Caja principal -->
-  <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-8 w-full max-w-md shadow-2xl z-10">
-    <div class="text-center mb-8">
-      <i class="fas fa-music text-5xl text-cyan-300 mb-4"></i>
-      <h1 class="text-3xl font-bold text-white">Music Manager</h1>
-      <p class="text-white/70 mt-2">Sign in to manage your YouTube playlists</p>
-    </div>
+  <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-8 w-full max-w-md shadow-2xl z-10 text-center">
+    <i class="fas fa-music text-5xl text-cyan-300 mb-4"></i>
+    <h1 class="text-3xl font-bold text-white mb-2">Music Manager</h1>
+    <p class="text-white/70 mb-6">Simple verification before entering</p>
 
-    <div id="auth-section">
-      <div class="flex flex-col gap-4">
-        <input type="email" id="email-input" placeholder="Enter your email"
-               class="px-4 py-3.5 rounded-lg bg-white/90 border-0 text-base text-black focus:ring-2 focus:ring-cyan-400 focus:outline-none">
+    <button id="start-btn"
+            class="px-6 py-3.5 rounded-lg bg-cyan-400 text-white font-medium cursor-pointer transition-all hover:bg-cyan-500 transform hover:-translate-y-0.5">
+      Continue
+    </button>
 
-        <button id="send-code-btn"
-                class="px-4 py-3.5 rounded-lg bg-cyan-400 text-white font-medium cursor-pointer transition-all hover:bg-cyan-500 transform hover:-translate-y-0.5">
-          Continue
-        </button>
-      </div>
-      <div id="email-status" class="email-status"></div>
-    </div>
+    <div id="status-message" class="status-message"></div>
   </div>
 
   <script>
     // ===== VARIABLES =====
-    const verificationModal = document.getElementById('verification-modal');
+    const modal = document.getElementById('verification-modal');
     const captchaCode = document.getElementById('captcha-code');
     const captchaInput = document.getElementById('captcha-input');
-    const emailStatus = document.getElementById('email-status');
-    const emailInput = document.getElementById('email-input');
+    const statusMsg = document.getElementById('status-message');
 
     let currentCode = '';
 
-    // ===== GENERAR CÓDIGO CAPTCHA =====
+    // ===== GENERAR CAPTCHA =====
     function generateCaptcha() {
-      // Genera un código aleatorio de 5 caracteres alfanuméricos
       currentCode = Math.random().toString(36).substring(2, 7).toUpperCase();
       captchaCode.textContent = currentCode;
     }
 
-    // ===== ABRIR Y CERRAR MODAL =====
+    // ===== ABRIR/CERRAR MODAL =====
     function openCaptchaModal() {
-      if (!emailInput.value.trim()) {
-        emailStatus.innerHTML = '<p class="text-red-400">⚠️ Please enter your email first.</p>';
-        emailStatus.style.display = 'block';
-        return;
-      }
       generateCaptcha();
       captchaInput.value = '';
-      verificationModal.classList.remove('hidden');
+      modal.classList.remove('hidden');
     }
 
     function closeCaptchaModal() {
-      verificationModal.classList.add('hidden');
+      modal.classList.add('hidden');
     }
 
-    // ===== VERIFICAR CAPTCHA =====
+    // ===== VERIFICAR CÓDIGO =====
     function handleVerification() {
       const inputValue = captchaInput.value.trim().toUpperCase();
 
       if (inputValue === currentCode) {
-        emailStatus.innerHTML = '<p class="text-green-400">✅ Verified successfully! Redirecting...</p>';
-        emailStatus.style.display = 'block';
         closeCaptchaModal();
+        statusMsg.innerHTML = '<p class="text-green-400">✅ Verified successfully! Redirecting...</p>';
+        statusMsg.style.display = 'block';
         setTimeout(() => window.location.href = 'dashboard.html', 1200);
       } else {
-        emailStatus.innerHTML = '<p class="text-red-400">❌ Incorrect code. Try again.</p>';
-        emailStatus.style.display = 'block';
+        statusMsg.innerHTML = '<p class="text-red-400">❌ Incorrect code. Try again.</p>';
+        statusMsg.style.display = 'block';
         generateCaptcha();
         captchaInput.value = '';
       }
     }
 
     // ===== EVENTOS =====
-    document.getElementById('send-code-btn').addEventListener('click', openCaptchaModal);
+    document.getElementById('start-btn').addEventListener('click', openCaptchaModal);
     document.getElementById('verify-btn').addEventListener('click', handleVerification);
     document.getElementById('refresh-captcha').addEventListener('click', generateCaptcha);
     document.getElementById('cancel-verify-btn').addEventListener('click', closeCaptchaModal);
 
-    // Permitir usar Enter
+    // Permitir Enter
     captchaInput.addEventListener('keypress', e => {
       if (e.key === 'Enter') handleVerification();
     });
@@ -174,4 +158,3 @@
 
 </body>
 </html>
-
