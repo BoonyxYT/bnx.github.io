@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Music Manager - Dashboard</title>
+    <title>Beaxly - Music Manager</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome -->
@@ -187,6 +187,36 @@
         .theme-black .theme-color {
             background: linear-gradient(135deg, #111827, #374151);
         }
+        
+        /* Cursor light effect */
+        .cursor-light {
+            position: fixed;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            z-index: 9999;
+            mix-blend-mode: overlay;
+            transition: transform 0.1s ease-out;
+        }
+        
+        /* Logo animation */
+        .logo {
+            background: linear-gradient(90deg, #22d3ee, #a855f7, #34d399);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            background-size: 200% 100%;
+            animation: gradientMove 3s ease infinite;
+        }
+        
+        @keyframes gradientMove {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
     </style>
 
     <script>
@@ -322,6 +352,28 @@
         function scrollToDiscover() {
             document.querySelector('.discover-section').scrollIntoView({ 
                 behavior: 'smooth' 
+            });
+        }
+
+        // Initialize cursor light effect
+        function initCursorLight() {
+            const cursorLight = document.createElement('div');
+            cursorLight.className = 'cursor-light';
+            document.body.appendChild(cursorLight);
+            
+            document.addEventListener('mousemove', (e) => {
+                cursorLight.style.left = e.clientX + 'px';
+                cursorLight.style.top = e.clientY + 'px';
+            });
+            
+            // Hide cursor light when not moving for a while
+            let timeout;
+            document.addEventListener('mousemove', () => {
+                cursorLight.style.opacity = '1';
+                clearTimeout(timeout);
+                timeout = setTimeout(() => {
+                    cursorLight.style.opacity = '0';
+                }, 1000);
             });
         }
 
@@ -860,6 +912,9 @@
             // Apply saved theme
             applyTheme(currentTheme);
             
+            // Initialize cursor light effect
+            initCursorLight();
+            
             // Check if user is already signed in
             updateUIForUser();
             
@@ -914,8 +969,8 @@
     <header class="bg-black/70 py-6 mb-8 shadow-lg">
         <div class="container mx-auto px-5 flex flex-col md:flex-row justify-between items-center">
             <div class="text-center md:text-left mb-4 md:mb-0">
-                <h1 class="text-4xl font-bold mb-3 accent-color">
-                    <i class="fas fa-music mr-2"></i> Music Manager
+                <h1 class="text-4xl font-bold mb-3 logo">
+                    <i class="fas fa-music mr-2"></i> Beaxly - Music Manager
                 </h1>
                 <p class="text-xl opacity-90">Create and manage your YouTube playlists easily</p>
             </div>
