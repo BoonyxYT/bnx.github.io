@@ -24,6 +24,25 @@
         .player-active .player-placeholder {
             display: none;
         }
+        .tag {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            margin: 2px;
+        }
+        .tag.active {
+            background: #0ea5e9;
+            color: white;
+        }
+        .tag-filter {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .tag-filter:hover {
+            transform: translateY(-2px);
+        }
     </style>
 
     <script>
@@ -33,7 +52,7 @@
                 id: "1",
                 name: "Relaxing Music",
                 songs: [
-                    { id: "1", title: "Meditation Music", url: "https://www.youtube.com/watch?v=NTpbbQUBbuo&list=RDQMsHhx03c4Dwk&index=3", videoId: "z2U8HW9XYpE" },
+                    { id: "1", title: "Meditation Music", url: "https://www.youtube.com/watch?v=NTpbbQUBbuo&list=RDQMsHhx03c4Dwk&index=3", videoId: "z2U8HW9HW9XYpE" },
                     { id: "2", title: "Nature Sounds", url: "https://www.youtube.com/watch?v=859u6uiZdds&list=RDQMsHhx03c4Dwk&index=1", videoId: "q76bMs-NwRk" }
                 ]
             },
@@ -46,20 +65,62 @@
             }
         ];
 
-        // Discover songs (shared across all users)
+        // Discover songs (shared across all users) - Updated with tags
         let discoverSongs = JSON.parse(localStorage.getItem('discoverSongs')) || [
-            { id: "d1", title: "The Weeknd - Big Sleep", url: "https://www.youtube.com/watch?v=-wTr3bTbVO8", videoId: "-wTr3bTbVO8"},
-            { id: "d2", title: "Myke Towers & Quevedo - SOLEAO", url: "https://www.youtube.com/watch?v=JgqsAvvwZAQ", videoId: "JgqsAvvwZAQ"},
-            { id: "d3", title: "The Wild Project #344", url: "https://www.youtube.com/watch?v=HjEVxPCmlVM", videoId: "HjEVxPCmlVM"},
+            { 
+                id: "d1", 
+                title: "The Weeknd - Big Sleep", 
+                url: "https://www.youtube.com/watch?v=-wTr3bTbVO8", 
+                videoId: "-wTr3bTbVO8",
+                tags: ["Pop", "R&B", "Chill"]
+            },
+            { 
+                id: "d2", 
+                title: "Myke Towers & Quevedo - SOLEAO", 
+                url: "https://www.youtube.com/watch?v=JgqsAvvwZAQ", 
+                videoId: "JgqsAvvwZAQ",
+                tags: ["Reggaeton", "Latin"]
+            },
+            { 
+                id: "d3", 
+                title: "The Wild Project #344", 
+                url: "https://www.youtube.com/watch?v=HjEVxPCmlVM", 
+                videoId: "HjEVxPCmlVM",
+                tags: ["Podcast", "Talk", "Interview"]
+            },
+            { 
+                id: "d4", 
+                title: "Imagine Dragons - Believer", 
+                url: "https://www.youtube.com/watch?v=7wtfhZwyrcc", 
+                videoId: "7wtfhZwyrcc",
+                tags: ["Rock", "Pop Rock", "Alternative"]
+            },
+            { 
+                id: "d5", 
+                title: "Bad Bunny - Titi Me Preguntó", 
+                url: "https://www.youtube.com/watch?v=saGYMhApaH8", 
+                videoId: "saGYMhApaH8",
+                tags: ["Reggaeton", "Latin", "Urban"]
+            },
+            { 
+                id: "d6", 
+                title: "Coldplay - Viva La Vida", 
+                url: "https://www.youtube.com/watch?v=dvgZkm1xWPE", 
+                videoId: "dvgZkm1xWPE",
+                tags: ["Rock", "Alternative", "Pop"]
+            }
         ];
 
-       // User authentication state
+        // User authentication state
         let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
         
         // YouTube Player variables
         let player; // variable global del reproductor
         let currentPlaylistIndex = null;
         let currentSongIndex = 0;
+
+        // Tag filter variables
+        let activeTag = null;
 
         // Debug function
         function debugLog(message) {
@@ -230,25 +291,91 @@
             updatePlaylistsDropdown();
         }
 
-        // Render discover songs
+        // Get all unique tags from discover songs
+        function getAllTags() {
+            const allTags = new Set();
+            discoverSongs.forEach(song => {
+                if (song.tags) {
+                    song.tags.forEach(tag => allTags.add(tag));
+                }
+            });
+            return Array.from(allTags);
+        }
+
+        // Render tag filters
+        function renderTagFilters() {
+            const container = document.getElementById('tag-filters');
+            const allTags = getAllTags();
+            
+            let tagsHtml = `
+                <button class="tag-filter bg-cyan-500 text-white px-4 py-2 rounded-lg cursor-pointer transition-colors hover:bg-cyan-600 ${activeTag === null ? 'active' : ''}" 
+                        data-tag="all">
+                    <i class="fas fa-eye mr-1"></i> Show All
+                </button>
+            `;
+            
+            allTags.forEach(tag => {
+                tagsHtml += `
+                    <button class="tag-filter bg-white/10 text-white px-4 py-2 rounded-lg cursor-pointer transition-colors hover:bg-white/20 ${activeTag === tag ? 'active' : ''}" 
+                            data-tag="${tag}">
+                        ${tag}
+                    </button>
+                `;
+            });
+            
+            container.innerHTML = tagsHtml;
+            
+            // Add event listeners to tag filters
+            document.querySelectorAll('.tag-filter').forEach(button => {
+                button.addEventListener('click', function() {
+                    const tag = this.getAttribute('data-tag');
+                    setActiveTag(tag === 'all' ? null : tag);
+                });
+            });
+        }
+
+        // Set active tag and re-render discover songs
+        function setActiveTag(tag) {
+            activeTag = tag;
+            renderTagFilters();
+            renderDiscoverSongs();
+        }
+
+        // Render discover songs with filtering
         function renderDiscoverSongs() {
             const container = document.getElementById('discover-songs-container');
             container.innerHTML = '';
 
-            if (discoverSongs.length === 0) {
+            // Filter songs based on active tag
+            const filteredSongs = activeTag 
+                ? discoverSongs.filter(song => song.tags && song.tags.includes(activeTag))
+                : discoverSongs;
+
+            if (filteredSongs.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state text-center p-10 opacity-70 col-span-full">
                         <i class="fas fa-compass text-5xl mb-4 opacity-50"></i>
-                        <p>No songs in the Discover section yet.</p>
-                        <p>Check back later for new music recommendations!</p>
+                        <p>No songs found for the selected tag.</p>
+                        <p>Try selecting a different tag or view all songs.</p>
                     </div>
                 `;
                 return;
             }
 
-            discoverSongs.forEach((song, index) => {
+            filteredSongs.forEach((song, index) => {
+                // Find the original index in discoverSongs array
+                const originalIndex = discoverSongs.findIndex(s => s.id === song.id);
+                
                 const songElement = document.createElement('div');
                 songElement.className = 'discover-song-card bg-white/5 rounded-lg p-4 transition-transform hover:-translate-y-1 hover:bg-white/10';
+                
+                // Generate tags HTML
+                let tagsHtml = '';
+                if (song.tags && song.tags.length > 0) {
+                    song.tags.forEach(tag => {
+                        tagsHtml += `<span class="tag">${tag}</span>`;
+                    });
+                }
                 
                 songElement.innerHTML = `
                     <div class="discover-song-thumbnail w-full h-36 rounded-lg mb-2.5 overflow-hidden">
@@ -256,15 +383,16 @@
                     </div>
                     <div class="song-details">
                         <div class="song-title font-medium text-lg">${song.title}</div>
+                        <div class="song-tags my-2">${tagsHtml}</div>
                         <div class="song-url text-sm opacity-70">${song.url}</div>
                     </div>
                     <div class="discover-song-actions flex gap-2.5 mt-2.5">
                         <button class="discover-play bg-green-500 text-white px-3 py-2 rounded cursor-pointer text-sm flex-1 transition-colors hover:bg-green-600" 
-                                data-index="${index}">
+                                data-index="${originalIndex}">
                             <i class="fas fa-play mr-1"></i> Play
                         </button>
                         <button class="discover-add bg-green-500 text-white px-3 py-2 rounded cursor-pointer text-sm flex-1 transition-colors hover:bg-green-600" 
-                                data-index="${index}">
+                                data-index="${originalIndex}">
                             <i class="fas fa-plus mr-1"></i> Add to My List
                         </button>
                     </div>
@@ -499,12 +627,14 @@
                 title: songTitle,
                 url: youtubeUrl,
                 videoId: videoId,
-                addedBy: currentUser.email
+                addedBy: currentUser.email,
+                tags: [] // Admin can add tags manually in the code for now
             });
             
             // Save and update the view
             saveDiscoverSongs();
             renderDiscoverSongs();
+            renderTagFilters();
             
             // Clear input fields
             document.getElementById('discover-youtube-url').value = '';
@@ -548,6 +678,7 @@
                 // Render user-specific content
                 renderPlaylists();
                 renderDiscoverSongs();
+                renderTagFilters();
             } else {
                 // User is not signed in, redirect to login
                 window.location.href = 'index.html';
@@ -683,6 +814,14 @@
                     <i class="fas fa-compass mr-2"></i> Discover
                 </h2>
                 
+                <!-- Tag Filters -->
+                <div class="tag-filters-section mb-6">
+                    <h3 class="text-lg font-semibold mb-3 text-cyan-200">Filter by Tags:</h3>
+                    <div id="tag-filters" class="flex flex-wrap gap-2">
+                        <!-- Tag filters will be generated here dynamically -->
+                    </div>
+                </div>
+                
                 <!-- Admin Controls (only visible to admin) -->
                 <div id="admin-controls" class="admin-controls bg-orange-500/20 rounded-lg p-5 mb-5 hidden">
                     <h3 class="text-lg font-semibold mb-4 text-orange-400">Admin Controls</h3>
@@ -717,18 +856,3 @@
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
