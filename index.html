@@ -16,6 +16,8 @@
       margin: 0;
       padding: 0;
       font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      overflow: hidden;
+      position: relative;
     }
     .hidden { display: none; }
     .verification-modal {
@@ -30,9 +32,35 @@
       font-size: 1.6rem; font-weight: 700; color: #1e3a8a; letter-spacing: 4px; margin: 1rem 0; user-select: none;
     }
     .status-message { display: none; padding: 1rem; border-radius: .5rem; margin-top: .8rem; text-align:center; transition: all .25s ease; }
+    
+    /* Sistema de Linterna */
+    #spotlight {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      background: radial-gradient(
+        circle at var(--x, 50%) var(--y, 50%),
+        transparent 80px,
+        rgba(0, 0, 0, 0.95) 150px
+      );
+      z-index: 5;
+      transition: background 0.1s ease;
+    }
+    
+    /* Asegurar que el contenido esté por encima de la linterna */
+    .content-container {
+      position: relative;
+      z-index: 10;
+    }
   </style>
 </head>
 <body>
+
+  <!-- Sistema de Linterna -->
+  <div id="spotlight"></div>
 
   <!-- Modal CAPTCHA -->
   <div id="verification-modal" class="verification-modal hidden">
@@ -59,17 +87,19 @@
   </div>
 
   <!-- Caja principal -->
-  <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-8 w-full max-w-md shadow-2xl z-10 text-center">
-    <i class="fas fa-music text-5xl text-cyan-300 mb-4"></i>
-    <h1 class="text-3xl font-bold text-white mb-2">Music Manager</h1>
-    <p class="text-white/70 mb-6">Simple verification before entering</p>
+  <div class="content-container">
+    <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-8 w-full max-w-md shadow-2xl text-center">
+      <i class="fas fa-music text-5xl text-cyan-300 mb-4"></i>
+      <h1 class="text-3xl font-bold text-white mb-2">Music Manager</h1>
+      <p class="text-white/70 mb-6">Simple verification before entering</p>
 
-    <button id="start-btn"
-            class="px-6 py-3.5 rounded-lg bg-cyan-400 text-white font-medium cursor-pointer transition-all hover:bg-cyan-500 transform hover:-translate-y-0.5">
-      Continue
-    </button>
+      <button id="start-btn"
+              class="px-6 py-3.5 rounded-lg bg-cyan-400 text-white font-medium cursor-pointer transition-all hover:bg-cyan-500 transform hover:-translate-y-0.5">
+        Continue
+      </button>
 
-    <div id="status-message" class="status-message"></div>
+      <div id="status-message" class="status-message"></div>
+    </div>
   </div>
 
   <script>
@@ -83,8 +113,22 @@
     const verifyBtn = document.getElementById('verify-btn');
     const cancelBtn = document.getElementById('cancel-verify-btn');
     const sessionNameEl = document.getElementById('session-name');
+    const spotlight = document.getElementById('spotlight');
 
     let currentCode = '';
+
+    // Sistema de linterna - actualizar posición según el cursor
+    document.addEventListener('mousemove', (e) => {
+      spotlight.style.setProperty('--x', `${e.clientX}px`);
+      spotlight.style.setProperty('--y', `${e.clientY}px`);
+    });
+
+    // También actualizar en dispositivos táctiles
+    document.addEventListener('touchmove', (e) => {
+      const touch = e.touches[0];
+      spotlight.style.setProperty('--x', `${touch.clientX}px`);
+      spotlight.style.setProperty('--y', `${touch.clientY}px`);
+    });
 
     // Genera CAPTCHA de 5 caracteres alfanuméricos
     function generateCaptcha() {
