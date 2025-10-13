@@ -103,6 +103,24 @@
       position: relative;
       z-index: 10;
     }
+    
+    /* Cambiar color de selección a negro */
+    ::selection {
+      background: #000000;
+      color: #ffffff;
+    }
+    
+    /* Para navegadores basados en Webkit (Chrome, Safari, etc.) */
+    ::-moz-selection {
+      background: #000000;
+      color: #ffffff;
+    }
+    
+    /* Para navegadores basados en Mozilla (Firefox) */
+    ::-webkit-selection {
+      background: #000000;
+      color: #ffffff;
+    }
   </style>
 </head>
 <body>
