@@ -49,6 +49,10 @@
        // User authentication state
         let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
         
+        // YouTube Player variables
+        let player; // variable global del reproductor
+        let currentPlaylistIndex = null;
+        let currentSongIndex = 0;
 
         // Debug function
         function debugLog(message) {
@@ -298,14 +302,39 @@
 
         // Play a song from playlist
         function playSong(playlistIndex, songIndex) {
+            currentPlaylistIndex = playlistIndex;
+            currentSongIndex = parseInt(songIndex);
+
             const song = playlists[playlistIndex].songs[songIndex];
-            const playerContainer = document.getElementById('player-container');
-            playerContainer.innerHTML = `
-                <iframe id="youtube-player" src="https://www.youtube.com/embed/${song.videoId}?autoplay=1" 
-                        frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                        allowfullscreen class="w-full h-96">
-                </iframe>
-            `;
+
+            if (!player) {
+                player = new YT.Player('youtube-player', {
+                    height: '384',
+                    width: '100%',
+                    videoId: song.videoId,
+                    events: {
+                        'onStateChange': onPlayerStateChange
+                    }
+                });
+            } else {
+                player.loadVideoById(song.videoId);
+            }
+        }
+
+        // Función que detecta cuando termina el video
+        function onPlayerStateChange(event) {
+            if (event.data === YT.PlayerState.ENDED) {
+                const playlist = playlists[currentPlaylistIndex];
+                currentSongIndex++;
+
+                // Si terminamos la lista, reiniciamos desde el primer video
+                if (currentSongIndex >= playlist.songs.length) {
+                    currentSongIndex = 0;
+                }
+
+                const nextSong = playlist.songs[currentSongIndex];
+                player.loadVideoById(nextSong.videoId);
+            }
         }
 
         // Play a song from discover section
@@ -608,6 +637,7 @@
                             <i class="fas fa-play-circle mr-2"></i> Player
                         </h3>
                         <div id="player-container">
+                            <div id="youtube-player"></div>
                             <div class="player-placeholder text-center p-10 bg-black/30 rounded-lg">
                                 <i class="fas fa-play-circle text-5xl mb-4 opacity-50"></i>
                                 <p>Select a song to play it here</p>
@@ -652,9 +682,17 @@
         </div>
     </div>
 
+    <!-- YouTube API Script -->
+    <script src="https://www.youtube.com/iframe_api"></script>
+    
+    <script>
+        // Esta función es requerida por la API pero no necesita contenido aquí
+        function onYouTubeIframeAPIReady() {
+            // El reproductor se inicializará cuando se llame a playSong por primera vez
+        }
+    </script>
 
 </body>
-
 </html>
 
 
