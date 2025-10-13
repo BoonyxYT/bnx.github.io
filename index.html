@@ -1,543 +1,177 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Music Manager - Login</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-    <style>
-        body {
-            background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
-            min-height: 100vh;
-            position: relative;
-            overflow: hidden;
-            margin: 0;
-            padding: 0;
-        }
-        
-        .gradient-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(
-                circle at var(--mouse-x, 50%) var(--mouse-y, 50%), 
-                rgba(30, 58, 138, 0.8) 0%, 
-                rgba(0, 0, 0, 0.9) 70%
-            );
-            transition: background 0.3s ease;
-            pointer-events: none;
-            z-index: -1;
-        }
-        
-        .music-player {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 50px;
-            padding: 10px 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            z-index: 100;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        }
-        
-        .volume-slider {
-            width: 80px;
-        }
-        
-        .hidden {
-            display: none;
-        }
-        
-        .autoplay-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        
-        .autoplay-content {
-            background: white;
-            padding: 2rem;
-            border-radius: 1rem;
-            text-align: center;
-            max-width: 400px;
-        }
-        
-        /* Visualizador de barras rítmicas */
-        .visualizer {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 150px;
-            display: flex;
-            align-items: flex-end;
-            justify-content: center;
-            gap: 3px;
-            padding: 20px;
-            z-index: 1;
-            pointer-events: none;
-        }
-        
-        .bar {
-            width: 12px;
-            background: linear-gradient(to top, #00f2fe, #4facfe);
-            border-radius: 6px 6px 0 0;
-            transition: height 0.1s ease;
-            box-shadow: 0 0 10px rgba(79, 172, 254, 0.5);
-            min-height: 5px;
-        }
-        
-        /* Barras más pequeñas para móviles */
-        @media (max-width: 768px) {
-            .visualizer {
-                height: 100px;
-                gap: 2px;
-            }
-            .bar {
-                width: 8px;
-            }
-        }
-        
-        /* Efecto de partículas */
-        .particles {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 0;
-        }
-        
-        .particle {
-            position: absolute;
-            background: rgba(79, 172, 254, 0.6);
-            border-radius: 50%;
-            pointer-events: none;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Music Manager - Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
+      min-height: 100vh;
+      position: relative;
+      overflow: hidden;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-        /* Modal de verificación */
-        .verification-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
-        }
+    .hidden { display: none; }
 
-        .verification-content {
-            background: white;
-            padding: 2rem;
-            border-radius: 1rem;
-            max-width: 400px;
-            width: 90%;
-        }
-        
-        .verification-code {
-            background: #f0f9ff;
-            border: 2px dashed #4facfe;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            text-align: center;
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #1e3a8a;
-            margin: 1rem 0;
-        }
+    /* MODAL CAPTCHA */
+    .verification-modal {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
 
-        /* Estilos para el estado del email */
-        .email-status {
-            display: none;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            margin: 1rem 0;
-            text-align: center;
-        }
-    </style>
+    .verification-content {
+      background: white;
+      padding: 2rem;
+      border-radius: 1rem;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+
+    .captcha-code {
+      background: #f0f9ff;
+      border: 2px dashed #4facfe;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: #1e3a8a;
+      letter-spacing: 4px;
+      margin: 1rem 0;
+      user-select: none;
+    }
+
+    .email-status {
+      display: none;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      margin-top: 1rem;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+  </style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-4">
-    <!-- Background Music -->
-    <audio id="background-music" loop>
-        <source src="https://assets.codepen.io/1468070/Forget-Me-Not_-_Background.mp3" type="audio/mpeg">
-    </audio>
-    
-    <!-- Visualizador de barras rítmicas -->
-    <div class="visualizer" id="visualizer"></div>
-    
-    <!-- Partículas flotantes -->
-    <div class="particles" id="particles"></div>
-    
-    <!-- Music Player Controls -->
-    <div class="music-player">
-        <button id="play-pause-btn" class="text-white hover:text-cyan-300 transition-colors text-lg w-8 h-8 flex items-center justify-center">
-            <i id="play-icon" class="fas fa-play hidden"></i>
-            <i id="pause-icon" class="fas fa-pause"></i>
+<body>
+
+  <!-- Modal tipo CAPTCHA -->
+  <div id="verification-modal" class="verification-modal hidden">
+    <div class="verification-content">
+      <h2 class="text-2xl font-bold mb-4 text-cyan-500">Verification Required</h2>
+      <p class="mb-2 text-gray-600">Please enter the code shown below:</p>
+
+      <div id="captcha-code" class="captcha-code"></div>
+
+      <input type="text" id="captcha-input" placeholder="Enter code"
+             class="w-full px-4 py-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-400 focus:outline-none text-center uppercase tracking-wider">
+
+      <div class="flex gap-2 mb-3">
+        <button id="verify-btn" class="flex-1 bg-cyan-500 text-white px-4 py-2 rounded-lg hover:bg-cyan-600 transition-all">Verify</button>
+        <button id="refresh-captcha" class="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-all">Refresh</button>
+      </div>
+
+      <button id="cancel-verify-btn" class="text-sm text-gray-500 hover:text-gray-700">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Caja principal -->
+  <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-8 w-full max-w-md shadow-2xl z-10">
+    <div class="text-center mb-8">
+      <i class="fas fa-music text-5xl text-cyan-300 mb-4"></i>
+      <h1 class="text-3xl font-bold text-white">Music Manager</h1>
+      <p class="text-white/70 mt-2">Sign in to manage your YouTube playlists</p>
+    </div>
+
+    <div id="auth-section">
+      <div class="flex flex-col gap-4">
+        <input type="email" id="email-input" placeholder="Enter your email"
+               class="px-4 py-3.5 rounded-lg bg-white/90 border-0 text-base text-black focus:ring-2 focus:ring-cyan-400 focus:outline-none">
+
+        <button id="send-code-btn"
+                class="px-4 py-3.5 rounded-lg bg-cyan-400 text-white font-medium cursor-pointer transition-all hover:bg-cyan-500 transform hover:-translate-y-0.5">
+          Continue
         </button>
-        <div class="volume-slider">
-            <input id="volume-slider" type="range" min="0" max="100" value="50" class="w-full">
-        </div>
-        <span id="music-status" class="text-white text-sm">Playing</span>
+      </div>
+      <div id="email-status" class="email-status"></div>
     </div>
+  </div>
 
-    <!-- Overlay para autoplay bloqueado -->
-    <div id="autoplay-overlay" class="autoplay-overlay hidden">
-        <div class="autoplay-content">
-            <h3 class="text-xl font-bold mb-4">🎵 Music Manager</h3>
-            <p class="mb-4">Click the button below to start the background music</p>
-            <button id="start-music-btn" class="bg-cyan-500 text-white px-6 py-2 rounded-lg hover:bg-cyan-600">
-                Start Music
-            </button>
-        </div>
-    </div>
+  <script>
+    // ===== VARIABLES =====
+    const verificationModal = document.getElementById('verification-modal');
+    const captchaCode = document.getElementById('captcha-code');
+    const captchaInput = document.getElementById('captcha-input');
+    const emailStatus = document.getElementById('email-status');
+    const emailInput = document.getElementById('email-input');
 
-    <!-- Modal de verificación -->
-    <div id="verification-modal" class="verification-modal hidden">
-        <div class="verification-content">
-            <h2 class="text-2xl font-bold mb-4 text-cyan-500">Verification Required</h2>
-            <p class="mb-2 text-gray-600">We've sent a verification code to your email</p>
-            <p class="mb-4 text-gray-600">Enter the verification code below:</p>
-            <input type="text" id="verification-input" placeholder="Enter code" 
-                   class="w-full px-4 py-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-400 focus:outline-none">
-            <div class="flex gap-2">
-                <button id="verify-btn" class="flex-1 bg-cyan-500 text-white px-4 py-2 rounded-lg hover:bg-cyan-600">
-                    Verify
-                </button>
-                <button id="cancel-verify-btn" class="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600">
-                    Cancel
-                </button>
-            </div>
-            <div class="mt-4 text-center">
-                <button id="resend-code-btn" class="text-cyan-500 hover:text-cyan-600 text-sm underline">
-                    Resend Verification Code
-                </button>
-            </div>
-        </div>
-    </div>
+    let currentCode = '';
 
-    <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-8 w-full max-w-md shadow-2xl z-10">
-        <div class="text-center mb-8">
-            <i class="fas fa-music text-5xl text-cyan-300 mb-4"></i>
-            <h1 class="text-3xl font-bold text-white">Music Manager</h1>
-            <p class="text-white/70 mt-2">Sign in to manage your YouTube playlists</p>
-        </div>
+    // ===== GENERAR CÓDIGO CAPTCHA =====
+    function generateCaptcha() {
+      // Genera un código aleatorio de 5 caracteres alfanuméricos
+      currentCode = Math.random().toString(36).substring(2, 7).toUpperCase();
+      captchaCode.textContent = currentCode;
+    }
 
-        <div id="auth-section">
-            <div class="flex flex-col gap-4">
-                <input type="email" id="email-input" placeholder="Enter your email" 
-                       class="px-4 py-3.5 rounded-lg bg-white/90 border-0 text-base text-black focus:ring-2 focus:ring-cyan-400 focus:outline-none">
-                <button id="send-code-btn" 
-                        class="px-4 py-3.5 rounded-lg bg-cyan-400 text-white font-medium cursor-pointer transition-all hover:bg-cyan-500 transform hover:-translate-y-0.5">
-                    Send Verification Code
-                </button>
-            </div>
-            <div id="email-status" class="email-status"></div>
-        </div>
+    // ===== ABRIR Y CERRAR MODAL =====
+    function openCaptchaModal() {
+      if (!emailInput.value.trim()) {
+        emailStatus.innerHTML = '<p class="text-red-400">⚠️ Please enter your email first.</p>';
+        emailStatus.style.display = 'block';
+        return;
+      }
+      generateCaptcha();
+      captchaInput.value = '';
+      verificationModal.classList.remove('hidden');
+    }
 
-        <!-- Debug info (opcional) -->
-        <div id="debug-info" class="mt-4 p-4 bg-black/50 text-white text-xs rounded-lg hidden"></div>
-    </div>
+    function closeCaptchaModal() {
+      verificationModal.classList.add('hidden');
+    }
 
-    <script src="auth.js"></script>
-    <script>
-        // Variables globales
-        let audioContext;
-        let analyser;
-        let dataArray;
-        let bufferLength;
-        let bars = [];
-        let animationId;
-        let particles = [];
-        let isPlaying = false;
+    // ===== VERIFICAR CAPTCHA =====
+    function handleVerification() {
+      const inputValue = captchaInput.value.trim().toUpperCase();
 
-        // Función para manejar login exitoso
-        function handleSuccessfulLogin() {
-            document.getElementById('email-status').innerHTML = 
-                '<p class="text-green-400">✅ Verification successful! Redirecting...</p>';
-            document.getElementById('email-status').style.display = 'block';
-            
-            setTimeout(redirectToDashboard, 1500);
-        }
+      if (inputValue === currentCode) {
+        emailStatus.innerHTML = '<p class="text-green-400">✅ Verified successfully! Redirecting...</p>';
+        emailStatus.style.display = 'block';
+        closeCaptchaModal();
+        setTimeout(() => window.location.href = 'dashboard.html', 1200);
+      } else {
+        emailStatus.innerHTML = '<p class="text-red-400">❌ Incorrect code. Try again.</p>';
+        emailStatus.style.display = 'block';
+        generateCaptcha();
+        captchaInput.value = '';
+      }
+    }
 
-        // Función para redirigir al dashboard
-        function redirectToDashboard() {
-            window.location.href = 'dashboard.html';
-        }
+    // ===== EVENTOS =====
+    document.getElementById('send-code-btn').addEventListener('click', openCaptchaModal);
+    document.getElementById('verify-btn').addEventListener('click', handleVerification);
+    document.getElementById('refresh-captcha').addEventListener('click', generateCaptcha);
+    document.getElementById('cancel-verify-btn').addEventListener('click', closeCaptchaModal);
 
-        // Función para iniciar música automáticamente
-        function startMusicAutomatically() {
-            const audioElement = document.getElementById('background-music');
-            const autoplayOverlay = document.getElementById('autoplay-overlay');
-            
-            audioElement.volume = 0.5;
-            
-            setTimeout(() => {
-                audioElement.play().then(() => {
-                    console.log("🎵 Music started automatically!");
-                    isPlaying = true;
-                    updateMusicUI();
-                    setupAudioAnalyzer(audioElement);
-                    startVisualizer();
-                }).catch(error => {
-                    console.log("Autoplay blocked:", error);
-                    autoplayOverlay.classList.remove('hidden');
-                    isPlaying = false;
-                    updateMusicUI();
-                });
-            }, 1000);
-        }
+    // Permitir usar Enter
+    captchaInput.addEventListener('keypress', e => {
+      if (e.key === 'Enter') handleVerification();
+    });
+  </script>
 
-        // Configurar eventos cuando el DOM esté listo
-        document.addEventListener('DOMContentLoaded', function() {
-            const audioElement = document.getElementById('background-music');
-            const playPauseBtn = document.getElementById('play-pause-btn');
-            const volumeSlider = document.getElementById('volume-slider');
-            const startMusicBtn = document.getElementById('start-music-btn');
-            const autoplayOverlay = document.getElementById('autoplay-overlay');
-            const sendCodeBtn = document.getElementById('send-code-btn');
-            const verifyBtn = document.getElementById('verify-btn');
-            const cancelVerifyBtn = document.getElementById('cancel-verify-btn');
-            const resendCodeBtn = document.getElementById('resend-code-btn');
-            const verificationModal = document.getElementById('verification-modal');
-
-            // Inicializar componentes
-            createVisualizerBars();
-            createParticles();
-            
-            // Intentar reproducir música automáticamente
-            startMusicAutomatically();
-
-            // Control de volumen
-            volumeSlider.addEventListener('input', function() {
-                audioElement.volume = this.value / 100;
-            });
-
-            // Botón de play/pause
-            playPauseBtn.addEventListener('click', function() {
-                if (isPlaying) {
-                    audioElement.pause();
-                    isPlaying = false;
-                    if (animationId) {
-                        cancelAnimationFrame(animationId);
-                    }
-                } else {
-                    audioElement.play().then(() => {
-                        isPlaying = true;
-                        if (!analyser) {
-                            setupAudioAnalyzer(audioElement);
-                        }
-                        startVisualizer();
-                    }).catch(error => {
-                        console.log("Play failed:", error);
-                    });
-                }
-                updateMusicUI();
-            });
-
-            // Botón de iniciar música desde el overlay
-            startMusicBtn.addEventListener('click', startMusicManually);
-
-            // Clic en cualquier parte del overlay para iniciar música
-            autoplayOverlay.addEventListener('click', function(e) {
-                if (e.target === autoplayOverlay) {
-                    startMusicManually();
-                }
-            });
-
-            // Botón de enviar código de verificación - USA LA FUNCIÓN DE auth.js
-            sendCodeBtn.addEventListener('click', function() {
-                sendVerificationCode();
-            });
-
-            // Botón de verificar código - USA LA FUNCIÓN DE auth.js
-            verifyBtn.addEventListener('click', function() {
-                verifyCode();
-            });
-
-            // Botón de cancelar verificación - USA LA FUNCIÓN DE auth.js
-            cancelVerifyBtn.addEventListener('click', function() {
-                closeVerificationModal();
-            });
-
-            // Botón de reenviar código - USA LA FUNCIÓN DE auth.js
-            resendCodeBtn.addEventListener('click', function() {
-                resendVerificationCode();
-            });
-
-            // Permitir Enter en el campo de verificación
-            document.getElementById('verification-input').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    verifyCode();
-                }
-            });
-
-            // Gradient overlay
-            const gradientOverlay = document.createElement('div');
-            gradientOverlay.className = 'gradient-overlay';
-            document.body.appendChild(gradientOverlay);
-
-            document.addEventListener('mousemove', function(e) {
-                const x = (e.clientX / window.innerWidth) * 100;
-                const y = (e.clientY / window.innerHeight) * 100;
-                
-                gradientOverlay.style.setProperty('--mouse-x', `${x}%`);
-                gradientOverlay.style.setProperty('--mouse-y', `${y}%`);
-            });
-        });
-
-        function startMusicManually() {
-            const audioElement = document.getElementById('background-music');
-            const autoplayOverlay = document.getElementById('autoplay-overlay');
-            
-            audioElement.play().then(() => {
-                isPlaying = true;
-                autoplayOverlay.classList.add('hidden');
-                setupAudioAnalyzer(audioElement);
-                startVisualizer();
-                updateMusicUI();
-            }).catch(error => {
-                console.log("Manual play failed:", error);
-            });
-        }
-
-        function updateMusicUI() {
-            const playIcon = document.getElementById('play-icon');
-            const pauseIcon = document.getElementById('pause-icon');
-            const musicStatus = document.getElementById('music-status');
-            
-            if (isPlaying) {
-                playIcon.classList.add('hidden');
-                pauseIcon.classList.remove('hidden');
-                musicStatus.textContent = "Playing";
-            } else {
-                playIcon.classList.remove('hidden');
-                pauseIcon.classList.add('hidden');
-                musicStatus.textContent = "Paused";
-            }
-        }
-
-        function createVisualizerBars() {
-            const visualizer = document.getElementById('visualizer');
-            const barCount = Math.floor(window.innerWidth / 15);
-            
-            for (let i = 0; i < barCount; i++) {
-                const bar = document.createElement('div');
-                bar.className = 'bar';
-                bar.style.height = '5px';
-                visualizer.appendChild(bar);
-                bars.push(bar);
-            }
-        }
-
-        function createParticles() {
-            const particlesContainer = document.getElementById('particles');
-            for (let i = 0; i < 20; i++) {
-                createParticle(particlesContainer);
-            }
-        }
-
-        function createParticle(container) {
-            const particle = document.createElement('div');
-            particle.className = 'particle';
-            
-            const size = Math.random() * 4 + 2;
-            particle.style.width = `${size}px`;
-            particle.style.height = `${size}px`;
-            
-            particle.style.left = `${Math.random() * 100}%`;
-            particle.style.top = `${Math.random() * 100}%`;
-            
-            container.appendChild(particle);
-            particles.push({
-                element: particle,
-                x: Math.random() * window.innerWidth,
-                y: Math.random() * window.innerHeight,
-                speedX: (Math.random() - 0.5) * 0.5,
-                speedY: (Math.random() - 0.5) * 0.5,
-                size: size
-            });
-        }
-
-        function setupAudioAnalyzer(audioElement) {
-            try {
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                analyser = audioContext.createAnalyser();
-                const source = audioContext.createMediaElementSource(audioElement);
-                source.connect(analyser);
-                analyser.connect(audioContext.destination);
-                
-                analyser.fftSize = 256;
-                bufferLength = analyser.frequencyBinCount;
-                dataArray = new Uint8Array(bufferLength);
-            } catch (error) {
-                console.log("Audio analyzer setup failed:", error);
-            }
-        }
-
-        function startVisualizer() {
-            if (!analyser) return;
-            
-            function animate() {
-                analyser.getByteFrequencyData(dataArray);
-                
-                for (let i = 0; i < bars.length; i++) {
-                    const barIndex = Math.floor((i / bars.length) * bufferLength);
-                    const value = dataArray[barIndex];
-                    const height = (value / 255) * 100 + 5;
-                    bars[i].style.height = `${height}px`;
-                    
-                    const intensity = value / 255;
-                    bars[i].style.background = `linear-gradient(to top, 
-                        hsl(${200 + intensity * 60}, 100%, ${50 + intensity * 30}%), 
-                        hsl(${200 + intensity * 40}, 100%, ${60 + intensity * 20}%))`;
-                    
-                    bars[i].style.boxShadow = `0 0 ${5 + intensity * 15}px hsl(${200 + intensity * 60}, 100%, 50%)`;
-                }
-                
-                updateParticles();
-                animationId = requestAnimationFrame(animate);
-            }
-            
-            animate();
-        }
-
-        function updateParticles() {
-            particles.forEach(particle => {
-                particle.x += particle.speedX;
-                particle.y += particle.speedY;
-                
-                if (particle.x <= 0 || particle.x >= window.innerWidth) particle.speedX *= -1;
-                if (particle.y <= 0 || particle.y >= window.innerHeight) particle.speedY *= -1;
-                
-                particle.element.style.left = `${particle.x}px`;
-                particle.element.style.top = `${particle.y}px`;
-                
-                if (dataArray && dataArray.length > 0) {
-                    const avgFrequency = dataArray.slice(0, 10).reduce((a, b) => a + b) / 10;
-                    const opacity = 0.3 + (avgFrequency / 255) * 0.7;
-                    particle.element.style.opacity = opacity;
-                }
-            });
-        }
-    </script>
 </body>
 </html>
+
