@@ -292,6 +292,22 @@
             color: #000;
             text-align: center;
         }
+        
+        /* Particle background */
+        #particles-js {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+        
+        /* Artist filter button */
+        .artist-filter.active {
+            background: #22d3ee;
+            color: white;
+        }
     </style>
 
     <script>
@@ -384,7 +400,7 @@
                 title: "Shape of You", 
                 url: "https://www.youtube.com/watch?v=JGwWNGJdvx8", 
                 videoId: "JGwWNGJdvx8",
-                tags: ["Pop", "Dance", "Ed Sheeran"],
+                tags: ["Pop", "Dance"],
                 artist: "Ed Sheeran",
                 year: 2017
             },
@@ -418,6 +434,7 @@
 
         // Tag filter variables
         let activeTag = null;
+        let activeArtist = null;
         
         // Theme management
         let currentTheme = localStorage.getItem('currentTheme') || 'original';
@@ -425,7 +442,6 @@
         // Playlist Generator variables
         let selectedGenres = [];
         let selectedEras = [];
-        let selectedArtists = [];
         let songCount = 10;
 
         // Debug function
@@ -726,10 +742,53 @@
             });
         }
 
+        // Render artist filters
+        function renderArtistFilters() {
+            const container = document.getElementById('artist-filters');
+            const allArtists = getAllArtists();
+            
+            let artistsHtml = `
+                <button class="artist-filter accent-btn text-white px-4 py-2 rounded-lg cursor-pointer transition-colors hover:bg-green-600 ${activeArtist === null ? 'active' : ''}" 
+                        data-artist="all">
+                    <i class="fas fa-eye mr-1"></i> Show All
+                </button>
+            `;
+            
+            allArtists.forEach(artist => {
+                artistsHtml += `
+                    <button class="artist-filter bg-white/10 text-white px-4 py-2 rounded-lg cursor-pointer transition-colors hover:bg-white/20 ${activeArtist === artist ? 'active' : ''}" 
+                            data-artist="${artist}">
+                        ${artist}
+                    </button>
+                `;
+            });
+            
+            container.innerHTML = artistsHtml;
+            
+            // Add event listeners to artist filters
+            document.querySelectorAll('.artist-filter').forEach(button => {
+                button.addEventListener('click', function() {
+                    const artist = this.getAttribute('data-artist');
+                    setActiveArtist(artist === 'all' ? null : artist);
+                });
+            });
+        }
+
         // Set active tag and re-render discover songs
         function setActiveTag(tag) {
             activeTag = tag;
+            activeArtist = null; // Reset artist filter when using tag filter
             renderTagFilters();
+            renderArtistFilters();
+            renderDiscoverSongs();
+        }
+
+        // Set active artist and re-render discover songs
+        function setActiveArtist(artist) {
+            activeArtist = artist;
+            activeTag = null; // Reset tag filter when using artist filter
+            renderTagFilters();
+            renderArtistFilters();
             renderDiscoverSongs();
         }
 
@@ -738,17 +797,23 @@
             const container = document.getElementById('discover-songs-container');
             container.innerHTML = '';
 
-            // Filter songs based on active tag
-            const filteredSongs = activeTag 
-                ? discoverSongs.filter(song => song.tags && song.tags.includes(activeTag))
-                : discoverSongs;
+            // Filter songs based on active tag or active artist
+            let filteredSongs = discoverSongs;
+            
+            if (activeTag) {
+                filteredSongs = filteredSongs.filter(song => song.tags && song.tags.includes(activeTag));
+            }
+            
+            if (activeArtist) {
+                filteredSongs = filteredSongs.filter(song => song.artist === activeArtist);
+            }
 
             if (filteredSongs.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state text-center p-10 opacity-70 col-span-full">
                         <i class="fas fa-compass text-5xl mb-4 opacity-50"></i>
-                        <p>No songs found for the selected tag.</p>
-                        <p>Try selecting a different tag or view all songs.</p>
+                        <p>No songs found for the selected filter.</p>
+                        <p>Try selecting a different filter or view all songs.</p>
                     </div>
                 `;
                 return;
@@ -1033,6 +1098,7 @@
             saveDiscoverSongs();
             renderDiscoverSongs();
             renderTagFilters();
+            renderArtistFilters();
             
             // Clear input fields
             document.getElementById('discover-youtube-url').value = '';
@@ -1079,6 +1145,7 @@
                 renderPlaylists();
                 renderDiscoverSongs();
                 renderTagFilters();
+                renderArtistFilters();
             } else {
                 // User is not signed in, redirect to login
                 window.location.href = 'index.html';
@@ -1096,7 +1163,6 @@
             // Reset selections
             selectedGenres = [];
             selectedEras = [];
-            selectedArtists = [];
             songCount = 10;
             updateFilterSelections();
         }
@@ -1104,7 +1170,6 @@
         function populateGeneratorFilters() {
             const genresContainer = document.getElementById('genre-filters');
             const erasContainer = document.getElementById('era-filters');
-            const artistsContainer = document.getElementById('artist-filters');
             
             // Populate genres
             const allGenres = getAllTags();
@@ -1130,18 +1195,6 @@
                 `;
             });
             
-            // Populate artists
-            const allArtists = getAllArtists();
-            artistsContainer.innerHTML = '';
-            allArtists.forEach(artist => {
-                artistsContainer.innerHTML += `
-                    <div class="filter-option ${selectedArtists.includes(artist) ? 'selected' : ''}" 
-                         data-value="${artist}" onclick="toggleFilter('artists', '${artist}')">
-                        ${artist}
-                    </div>
-                `;
-            });
-            
             // Set song count
             document.getElementById('song-count').value = songCount;
         }
@@ -1154,9 +1207,6 @@
                     break;
                 case 'eras':
                     array = selectedEras;
-                    break;
-                case 'artists':
-                    array = selectedArtists;
                     break;
             }
             
@@ -1184,15 +1234,6 @@
             document.querySelectorAll('#era-filters .filter-option').forEach(option => {
                 const value = option.getAttribute('data-value');
                 if (selectedEras.includes(value)) {
-                    option.classList.add('selected');
-                } else {
-                    option.classList.remove('selected');
-                }
-            });
-            
-            document.querySelectorAll('#artist-filters .filter-option').forEach(option => {
-                const value = option.getAttribute('data-value');
-                if (selectedArtists.includes(value)) {
                     option.classList.add('selected');
                 } else {
                     option.classList.remove('selected');
@@ -1234,13 +1275,6 @@
                     
                     return selectedEras.includes(era);
                 });
-            }
-            
-            // Filter by artists
-            if (selectedArtists.length > 0) {
-                filteredSongs = filteredSongs.filter(song => 
-                    song.artist && selectedArtists.includes(song.artist)
-                );
             }
             
             // Limit to requested number of songs
@@ -1287,6 +1321,86 @@
             alert(`Playlist "${playlistName}" with ${filteredSongs.length} songs has been created!`);
         }
 
+        // Initialize particles background
+        function initParticles() {
+            // Simple particle system implementation
+            const canvas = document.createElement('canvas');
+            canvas.id = 'particles-js';
+            document.body.appendChild(canvas);
+            
+            const ctx = canvas.getContext('2d');
+            let particlesArray = [];
+            
+            // Set canvas size
+            function setCanvasSize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            
+            setCanvasSize();
+            window.addEventListener('resize', setCanvasSize);
+            
+            // Particle class
+            class Particle {
+                constructor() {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.size = Math.random() * 2 + 0.5;
+                    this.speedX = Math.random() * 0.5 - 0.25;
+                    this.speedY = Math.random() * 0.5 - 0.25;
+                    this.color = `rgba(255, 255, 255, ${Math.random() * 0.1})`;
+                }
+                
+                update() {
+                    this.x += this.speedX;
+                    this.y += this.speedY;
+                    
+                    // Bounce off edges
+                    if (this.x > canvas.width || this.x < 0) {
+                        this.speedX = -this.speedX;
+                    }
+                    if (this.y > canvas.height || this.y < 0) {
+                        this.speedY = -this.speedY;
+                    }
+                }
+                
+                draw() {
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            
+            // Create particles
+            function init() {
+                particlesArray = [];
+                const numberOfParticles = (canvas.width * canvas.height) / 9000;
+                for (let i = 0; i < numberOfParticles; i++) {
+                    particlesArray.push(new Particle());
+                }
+            }
+            
+            // Animation loop
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                for (let i = 0; i < particlesArray.length; i++) {
+                    particlesArray[i].update();
+                    particlesArray[i].draw();
+                }
+                requestAnimationFrame(animate);
+            }
+            
+            init();
+            animate();
+            
+            // Reinitialize on resize
+            window.addEventListener('resize', function() {
+                setCanvasSize();
+                init();
+            });
+        }
+
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
             debugLog('Application initialized');
@@ -1296,6 +1410,9 @@
             
             // Initialize cursor light effect
             initCursorLight();
+            
+            // Initialize particles background
+            initParticles();
             
             // Check if user is already signed in
             updateUIForUser();
@@ -1496,9 +1613,26 @@
                 
                 <!-- Tag Filters -->
                 <div class="tag-filters-section mb-6">
-                    <h3 class="text-lg font-semibold mb-3 accent-color">Filter by Tags:</h3>
-                    <div id="tag-filters" class="flex flex-wrap gap-2">
+                    <h3 class="text-lg font-semibold mb-3 accent-color">Filter by:</h3>
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <button class="tag-filter accent-btn text-white px-4 py-2 rounded-lg cursor-pointer transition-colors hover:bg-green-600 ${activeTag === null && activeArtist === null ? 'active' : ''}" 
+                                onclick="setActiveTag(null); setActiveArtist(null);">
+                            <i class="fas fa-eye mr-1"></i> Show All
+                        </button>
+                        <button class="tag-filter bg-white/10 text-white px-4 py-2 rounded-lg cursor-pointer transition-colors hover:bg-white/20" 
+                                onclick="document.getElementById('tag-filters').classList.toggle('hidden'); document.getElementById('artist-filters').classList.add('hidden');">
+                            <i class="fas fa-tags mr-1"></i> Genres
+                        </button>
+                        <button class="tag-filter bg-white/10 text-white px-4 py-2 rounded-lg cursor-pointer transition-colors hover:bg-white/20" 
+                                onclick="document.getElementById('artist-filters').classList.toggle('hidden'); document.getElementById('tag-filters').classList.add('hidden');">
+                            <i class="fas fa-users mr-1"></i> Artists
+                        </button>
+                    </div>
+                    <div id="tag-filters" class="flex flex-wrap gap-2 hidden">
                         <!-- Tag filters will be generated here dynamically -->
+                    </div>
+                    <div id="artist-filters" class="flex flex-wrap gap-2 hidden">
+                        <!-- Artist filters will be generated here dynamically -->
                     </div>
                 </div>
                 
@@ -1547,13 +1681,6 @@
                 <span class="filter-title">Select Eras:</span>
                 <div id="era-filters" class="filter-options">
                     <!-- Era options will be populated here -->
-                </div>
-            </div>
-            
-            <div class="filter-section">
-                <span class="filter-title">Select Artists:</span>
-                <div id="artist-filters" class="filter-options">
-                    <!-- Artist options will be populated here -->
                 </div>
             </div>
             
