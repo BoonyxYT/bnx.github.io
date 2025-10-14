@@ -12,8 +12,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <!-- ColorThief para extraer colores de imágenes -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js"></script>
-    <script src="auth.js"></script>
     <style>
+        /* Todos los estilos anteriores se mantienen igual */
         #youtube-player {
             border-radius: 10px;
         }
@@ -440,8 +440,365 @@
         .player-pulse {
             animation: pulse 0.5s ease-in-out infinite;
         }
+        
+        /* Estilos para el historial de canciones recientes */
+        .recent-songs-container {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .recent-song-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        
+        .recent-song-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .recent-song-thumbnail {
+            width: 50px;
+            height: 40px;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        
+        .recent-song-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .recent-song-info {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .recent-song-title {
+            font-weight: 500;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .recent-song-artist {
+            font-size: 0.75rem;
+            opacity: 0.7;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .recent-song-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .recent-song-play {
+            background: rgba(34, 211, 238, 0.2);
+            color: #22d3ee;
+            border: none;
+            border-radius: 4px;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .recent-song-play:hover {
+            background: #22d3ee;
+            color: white;
+        }
+        
+        /* Modal para añadir canciones */
+        .add-song-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .add-song-modal-content {
+            background: rgba(30, 41, 59, 0.95);
+            border-radius: 12px;
+            padding: 25px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        }
+        
+        .add-song-modal.show {
+            display: flex;
+        }
     </style>
+</head>
+<body class="theme-original text-white min-h-screen pb-12">
+    <!-- Overlay para el tema dinámico -->
+    <div class="dynamic-overlay" style="display: none;"></div>
+    
+    <header class="bg-black/70 py-6 mb-8 shadow-lg">
+        <div class="container mx-auto px-5 flex flex-col md:flex-row justify-between items-center">
+            <div class="text-center md:text-left mb-4 md:mb-0">
+                <h1 class="text-4xl font-bold mb-3 logo">
+                    <i class="fas fa-music mr-2"></i> Beaxly - Music Manager
+                </h1>
+                <p class="text-xl opacity-90">Create and manage your YouTube playlists easily</p>
+            </div>
+            <div class="flex gap-4">
+                <button id="discover-btn" class="accent-btn text-white px-6 py-3 rounded-lg cursor-pointer transition-all hover:-translate-y-1 hover:shadow-lg">
+                    <i class="fas fa-compass mr-2"></i> Discover
+                </button>
+                <div class="theme-selector">
+                    <button id="theme-toggle-btn" class="bg-white/20 text-white px-4 py-3 rounded-lg cursor-pointer transition-colors hover:bg-white/30">
+                        <i class="fas fa-palette mr-2"></i> Themes
+                    </button>
+                    <div id="theme-options" class="theme-options">
+                        <div class="theme-option" data-theme="original">
+                            <span class="theme-color"></span> Original
+                        </div>
+                        <div class="theme-option" data-theme="red">
+                            <span class="theme-color"></span> Red
+                        </div>
+                        <div class="theme-option" data-theme="green">
+                            <span class="theme-color"></span> Green
+                        </div>
+                        <div class="theme-option" data-theme="purple">
+                            <span class="theme-color"></span> Purple
+                        </div>
+                        <div class="theme-option" data-theme="black">
+                            <span class="theme-color"></span> Black
+                        </div>
+                        <div class="theme-option" data-theme="dynamic">
+                            <span class="theme-color"></span> Dynamic
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
 
+    <div class="container mx-auto px-5">
+        <!-- User Info Section -->
+        <div id="user-info" class="flex justify-between items-center mb-5 p-4 bg-white/10 rounded-xl">
+            <div class="flex items-center gap-2.5">
+                <span id="user-email"></span>
+                <span id="admin-badge" class="hidden bg-orange-500 text-white px-2.5 py-1.5 rounded-full text-xs font-bold">
+                    ADMIN
+                </span>
+            </div>
+            <button id="logout-btn" 
+                    class="bg-red-500 text-white border-0 px-3 py-2 rounded cursor-pointer transition-colors hover:bg-red-600">
+                Logout
+            </button>
+        </div>
+
+        <!-- Main Content -->
+        <div id="main-content">
+            <div class="flex flex-col lg:flex-row gap-8">
+                <section class="flex-1 min-w-[350px] bg-white/10 rounded-xl p-6 shadow-lg">
+                    <div class="flex justify-between items-center mb-5 pb-2.5 border-b border-white/20">
+                        <h2 class="text-2xl font-bold accent-color">Recently Played</h2>
+                        <button id="open-add-song-modal" class="accent-btn text-white px-4 py-2 rounded cursor-pointer transition-colors hover:bg-green-600">
+                            <i class="fas fa-plus mr-2"></i> Add Song
+                        </button>
+                    </div>
+                    
+                    <div id="recent-songs-container" class="recent-songs-container">
+                        <!-- Canciones recientes se generarán aquí dinámicamente -->
+                    </div>
+                    
+                    <div class="player-section mt-8 bg-white/10 rounded-xl p-5 shadow-lg">
+                        <h3 class="text-2xl font-bold mb-5 accent-color pb-2.5 border-b border-white/20">
+                            <i class="fas fa-play-circle mr-2"></i> Player
+                        </h3>
+                        <div id="player-container">
+                            <div id="youtube-player" style="display: none;"></div>
+                            <div id="player-placeholder" class="player-placeholder text-center p-10 bg-black/30 rounded-lg">
+                                <i class="fas fa-play-circle text-5xl mb-4 opacity-50"></i>
+                                <p>Select a song to play it here</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <section class="flex-2 min-w-[350px]">
+                    <h2 class="text-2xl font-bold mb-5 accent-color pb-2.5 border-b border-white/20">My Playlists</h2>
+                    <div id="playlists-container">
+                        <!-- Playlists will be generated here dynamically -->
+                    </div>
+                </section>
+            </div>
+
+            <!-- Discover Section -->
+            <section class="discover-section bg-white/10 rounded-xl p-6 mt-8 shadow-lg">
+                <div class="flex justify-between items-center mb-5">
+                    <h2 class="text-2xl font-bold accent-color">
+                        <i class="fas fa-compass mr-2"></i> Discover
+                    </h2>
+                    <button id="generate-playlist-btn" class="accent-btn text-white px-4 py-2 rounded-lg cursor-pointer transition-colors hover:bg-green-600">
+                        <i class="fas fa-magic mr-2"></i> Generate Playlist
+                    </button>
+                </div>
+                
+                <!-- Tag Filters -->
+                <div class="filter-container mb-6">
+                    <h3 class="text-lg font-semibold mb-3 accent-color">Filter by:</h3>
+                    <div class="filter-toggle-buttons">
+                        <button id="show-all-btn" class="filter-toggle accent-btn">
+                            <i class="fas fa-eye mr-1"></i> Show All
+                        </button>
+                        <button id="genres-btn" class="filter-toggle">
+                            <i class="fas fa-tags mr-1"></i> Genres
+                        </button>
+                        <button id="artists-btn" class="filter-toggle">
+                            <i class="fas fa-users mr-1"></i> Artists
+                        </button>
+                    </div>
+                    <div id="tag-filters" class="filter-list">
+                        <!-- Tag filters will be generated here dynamically -->
+                    </div>
+                    <div id="artist-filters" class="filter-list">
+                        <!-- Artist filters will be generated here dynamically -->
+                    </div>
+                </div>
+                
+                <!-- Admin Controls (only visible to admin) -->
+                <div id="admin-controls" class="admin-controls bg-orange-500/20 rounded-lg p-5 mb-5 hidden">
+                    <h3 class="text-lg font-semibold mb-4 text-orange-400">Admin Controls</h3>
+                    <div class="admin-form grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <input type="text" id="discover-youtube-url" placeholder="YouTube URL for Discover section" 
+                               class="px-4 py-3 rounded-lg bg-white/90 border-0 text-black">
+                        <input type="text" id="discover-song-title" placeholder="Song title" 
+                               class="px-4 py-3 rounded-lg bg-white/90 border-0 text-black">
+                        <input type="text" id="discover-song-artist" placeholder="Artist" 
+                               class="px-4 py-3 rounded-lg bg-white/90 border-0 text-black">
+                        <input type="text" id="discover-song-year" placeholder="Year" 
+                               class="px-4 py-3 rounded-lg bg-white/90 border-0 text-black">
+                        <button id="add-to-discover-btn" 
+                                class="bg-orange-500 text-white px-4 py-3 rounded-lg cursor-pointer transition-colors hover:bg-orange-600 md:col-span-2">
+                            <i class="fas fa-plus mr-1"></i> Add to Discover
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="discover-songs-container" class="discover-songs grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    <!-- Discover songs will be generated here dynamically -->
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Modal para añadir canciones -->
+    <div id="add-song-modal" class="add-song-modal">
+        <div class="add-song-modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold accent-color">Add New Song</h3>
+                <button id="close-add-song-modal" class="text-white text-xl">&times;</button>
+            </div>
+            
+            <div class="mb-5">
+                <label for="youtube-url" class="block mb-2 font-medium">
+                    <i class="fab fa-youtube mr-2"></i> YouTube URL:
+                </label>
+                <input type="text" id="youtube-url" placeholder="Paste YouTube URL here..." 
+                       class="w-full px-4 py-3.5 rounded-lg bg-white/90 border-0 text-base text-black">
+            </div>
+            <div class="mb-5">
+                <label for="song-title" class="block mb-2 font-medium">
+                    <i class="fas fa-heading mr-2"></i> Song Title (optional):
+                </label>
+                <input type="text" id="song-title" placeholder="Enter a custom title..." 
+                       class="w-full px-4 py-3.5 rounded-lg bg-white/90 border-0 text-base text-black">
+            </div>
+            <div class="mb-5">
+                <label for="playlist-name" class="block mb-2 font-medium">
+                    <i class="fas fa-list mr-2"></i> Add to Playlist:
+                </label>
+                <input type="text" id="playlist-name" placeholder="Enter playlist name..." 
+                       class="w-full px-4 py-3.5 rounded-lg bg-white/90 border-0 text-base text-black">
+            </div>
+            <button id="add-song-btn" 
+                    class="w-full inline-block accent-btn text-white px-6 py-3.5 rounded-lg cursor-pointer text-base font-medium text-center transition-all hover:-translate-y-1 hover:shadow-lg">
+                <i class="fas fa-plus-circle mr-2"></i> Add to Playlist
+            </button>
+            
+            <div class="quick-add-section bg-white/5 rounded-lg p-5 mt-5">
+                <h3 class="text-lg font-semibold mb-4">Quick Add to Existing Playlist</h3>
+                <div class="playlist-selector flex gap-2.5 mb-4 items-center">
+                    <select id="existing-playlists" 
+                            class="flex-1 px-4 py-3 rounded-lg bg-white/90 border-0 text-black">
+                        <option value="">Select a playlist...</option>
+                    </select>
+                    <button id="quick-add-btn" 
+                            class="accent-btn text-white px-4 py-3 rounded-lg cursor-pointer transition-colors hover:bg-green-600">
+                        <i class="fas fa-plus mr-1"></i> Add
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Playlist Generator Modal -->
+    <div id="playlist-generator-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold accent-color">Generate Playlist</h3>
+                <button id="close-generator-btn" class="text-white text-xl">&times;</button>
+            </div>
+            
+            <div class="filter-section">
+                <span class="filter-title">Select Genres:</span>
+                <div id="genre-filters" class="filter-options">
+                    <!-- Genre options will be populated here -->
+                </div>
+            </div>
+            
+            <div class="filter-section">
+                <span class="filter-title">Select Eras:</span>
+                <div id="era-filters" class="filter-options">
+                    <!-- Era options will be populated here -->
+                </div>
+            </div>
+            
+            <div class="song-count-selector">
+                <span class="filter-title">Number of Songs:</span>
+                <input type="number" id="song-count" class="song-count-input" min="1" max="50" value="10">
+            </div>
+            
+            <div class="flex justify-end gap-3 mt-6">
+                <button id="cancel-generator-btn" class="bg-gray-500 text-white px-4 py-2 rounded cursor-pointer transition-colors hover:bg-gray-600">
+                    Cancel
+                </button>
+                <button id="generate-btn" class="accent-btn text-white px-4 py-2 rounded cursor-pointer transition-colors hover:bg-green-600">
+                    Generate Playlist
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- YouTube API Script -->
+    <script src="https://www.youtube.com/iframe_api"></script>
+    
     <script>
         // Sample data for testing the application
         let playlists = JSON.parse(localStorage.getItem('musicPlaylists')) || [
@@ -481,83 +838,11 @@
                 tags: ["Reggaeton", "Latin"],
                 artist: "Myke Towers & Quevedo",
                 year: 2023
-            },
-            { 
-                id: "d3", 
-                title: "The Wild Project #344", 
-                url: "https://www.youtube.com/watch?v=HjEVxPCmlVM", 
-                videoId: "HjEVxPCmlVM",
-                tags: ["Podcast", "Talk", "Interview"],
-                artist: "The Wild Project",
-                year: 2023
-            },
-            { 
-                id: "d4", 
-                title: "Believer", 
-                url: "https://www.youtube.com/watch?v=7wtfhZwyrcc", 
-                videoId: "7wtfhZwyrcc",
-                tags: ["Rock", "Pop Rock", "Alternative"],
-                artist: "Imagine Dragons",
-                year: 2017
-            },
-            { 
-                id: "d5", 
-                title: "Titi Me Preguntó", 
-                url: "https://www.youtube.com/watch?v=saGYMhApaH8", 
-                videoId: "saGYMhApaH8",
-                tags: ["Reggaeton", "Latin", "Urban"],
-                artist: "Bad Bunny",
-                year: 2022
-            },
-            { 
-                id: "d6", 
-                title: "Viva La Vida", 
-                url: "https://www.youtube.com/watch?v=dvgZkm1xWPE", 
-                videoId: "dvgZkm1xWPE",
-                tags: ["Rock", "Alternative", "Pop"],
-                artist: "Coldplay",
-                year: 2008
-            },
-            { 
-                id: "d7", 
-                title: "Blinding Lights", 
-                url: "https://www.youtube.com/watch?v=4NRXx6U8ABQ", 
-                videoId: "4NRXx6U8ABQ",
-                tags: ["Pop", "Synthwave", "80s"],
-                artist: "The Weeknd",
-                year: 2019
-            },
-            { 
-                id: "d8", 
-                title: "Shape of You", 
-                url: "https://www.youtube.com/watch?v=JGwWNGJdvx8", 
-                videoId: "JGwWNGJdvx8",
-                tags: ["Pop", "Dance"],
-                artist: "Ed Sheeran",
-                year: 2017
-            },
-            { 
-                id: "d9", 
-                title: "Despacito", 
-                url: "https://www.youtube.com/watch?v=kJQP7kiw5Fk", 
-                videoId: "kJQP7kiw5Fk",
-                tags: ["Reggaeton", "Latin", "Pop"],
-                artist: "Luis Fonsi ft. Daddy Yankee",
-                year: 2017
-            },
-            { 
-                id: "d10", 
-                title: "Uptown Funk", 
-                url: "https://www.youtube.com/watch?v=OPf0YbXqDm0", 
-                videoId: "OPf0YbXqDm0",
-                tags: ["Funk", "Pop", "R&B"],
-                artist: "Mark Ronson ft. Bruno Mars",
-                year: 2014
             }
         ];
 
         // User authentication state
-        let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
+        let currentUser = JSON.parse(localStorage.getItem('currentUser')) || { email: "test@example.com", isAdmin: true };
         
         // YouTube Player variables
         let player; // variable global del reproductor
@@ -604,6 +889,9 @@
         let beatInterval;
         let waveInterval;
 
+        // Historial de canciones recientes
+        let recentSongs = JSON.parse(localStorage.getItem('recentSongs')) || [];
+
         // Debug function
         function debugLog(message) {
             console.log(message);
@@ -625,6 +913,118 @@
 
         function saveUser() {
             localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        }
+
+        // Guardar canciones recientes
+        function saveRecentSongs() {
+            localStorage.setItem('recentSongs', JSON.stringify(recentSongs));
+        }
+
+        // Añadir canción al historial de recientes
+        function addToRecentSongs(song) {
+            // Evitar duplicados
+            const existingIndex = recentSongs.findIndex(s => s.videoId === song.videoId);
+            if (existingIndex !== -1) {
+                // Mover al principio si ya existe
+                recentSongs.splice(existingIndex, 1);
+            }
+            
+            // Añadir al principio
+            recentSongs.unshift({
+                id: song.id,
+                title: song.title,
+                url: song.url,
+                videoId: song.videoId,
+                artist: song.artist || 'Unknown Artist',
+                playedAt: new Date().toISOString()
+            });
+            
+            // Limitar a 10 canciones
+            if (recentSongs.length > 10) {
+                recentSongs = recentSongs.slice(0, 10);
+            }
+            
+            saveRecentSongs();
+            renderRecentSongs();
+        }
+
+        // Renderizar canciones recientes
+        function renderRecentSongs() {
+            const container = document.getElementById('recent-songs-container');
+            if (!container) return;
+            
+            container.innerHTML = '';
+
+            if (recentSongs.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state text-center p-6 opacity-70">
+                        <i class="fas fa-history text-3xl mb-3 opacity-50"></i>
+                        <p>No recently played songs</p>
+                        <p class="text-sm">Play some music to see your history here</p>
+                    </div>
+                `;
+                return;
+            }
+
+            recentSongs.forEach((song, index) => {
+                const songElement = document.createElement('div');
+                songElement.className = 'recent-song-item beat-element';
+                
+                songElement.innerHTML = `
+                    <div class="recent-song-thumbnail">
+                        <img src="https://img.youtube.com/vi/${song.videoId}/hqdefault.jpg" alt="Thumbnail">
+                    </div>
+                    <div class="recent-song-info">
+                        <div class="recent-song-title">${song.title}</div>
+                        <div class="recent-song-artist">${song.artist}</div>
+                    </div>
+                    <div class="recent-song-actions">
+                        <button class="recent-song-play" data-index="${index}">
+                            <i class="fas fa-play"></i>
+                        </button>
+                    </div>
+                `;
+
+                container.appendChild(songElement);
+            });
+
+            // Añadir event listeners para los botones de play
+            document.querySelectorAll('.recent-song-play').forEach(button => {
+                button.addEventListener('click', function() {
+                    const index = this.getAttribute('data-index');
+                    playRecentSong(index);
+                });
+            });
+        }
+
+        // Reproducir canción reciente
+        function playRecentSong(index) {
+            const song = recentSongs[index];
+            
+            // Obtener miniatura y extraer colores
+            const thumbnailUrl = `https://img.youtube.com/vi/${song.videoId}/hqdefault.jpg`;
+            if (currentTheme === 'dynamic') {
+                extractColorsFromThumbnail(thumbnailUrl);
+                startBeatEffects();
+            }
+            
+            // Hide placeholder and show player container
+            document.getElementById('player-placeholder').style.display = 'none';
+            document.getElementById('youtube-player').style.display = 'block';
+            document.getElementById('player-container').classList.add('player-active');
+
+            if (!player) {
+                player = new YT.Player('youtube-player', {
+                    height: '384',
+                    width: '100%',
+                    videoId: song.videoId,
+                    events: {
+                        'onStateChange': onPlayerStateChange
+                    }
+                });
+            } else {
+                player.loadVideoById(song.videoId);
+            }
         }
 
         // Extract YouTube video ID from URL
@@ -793,7 +1193,8 @@
                 ...document.querySelectorAll('.playlist-card'),
                 ...document.querySelectorAll('.discover-song-card'),
                 ...document.querySelectorAll('.accent-btn'),
-                ...document.querySelectorAll('.player-section')
+                ...document.querySelectorAll('.player-section'),
+                ...document.querySelectorAll('.recent-song-item')
             ];
             
             console.log(`Elementos que reaccionan al ritmo: ${beatElements.length}`);
@@ -941,6 +1342,8 @@
         // Render all playlists
         function renderPlaylists() {
             const container = document.getElementById('playlists-container');
+            if (!container) return;
+            
             container.innerHTML = '';
 
             if (playlists.length === 0) {
@@ -1064,7 +1467,8 @@
                     const playlistIndex = this.getAttribute('data-playlist');
                     document.getElementById('existing-playlists').value = playlistIndex;
                     document.getElementById('playlist-name').value = playlists[playlistIndex].name;
-                    document.getElementById('youtube-url').focus();
+                    // Mostrar modal de añadir canción
+                    showAddSongModal();
                 });
             });
 
@@ -1136,6 +1540,8 @@
             if (tagFiltersRendered) return;
             
             const container = document.getElementById('tag-filters');
+            if (!container) return;
+            
             const allTags = getAllTags();
             
             let tagsHtml = '';
@@ -1166,6 +1572,8 @@
             if (artistFiltersRendered) return;
             
             const container = document.getElementById('artist-filters');
+            if (!container) return;
+            
             const allArtists = getAllArtists();
             
             let artistsHtml = '';
@@ -1276,6 +1684,8 @@
         // Render discover songs with filtering
         function renderDiscoverSongs() {
             const container = document.getElementById('discover-songs-container');
+            if (!container) return;
+            
             container.innerHTML = '';
 
             // Filter songs based on active tag or active artist
@@ -1365,6 +1775,7 @@
         // Update the existing playlists dropdown
         function updatePlaylistsDropdown() {
             const dropdown = document.getElementById('existing-playlists');
+            if (!dropdown) return;
             
             // Clear existing options except the first one
             while (dropdown.options.length > 1) {
@@ -1386,6 +1797,9 @@
             currentSongIndex = parseInt(songIndex);
 
             const song = playlists[playlistIndex].songs[songIndex];
+            
+            // Añadir a canciones recientes
+            addToRecentSongs(song);
             
             // Obtener miniatura y extraer colores
             const thumbnailUrl = `https://img.youtube.com/vi/${song.videoId}/hqdefault.jpg`;
@@ -1432,6 +1846,9 @@
                 const nextSong = playlist.songs[currentSongIndex];
                 player.loadVideoById(nextSong.videoId);
                 
+                // Añadir a canciones recientes
+                addToRecentSongs(nextSong);
+                
                 // Reiniciar efectos para la siguiente canción
                 if (currentTheme === 'dynamic') {
                     setTimeout(() => {
@@ -1454,6 +1871,9 @@
         // Modificar la función playDiscoverSong para integrar el tema dinámico
         function playDiscoverSong(index) {
             const song = discoverSongs[index];
+            
+            // Añadir a canciones recientes
+            addToRecentSongs(song);
             
             // Obtener miniatura y extraer colores
             const thumbnailUrl = `https://img.youtube.com/vi/${song.videoId}/hqdefault.jpg`;
@@ -1579,6 +1999,11 @@
             // Clear input fields
             document.getElementById('youtube-url').value = '';
             document.getElementById('song-title').value = '';
+            
+            // Cerrar modal
+            hideAddSongModal();
+            
+            alert('Song added successfully!');
         }
 
         // Add a song to discover section (admin only)
@@ -1668,6 +2093,7 @@
                 renderDiscoverSongs();
                 renderTagFilters();
                 renderArtistFilters();
+                renderRecentSongs();
             } else {
                 // User is not signed in, redirect to login
                 window.location.href = 'index.html';
@@ -1923,9 +2349,18 @@
             });
         }
 
+        // Funciones para el modal de añadir canciones
+        function showAddSongModal() {
+            document.getElementById('add-song-modal').classList.add('show');
+        }
+
+        function hideAddSongModal() {
+            document.getElementById('add-song-modal').classList.remove('show');
+        }
+
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
-            debugLog('Application initialized');
+            console.log('Application initialized');
             
             // Apply saved theme
             applyTheme(currentTheme);
@@ -1976,7 +2411,7 @@
             // Close theme selector when clicking outside
             document.addEventListener('click', function(event) {
                 const themeSelector = document.querySelector('.theme-selector');
-                if (!themeSelector.contains(event.target)) {
+                if (themeSelector && !themeSelector.contains(event.target)) {
                     document.getElementById('theme-options').classList.remove('show');
                 }
             });
@@ -1984,6 +2419,7 @@
             // Playlist generator events
             document.getElementById('generate-playlist-btn').addEventListener('click', openPlaylistGenerator);
             document.getElementById('close-generator-btn').addEventListener('click', closePlaylistGenerator);
+            document.getElementById('cancel-generator-btn').addEventListener('click', closePlaylistGenerator);
             document.getElementById('generate-btn').addEventListener('click', generatePlaylist);
             document.getElementById('song-count').addEventListener('change', function() {
                 songCount = parseInt(this.value) || 10;
@@ -2008,244 +2444,22 @@
                 }
             });
             
-            debugLog('All event listeners attached');
+            // Botón para abrir modal de añadir canciones
+            document.getElementById('open-add-song-modal').addEventListener('click', showAddSongModal);
+            
+            // Cerrar modal de añadir canciones
+            document.getElementById('close-add-song-modal').addEventListener('click', hideAddSongModal);
+            
+            // Cerrar modal de añadir canciones al hacer clic fuera
+            document.getElementById('add-song-modal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    hideAddSongModal();
+                }
+            });
+            
+            console.log('All event listeners attached');
         });
     </script>
-    
-</head>
-<body class="theme-original text-white min-h-screen pb-12">
-    <!-- Overlay para el tema dinámico -->
-    <div class="dynamic-overlay" style="display: none;"></div>
-    
-    <header class="bg-black/70 py-6 mb-8 shadow-lg">
-        <div class="container mx-auto px-5 flex flex-col md:flex-row justify-between items-center">
-            <div class="text-center md:text-left mb-4 md:mb-0">
-                <h1 class="text-4xl font-bold mb-3 logo">
-                    <i class="fas fa-music mr-2"></i> Beaxly - Music Manager
-                </h1>
-                <p class="text-xl opacity-90">Create and manage your YouTube playlists easily</p>
-            </div>
-            <div class="flex gap-4">
-                <button id="discover-btn" class="accent-btn text-white px-6 py-3 rounded-lg cursor-pointer transition-all hover:-translate-y-1 hover:shadow-lg">
-                    <i class="fas fa-compass mr-2"></i> Discover
-                </button>
-                <div class="theme-selector">
-                    <button id="theme-toggle-btn" class="bg-white/20 text-white px-4 py-3 rounded-lg cursor-pointer transition-colors hover:bg-white/30">
-                        <i class="fas fa-palette mr-2"></i> Themes
-                    </button>
-                    <div id="theme-options" class="theme-options">
-                        <div class="theme-option" data-theme="original">
-                            <span class="theme-color"></span> Original
-                        </div>
-                        <div class="theme-option" data-theme="red">
-                            <span class="theme-color"></span> Red
-                        </div>
-                        <div class="theme-option" data-theme="green">
-                            <span class="theme-color"></span> Green
-                        </div>
-                        <div class="theme-option" data-theme="purple">
-                            <span class="theme-color"></span> Purple
-                        </div>
-                        <div class="theme-option" data-theme="black">
-                            <span class="theme-color"></span> Black
-                        </div>
-                        <div class="theme-option" data-theme="dynamic">
-                            <span class="theme-color"></span> Dynamic
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <div class="container mx-auto px-5">
-        <!-- User Info Section -->
-        <div id="user-info" class="flex justify-between items-center mb-5 p-4 bg-white/10 rounded-xl">
-            <div class="flex items-center gap-2.5">
-                <span id="user-email"></span>
-                <span id="admin-badge" class="hidden bg-orange-500 text-white px-2.5 py-1.5 rounded-full text-xs font-bold">
-                    ADMIN
-                </span>
-            </div>
-            <button id="logout-btn" 
-                    class="bg-red-500 text-white border-0 px-3 py-2 rounded cursor-pointer transition-colors hover:bg-red-600">
-                Logout
-            </button>
-        </div>
-
-        <!-- Main Content -->
-        <div id="main-content">
-            <div class="flex flex-col lg:flex-row gap-8">
-                <section class="flex-1 min-w-[350px] bg-white/10 rounded-xl p-6 shadow-lg">
-                    <h2 class="text-2xl font-bold mb-5 accent-color pb-2.5 border-b border-white/20">Add New Song</h2>
-                    <div class="mb-5">
-                        <label for="youtube-url" class="block mb-2 font-medium">
-                            <i class="fab fa-youtube mr-2"></i> YouTube URL:
-                        </label>
-                        <input type="text" id="youtube-url" placeholder="Paste YouTube URL here..." 
-                               class="w-full px-4 py-3.5 rounded-lg bg-white/90 border-0 text-base text-black">
-                    </div>
-                    <div class="mb-5">
-                        <label for="song-title" class="block mb-2 font-medium">
-                            <i class="fas fa-heading mr-2"></i> Song Title (optional):
-                        </label>
-                        <input type="text" id="song-title" placeholder="Enter a custom title..." 
-                               class="w-full px-4 py-3.5 rounded-lg bg-white/90 border-0 text-base text-black">
-                    </div>
-                    <div class="mb-5">
-                        <label for="playlist-name" class="block mb-2 font-medium">
-                            <i class="fas fa-list mr-2"></i> Add to Playlist:
-                        </label>
-                        <input type="text" id="playlist-name" placeholder="Enter playlist name..." 
-                               class="w-full px-4 py-3.5 rounded-lg bg-white/90 border-0 text-base text-black">
-                    </div>
-                    <button id="add-song-btn" 
-                            class="w-full inline-block accent-btn text-white px-6 py-3.5 rounded-lg cursor-pointer text-base font-medium text-center transition-all hover:-translate-y-1 hover:shadow-lg">
-                        <i class="fas fa-plus-circle mr-2"></i> Add to Playlist
-                    </button>
-                    
-                    <div class="quick-add-section bg-white/5 rounded-lg p-5 mt-5">
-                        <h3 class="text-lg font-semibold mb-4">Quick Add to Existing Playlist</h3>
-                        <div class="playlist-selector flex gap-2.5 mb-4 items-center">
-                            <select id="existing-playlists" 
-                                    class="flex-1 px-4 py-3 rounded-lg bg-white/90 border-0 text-black">
-                                <option value="">Select a playlist...</option>
-                            </select>
-                            <button id="quick-add-btn" 
-                                    class="accent-btn text-white px-4 py-3 rounded-lg cursor-pointer transition-colors hover:bg-green-600">
-                                <i class="fas fa-plus mr-1"></i> Add
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="player-section mt-8 bg-white/10 rounded-xl p-5 shadow-lg">
-                        <h3 class="text-2xl font-bold mb-5 accent-color pb-2.5 border-b border-white/20">
-                            <i class="fas fa-play-circle mr-2"></i> Player
-                        </h3>
-                        <div id="player-container">
-                            <div id="youtube-player" style="display: none;"></div>
-                            <div id="player-placeholder" class="player-placeholder text-center p-10 bg-black/30 rounded-lg">
-                                <i class="fas fa-play-circle text-5xl mb-4 opacity-50"></i>
-                                <p>Select a song to play it here</p>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-                
-                <section class="flex-2 min-w-[350px]">
-                    <h2 class="text-2xl font-bold mb-5 accent-color pb-2.5 border-b border-white/20">My Playlists</h2>
-                    <div id="playlists-container">
-                        <!-- Playlists will be generated here dynamically -->
-                    </div>
-                </section>
-            </div>
-
-            <!-- Discover Section -->
-            <section class="discover-section bg-white/10 rounded-xl p-6 mt-8 shadow-lg">
-                <div class="flex justify-between items-center mb-5">
-                    <h2 class="text-2xl font-bold accent-color">
-                        <i class="fas fa-compass mr-2"></i> Discover
-                    </h2>
-                    <button id="generate-playlist-btn" class="accent-btn text-white px-4 py-2 rounded-lg cursor-pointer transition-colors hover:bg-green-600">
-                        <i class="fas fa-magic mr-2"></i> Generate Playlist
-                    </button>
-                </div>
-                
-                <!-- Tag Filters -->
-                <div class="filter-container mb-6">
-                    <h3 class="text-lg font-semibold mb-3 accent-color">Filter by:</h3>
-                    <div class="filter-toggle-buttons">
-                        <button id="show-all-btn" class="filter-toggle accent-btn">
-                            <i class="fas fa-eye mr-1"></i> Show All
-                        </button>
-                        <button id="genres-btn" class="filter-toggle">
-                            <i class="fas fa-tags mr-1"></i> Genres
-                        </button>
-                        <button id="artists-btn" class="filter-toggle">
-                            <i class="fas fa-users mr-1"></i> Artists
-                        </button>
-                    </div>
-                    <div id="tag-filters" class="filter-list">
-                        <!-- Tag filters will be generated here dynamically -->
-                    </div>
-                    <div id="artist-filters" class="filter-list">
-                        <!-- Artist filters will be generated here dynamically -->
-                    </div>
-                </div>
-                
-                <!-- Admin Controls (only visible to admin) -->
-                <div id="admin-controls" class="admin-controls bg-orange-500/20 rounded-lg p-5 mb-5 hidden">
-                    <h3 class="text-lg font-semibold mb-4 text-orange-400">Admin Controls</h3>
-                    <div class="admin-form grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <input type="text" id="discover-youtube-url" placeholder="YouTube URL for Discover section" 
-                               class="px-4 py-3 rounded-lg bg-white/90 border-0 text-black">
-                        <input type="text" id="discover-song-title" placeholder="Song title" 
-                               class="px-4 py-3 rounded-lg bg-white/90 border-0 text-black">
-                        <input type="text" id="discover-song-artist" placeholder="Artist" 
-                               class="px-4 py-3 rounded-lg bg-white/90 border-0 text-black">
-                        <input type="text" id="discover-song-year" placeholder="Year" 
-                               class="px-4 py-3 rounded-lg bg-white/90 border-0 text-black">
-                        <button id="add-to-discover-btn" 
-                                class="bg-orange-500 text-white px-4 py-3 rounded-lg cursor-pointer transition-colors hover:bg-orange-600 md:col-span-2">
-                            <i class="fas fa-plus mr-1"></i> Add to Discover
-                        </button>
-                    </div>
-                </div>
-                
-                <div id="discover-songs-container" class="discover-songs grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                    <!-- Discover songs will be generated here dynamically -->
-                </div>
-            </section>
-        </div>
-    </div>
-
-    <!-- Playlist Generator Modal -->
-    <div id="playlist-generator-modal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold accent-color">Generate Playlist</h3>
-                <button id="close-generator-btn" class="text-white text-xl">&times;</button>
-            </div>
-            
-            <div class="filter-section">
-                <span class="filter-title">Select Genres:</span>
-                <div id="genre-filters" class="filter-options">
-                    <!-- Genre options will be populated here -->
-                </div>
-            </div>
-            
-            <div class="filter-section">
-                <span class="filter-title">Select Eras:</span>
-                <div id="era-filters" class="filter-options">
-                    <!-- Era options will be populated here -->
-                </div>
-            </div>
-            
-            <div class="song-count-selector">
-                <span class="filter-title">Number of Songs:</span>
-                <input type="number" id="song-count" class="song-count-input" min="1" max="50" value="10">
-            </div>
-            
-            <div class="flex justify-end gap-3 mt-6">
-                <button id="close-generator-btn" class="bg-gray-500 text-white px-4 py-2 rounded cursor-pointer transition-colors hover:bg-gray-600">
-                    Cancel
-                </button>
-                <button id="generate-btn" class="accent-btn text-white px-4 py-2 rounded cursor-pointer transition-colors hover:bg-green-600">
-                    Generate Playlist
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- YouTube API Script -->
-    <script src="https://www.youtube.com/iframe_api"></script>
-    
-    <script>
-        // Esta función es requerida por la API pero no necesita contenido aquí
-        function onYouTubeIframeAPIReady() {
-            // El reproductor se inicializará cuando se llame a playSong por primera vez
-        }
-    </script>
-
 </body>
 </html>
+
