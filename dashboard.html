@@ -303,12 +303,6 @@
             z-index: -1;
         }
         
-        /* Artist filter button */
-        .artist-filter.active {
-            background: #22d3ee;
-            color: white;
-        }
-        
         /* Filter visibility */
         .filter-list {
             display: none;
@@ -319,6 +313,48 @@
         }
         
         .filter-toggle.active {
+            background: #22d3ee;
+            color: white;
+        }
+        
+        /* Updated styles for filters */
+        .filter-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .filter-toggle-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .filter-toggle {
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: none;
+        }
+        
+        .filter-toggle.active {
+            background: #22d3ee;
+            color: white;
+        }
+        
+        .filter-tag {
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        .filter-tag.active {
             background: #22d3ee;
             color: white;
         }
@@ -740,7 +776,7 @@
             
             allTags.forEach(tag => {
                 tagsHtml += `
-                    <button class="tag-filter bg-white/10 text-white px-4 py-2 rounded-lg cursor-pointer transition-colors hover:bg-white/20 ${activeTag === tag ? 'active' : ''}" 
+                    <button class="filter-tag ${activeTag === tag ? 'active' : ''}" 
                             data-tag="${tag}">
                         ${tag}
                     </button>
@@ -752,7 +788,7 @@
             
             // Use event delegation for better performance
             container.addEventListener('click', function(e) {
-                if (e.target.classList.contains('tag-filter')) {
+                if (e.target.classList.contains('filter-tag')) {
                     const tag = e.target.getAttribute('data-tag');
                     setActiveTag(tag);
                 }
@@ -770,7 +806,7 @@
             
             allArtists.forEach(artist => {
                 artistsHtml += `
-                    <button class="artist-filter bg-white/10 text-white px-4 py-2 rounded-lg cursor-pointer transition-colors hover:bg-white/20 ${activeArtist === artist ? 'active' : ''}" 
+                    <button class="filter-tag ${activeArtist === artist ? 'active' : ''}" 
                             data-artist="${artist}">
                         ${artist}
                     </button>
@@ -782,7 +818,7 @@
             
             // Use event delegation for better performance
             container.addEventListener('click', function(e) {
-                if (e.target.classList.contains('artist-filter')) {
+                if (e.target.classList.contains('filter-tag')) {
                     const artist = e.target.getAttribute('data-artist');
                     setActiveArtist(artist);
                 }
@@ -793,11 +829,9 @@
         function setActiveTag(tag) {
             activeTag = tag;
             activeArtist = null; // Reset artist filter when using tag filter
-            activeFilterType = 'genres';
             
             // Update UI state
             updateFilterButtons();
-            updateFilterVisibility();
             renderDiscoverSongs();
         }
 
@@ -805,18 +839,16 @@
         function setActiveArtist(artist) {
             activeArtist = artist;
             activeTag = null; // Reset tag filter when using artist filter
-            activeFilterType = 'artists';
             
             // Update UI state
             updateFilterButtons();
-            updateFilterVisibility();
             renderDiscoverSongs();
         }
 
         // Update filter button states
         function updateFilterButtons() {
             // Update tag filters
-            document.querySelectorAll('.tag-filter').forEach(button => {
+            document.querySelectorAll('#tag-filters .filter-tag').forEach(button => {
                 const tag = button.getAttribute('data-tag');
                 if (activeTag === tag) {
                     button.classList.add('active');
@@ -826,7 +858,7 @@
             });
             
             // Update artist filters
-            document.querySelectorAll('.artist-filter').forEach(button => {
+            document.querySelectorAll('#artist-filters .filter-tag').forEach(button => {
                 const artist = button.getAttribute('data-artist');
                 if (activeArtist === artist) {
                     button.classList.add('active');
@@ -838,36 +870,22 @@
 
         // Toggle filter visibility
         function toggleFilterType(type) {
-            // If clicking the same filter type, toggle it off
+            // Hide all filter lists first
+            document.getElementById('tag-filters').classList.remove('active');
+            document.getElementById('artist-filters').classList.remove('active');
+            
+            // Remove active class from all toggle buttons
+            document.getElementById('genres-btn').classList.remove('active');
+            document.getElementById('artists-btn').classList.remove('active');
+            
+            // If clicking the same filter type that's already active, deactivate it
             if (activeFilterType === type) {
                 activeFilterType = null;
             } else {
+                // Otherwise, activate the selected type
                 activeFilterType = type;
-            }
-            
-            updateFilterVisibility();
-        }
-
-        // Update filter visibility based on activeFilterType
-        function updateFilterVisibility() {
-            const tagFilters = document.getElementById('tag-filters');
-            const artistFilters = document.getElementById('artist-filters');
-            const genresBtn = document.getElementById('genres-btn');
-            const artistsBtn = document.getElementById('artists-btn');
-            
-            // Reset all
-            tagFilters.classList.remove('active');
-            artistFilters.classList.remove('active');
-            genresBtn.classList.remove('active');
-            artistsBtn.classList.remove('active');
-            
-            // Show the active filter
-            if (activeFilterType === 'genres') {
-                tagFilters.classList.add('active');
-                genresBtn.classList.add('active');
-            } else if (activeFilterType === 'artists') {
-                artistFilters.classList.add('active');
-                artistsBtn.classList.add('active');
+                document.getElementById(`${type}-filters`).classList.add('active');
+                document.getElementById(`${type}-btn`).classList.add('active');
             }
         }
 
@@ -876,8 +894,16 @@
             activeTag = null;
             activeArtist = null;
             activeFilterType = null;
+            
+            // Hide all filter lists
+            document.getElementById('tag-filters').classList.remove('active');
+            document.getElementById('artist-filters').classList.remove('active');
+            
+            // Remove active class from all toggle buttons
+            document.getElementById('genres-btn').classList.remove('active');
+            document.getElementById('artists-btn').classList.remove('active');
+            
             updateFilterButtons();
-            updateFilterVisibility();
             renderDiscoverSongs();
         }
 
@@ -1235,7 +1261,6 @@
                 renderDiscoverSongs();
                 renderTagFilters();
                 renderArtistFilters();
-                updateFilterVisibility();
             } else {
                 // User is not signed in, redirect to login
                 window.location.href = 'index.html';
@@ -1559,11 +1584,11 @@
             
             // Filter toggle events
             document.getElementById('genres-btn').addEventListener('click', function() {
-                toggleFilterType('genres');
+                toggleFilterType('tag');
             });
             
             document.getElementById('artists-btn').addEventListener('click', function() {
-                toggleFilterType('artists');
+                toggleFilterType('artist');
             });
             
             // Show all button event
@@ -1714,23 +1739,23 @@
                 </div>
                 
                 <!-- Tag Filters -->
-                <div class="tag-filters-section mb-6">
+                <div class="filter-container mb-6">
                     <h3 class="text-lg font-semibold mb-3 accent-color">Filter by:</h3>
-                    <div class="flex flex-wrap gap-2 mb-4">
-                        <button id="show-all-btn" class="tag-filter accent-btn text-white px-4 py-2 rounded-lg cursor-pointer transition-colors hover:bg-green-600">
+                    <div class="filter-toggle-buttons">
+                        <button id="show-all-btn" class="filter-toggle accent-btn">
                             <i class="fas fa-eye mr-1"></i> Show All
                         </button>
-                        <button id="genres-btn" class="tag-filter bg-white/10 text-white px-4 py-2 rounded-lg cursor-pointer transition-colors hover:bg-white/20">
+                        <button id="genres-btn" class="filter-toggle">
                             <i class="fas fa-tags mr-1"></i> Genres
                         </button>
-                        <button id="artists-btn" class="tag-filter bg-white/10 text-white px-4 py-2 rounded-lg cursor-pointer transition-colors hover:bg-white/20">
+                        <button id="artists-btn" class="filter-toggle">
                             <i class="fas fa-users mr-1"></i> Artists
                         </button>
                     </div>
-                    <div id="tag-filters" class="filter-list flex flex-wrap gap-2">
+                    <div id="tag-filters" class="filter-list">
                         <!-- Tag filters will be generated here dynamically -->
                     </div>
-                    <div id="artist-filters" class="filter-list flex flex-wrap gap-2">
+                    <div id="artist-filters" class="filter-list">
                         <!-- Artist filters will be generated here dynamically -->
                     </div>
                 </div>
@@ -1811,6 +1836,6 @@
 
 </body>
 </html>
-</body>
 </html>
+
 
