@@ -217,6 +217,81 @@
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
+        
+        /* Playlist Generator Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: rgba(30, 41, 59, 0.95);
+            border-radius: 12px;
+            padding: 25px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        }
+        
+        .filter-section {
+            margin-bottom: 20px;
+        }
+        
+        .filter-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: block;
+        }
+        
+        .filter-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .filter-option {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .filter-option:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .filter-option.selected {
+            background: #22d3ee;
+            color: white;
+        }
+        
+        .song-count-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .song-count-input {
+            width: 60px;
+            padding: 8px;
+            border-radius: 6px;
+            border: none;
+            background: rgba(255, 255, 255, 0.9);
+            color: #000;
+            text-align: center;
+        }
     </style>
 
     <script>
@@ -226,7 +301,7 @@
                 id: "1",
                 name: "Relaxing Music",
                 songs: [
-                    { id: "1", title: "Meditation Music", url: "https://www.youtube.com/watch?v=NTpbbQUBbuo&list=RDQMsHhx03c4Dwk&index=3", videoId: "z2U8HW9XYpE" },
+                    { id: "1", title: "Meditation Music", url: "https://www.youtube.com/watch?v=NTpbbQUBbuo&list=RDQMsHhx03c4Dwk&index=3", videoId: "z2U8HW9HW9XYpE" },
                     { id: "2", title: "Nature Sounds", url: "https://www.youtube.com/watch?v=859u6uiZdds&list=RDQMsHhx03c4Dwk&index=1", videoId: "q76bMs-NwRk" }
                 ]
             },
@@ -239,49 +314,97 @@
             }
         ];
 
-        // Discover songs (shared across all users) - Updated with tags
+        // Discover songs (shared across all users) - Updated with tags, artists and years
         let discoverSongs = JSON.parse(localStorage.getItem('discoverSongs')) || [
             { 
                 id: "d1", 
-                title: "The Weeknd - Big Sleep", 
+                title: "Big Sleep", 
                 url: "https://www.youtube.com/watch?v=-wTr3bTbVO8", 
                 videoId: "-wTr3bTbVO8",
-                tags: ["Pop", "R&B", "Chill"]
+                tags: ["Pop", "R&B", "Chill"],
+                artist: "The Weeknd",
+                year: 2023
             },
             { 
                 id: "d2", 
-                title: "Myke Towers & Quevedo - SOLEAO", 
+                title: "SOLEAO", 
                 url: "https://www.youtube.com/watch?v=JgqsAvvwZAQ", 
                 videoId: "JgqsAvvwZAQ",
-                tags: ["Reggaeton", "Latin"]
+                tags: ["Reggaeton", "Latin"],
+                artist: "Myke Towers & Quevedo",
+                year: 2023
             },
             { 
                 id: "d3", 
                 title: "The Wild Project #344", 
                 url: "https://www.youtube.com/watch?v=HjEVxPCmlVM", 
                 videoId: "HjEVxPCmlVM",
-                tags: ["Podcast", "Talk", "Interview"]
+                tags: ["Podcast", "Talk", "Interview"],
+                artist: "The Wild Project",
+                year: 2023
             },
             { 
                 id: "d4", 
-                title: "Imagine Dragons - Believer", 
+                title: "Believer", 
                 url: "https://www.youtube.com/watch?v=7wtfhZwyrcc", 
                 videoId: "7wtfhZwyrcc",
-                tags: ["Rock", "Pop Rock", "Alternative"]
+                tags: ["Rock", "Pop Rock", "Alternative"],
+                artist: "Imagine Dragons",
+                year: 2017
             },
             { 
                 id: "d5", 
-                title: "Bad Bunny - Titi Me Preguntó", 
+                title: "Titi Me Preguntó", 
                 url: "https://www.youtube.com/watch?v=saGYMhApaH8", 
                 videoId: "saGYMhApaH8",
-                tags: ["Reggaeton", "Latin", "Urban"]
+                tags: ["Reggaeton", "Latin", "Urban"],
+                artist: "Bad Bunny",
+                year: 2022
             },
             { 
                 id: "d6", 
-                title: "Coldplay - Viva La Vida", 
+                title: "Viva La Vida", 
                 url: "https://www.youtube.com/watch?v=dvgZkm1xWPE", 
                 videoId: "dvgZkm1xWPE",
-                tags: ["Rock", "Alternative", "Pop"]
+                tags: ["Rock", "Alternative", "Pop"],
+                artist: "Coldplay",
+                year: 2008
+            },
+            { 
+                id: "d7", 
+                title: "Blinding Lights", 
+                url: "https://www.youtube.com/watch?v=4NRXx6U8ABQ", 
+                videoId: "4NRXx6U8ABQ",
+                tags: ["Pop", "Synthwave", "80s"],
+                artist: "The Weeknd",
+                year: 2019
+            },
+            { 
+                id: "d8", 
+                title: "Shape of You", 
+                url: "https://www.youtube.com/watch?v=JGwWNGJdvx8", 
+                videoId: "JGwWNGJdvx8",
+                tags: ["Pop", "Dance", "Ed Sheeran"],
+                artist: "Ed Sheeran",
+                year: 2017
+            },
+            { 
+                id: "d9", 
+                title: "Despacito", 
+                url: "https://www.youtube.com/watch?v=kJQP7kiw5Fk", 
+                videoId: "kJQP7kiw5Fk",
+                tags: ["Reggaeton", "Latin", "Pop"],
+                artist: "Luis Fonsi ft. Daddy Yankee",
+                year: 2017
+            },
+            { 
+                id: "d10", 
+                title: "Uptown Funk", 
+                url: "https://www.youtube.com/watch?v=OPf0YbXqDm0", 
+                videoId: "OPf0YbXqDm0",
+                tags: ["Funk", "Pop", "R&B"],
+                artist: "Mark Ronson ft. Bruno Mars",
+                year: 2014
             }
         ];
 
@@ -298,6 +421,12 @@
         
         // Theme management
         let currentTheme = localStorage.getItem('currentTheme') || 'original';
+
+        // Playlist Generator variables
+        let selectedGenres = [];
+        let selectedEras = [];
+        let selectedArtists = [];
+        let songCount = 10;
 
         // Debug function
         function debugLog(message) {
@@ -522,6 +651,49 @@
             return Array.from(allTags);
         }
 
+        // Get all unique artists from discover songs
+        function getAllArtists() {
+            const allArtists = new Set();
+            discoverSongs.forEach(song => {
+                if (song.artist) {
+                    allArtists.add(song.artist);
+                }
+            });
+            return Array.from(allArtists);
+        }
+
+        // Get all unique years from discover songs
+        function getAllYears() {
+            const allYears = new Set();
+            discoverSongs.forEach(song => {
+                if (song.year) {
+                    allYears.add(song.year);
+                }
+            });
+            return Array.from(allYears).sort((a, b) => b - a); // Sort descending
+        }
+
+        // Get all unique eras from discover songs
+        function getAllEras() {
+            const eras = new Set();
+            discoverSongs.forEach(song => {
+                if (song.year) {
+                    if (song.year >= 2020) {
+                        eras.add("2020s");
+                    } else if (song.year >= 2010) {
+                        eras.add("2010s");
+                    } else if (song.year >= 2000) {
+                        eras.add("2000s");
+                    } else if (song.year >= 1990) {
+                        eras.add("1990s");
+                    } else {
+                        eras.add("Classic");
+                    }
+                }
+            });
+            return Array.from(eras);
+        }
+
         // Render tag filters
         function renderTagFilters() {
             const container = document.getElementById('tag-filters');
@@ -602,9 +774,11 @@
                         <img src="https://img.youtube.com/vi/${song.videoId}/hqdefault.jpg" alt="Thumbnail" class="w-full h-full object-cover">
                     </div>
                     <div class="song-details">
-                        <div class="song-title font-medium text-lg">${song.title}</div>
+                        <div class="song-title font-medium text-lg mb-1">${song.title}</div>
+                        <div class="song-artist text-sm opacity-80 mb-1">${song.artist || 'Unknown Artist'}</div>
+                        <div class="song-year text-sm opacity-70 mb-2">${song.year || 'Unknown Year'}</div>
                         <div class="song-tags my-2">${tagsHtml}</div>
-                        <div class="song-url text-sm opacity-70">${song.url}</div>
+                        <div class="song-url text-xs opacity-70 truncate">${song.url}</div>
                     </div>
                     <div class="discover-song-actions flex gap-2.5 mt-2.5">
                         <button class="discover-play accent-btn text-white px-3 py-2 rounded cursor-pointer text-sm flex-1 transition-colors hover:bg-green-600" 
@@ -824,6 +998,8 @@
         function addSongToDiscover() {
             const youtubeUrl = document.getElementById('discover-youtube-url').value.trim();
             const songTitle = document.getElementById('discover-song-title').value.trim();
+            const songArtist = document.getElementById('discover-song-artist').value.trim();
+            const songYear = document.getElementById('discover-song-year').value.trim();
             
             if (!youtubeUrl) {
                 alert('Please enter a YouTube URL');
@@ -847,6 +1023,8 @@
                 title: songTitle,
                 url: youtubeUrl,
                 videoId: videoId,
+                artist: songArtist || 'Unknown Artist',
+                year: songYear || new Date().getFullYear(),
                 addedBy: currentUser.email,
                 tags: [] // Admin can add tags manually in the code for now
             });
@@ -859,6 +1037,8 @@
             // Clear input fields
             document.getElementById('discover-youtube-url').value = '';
             document.getElementById('discover-song-title').value = '';
+            document.getElementById('discover-song-artist').value = '';
+            document.getElementById('discover-song-year').value = '';
             
             alert('Song added to Discover section!');
         }
@@ -903,6 +1083,208 @@
                 // User is not signed in, redirect to login
                 window.location.href = 'index.html';
             }
+        }
+
+        // Playlist Generator Functions
+        function openPlaylistGenerator() {
+            document.getElementById('playlist-generator-modal').style.display = 'flex';
+            populateGeneratorFilters();
+        }
+
+        function closePlaylistGenerator() {
+            document.getElementById('playlist-generator-modal').style.display = 'none';
+            // Reset selections
+            selectedGenres = [];
+            selectedEras = [];
+            selectedArtists = [];
+            songCount = 10;
+            updateFilterSelections();
+        }
+
+        function populateGeneratorFilters() {
+            const genresContainer = document.getElementById('genre-filters');
+            const erasContainer = document.getElementById('era-filters');
+            const artistsContainer = document.getElementById('artist-filters');
+            
+            // Populate genres
+            const allGenres = getAllTags();
+            genresContainer.innerHTML = '';
+            allGenres.forEach(genre => {
+                genresContainer.innerHTML += `
+                    <div class="filter-option ${selectedGenres.includes(genre) ? 'selected' : ''}" 
+                         data-value="${genre}" onclick="toggleFilter('genres', '${genre}')">
+                        ${genre}
+                    </div>
+                `;
+            });
+            
+            // Populate eras
+            const allEras = getAllEras();
+            erasContainer.innerHTML = '';
+            allEras.forEach(era => {
+                erasContainer.innerHTML += `
+                    <div class="filter-option ${selectedEras.includes(era) ? 'selected' : ''}" 
+                         data-value="${era}" onclick="toggleFilter('eras', '${era}')">
+                        ${era}
+                    </div>
+                `;
+            });
+            
+            // Populate artists
+            const allArtists = getAllArtists();
+            artistsContainer.innerHTML = '';
+            allArtists.forEach(artist => {
+                artistsContainer.innerHTML += `
+                    <div class="filter-option ${selectedArtists.includes(artist) ? 'selected' : ''}" 
+                         data-value="${artist}" onclick="toggleFilter('artists', '${artist}')">
+                        ${artist}
+                    </div>
+                `;
+            });
+            
+            // Set song count
+            document.getElementById('song-count').value = songCount;
+        }
+
+        function toggleFilter(type, value) {
+            let array;
+            switch(type) {
+                case 'genres':
+                    array = selectedGenres;
+                    break;
+                case 'eras':
+                    array = selectedEras;
+                    break;
+                case 'artists':
+                    array = selectedArtists;
+                    break;
+            }
+            
+            const index = array.indexOf(value);
+            if (index === -1) {
+                array.push(value);
+            } else {
+                array.splice(index, 1);
+            }
+            
+            updateFilterSelections();
+        }
+
+        function updateFilterSelections() {
+            // Update UI to reflect current selections
+            document.querySelectorAll('#genre-filters .filter-option').forEach(option => {
+                const value = option.getAttribute('data-value');
+                if (selectedGenres.includes(value)) {
+                    option.classList.add('selected');
+                } else {
+                    option.classList.remove('selected');
+                }
+            });
+            
+            document.querySelectorAll('#era-filters .filter-option').forEach(option => {
+                const value = option.getAttribute('data-value');
+                if (selectedEras.includes(value)) {
+                    option.classList.add('selected');
+                } else {
+                    option.classList.remove('selected');
+                }
+            });
+            
+            document.querySelectorAll('#artist-filters .filter-option').forEach(option => {
+                const value = option.getAttribute('data-value');
+                if (selectedArtists.includes(value)) {
+                    option.classList.add('selected');
+                } else {
+                    option.classList.remove('selected');
+                }
+            });
+            
+            // Update song count
+            songCount = parseInt(document.getElementById('song-count').value) || 10;
+        }
+
+        function generatePlaylist() {
+            // Filter songs based on selections
+            let filteredSongs = [...discoverSongs];
+            
+            // Filter by genres
+            if (selectedGenres.length > 0) {
+                filteredSongs = filteredSongs.filter(song => 
+                    song.tags && song.tags.some(tag => selectedGenres.includes(tag))
+                );
+            }
+            
+            // Filter by eras
+            if (selectedEras.length > 0) {
+                filteredSongs = filteredSongs.filter(song => {
+                    if (!song.year) return false;
+                    
+                    let era = "";
+                    if (song.year >= 2020) {
+                        era = "2020s";
+                    } else if (song.year >= 2010) {
+                        era = "2010s";
+                    } else if (song.year >= 2000) {
+                        era = "2000s";
+                    } else if (song.year >= 1990) {
+                        era = "1990s";
+                    } else {
+                        era = "Classic";
+                    }
+                    
+                    return selectedEras.includes(era);
+                });
+            }
+            
+            // Filter by artists
+            if (selectedArtists.length > 0) {
+                filteredSongs = filteredSongs.filter(song => 
+                    song.artist && selectedArtists.includes(song.artist)
+                );
+            }
+            
+            // Limit to requested number of songs
+            if (filteredSongs.length > songCount) {
+                // Shuffle and take first n songs
+                filteredSongs = filteredSongs
+                    .sort(() => 0.5 - Math.random())
+                    .slice(0, songCount);
+            }
+            
+            if (filteredSongs.length === 0) {
+                alert("No songs match your criteria. Please try different filters.");
+                return;
+            }
+            
+            // Create playlist name based on filters
+            let playlistName = "Generated Playlist";
+            if (selectedGenres.length > 0) {
+                playlistName += ` - ${selectedGenres.join(', ')}`;
+            }
+            if (selectedEras.length > 0) {
+                playlistName += ` (${selectedEras.join(', ')})`;
+            }
+            
+            // Create the playlist
+            playlists.push({
+                id: generateId(),
+                name: playlistName,
+                songs: filteredSongs.map(song => ({
+                    id: generateId(),
+                    title: song.title,
+                    url: song.url,
+                    videoId: song.videoId
+                }))
+            });
+            
+            // Save and update the view
+            savePlaylists();
+            renderPlaylists();
+            
+            // Close the modal
+            closePlaylistGenerator();
+            
+            alert(`Playlist "${playlistName}" with ${filteredSongs.length} songs has been created!`);
         }
 
         // Initialize the application
@@ -957,6 +1339,21 @@
                 const themeSelector = document.querySelector('.theme-selector');
                 if (!themeSelector.contains(event.target)) {
                     document.getElementById('theme-options').classList.remove('show');
+                }
+            });
+            
+            // Playlist generator events
+            document.getElementById('generate-playlist-btn').addEventListener('click', openPlaylistGenerator);
+            document.getElementById('close-generator-btn').addEventListener('click', closePlaylistGenerator);
+            document.getElementById('generate-btn').addEventListener('click', generatePlaylist);
+            document.getElementById('song-count').addEventListener('change', function() {
+                songCount = parseInt(this.value) || 10;
+            });
+            
+            // Close modal when clicking outside
+            document.getElementById('playlist-generator-modal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closePlaylistGenerator();
                 }
             });
             
@@ -1088,9 +1485,14 @@
 
             <!-- Discover Section -->
             <section class="discover-section bg-white/10 rounded-xl p-6 mt-8 shadow-lg">
-                <h2 class="text-2xl font-bold mb-5 accent-color pb-2.5 border-b border-white/20">
-                    <i class="fas fa-compass mr-2"></i> Discover
-                </h2>
+                <div class="flex justify-between items-center mb-5">
+                    <h2 class="text-2xl font-bold accent-color">
+                        <i class="fas fa-compass mr-2"></i> Discover
+                    </h2>
+                    <button id="generate-playlist-btn" class="accent-btn text-white px-4 py-2 rounded-lg cursor-pointer transition-colors hover:bg-green-600">
+                        <i class="fas fa-magic mr-2"></i> Generate Playlist
+                    </button>
+                </div>
                 
                 <!-- Tag Filters -->
                 <div class="tag-filters-section mb-6">
@@ -1103,13 +1505,17 @@
                 <!-- Admin Controls (only visible to admin) -->
                 <div id="admin-controls" class="admin-controls bg-orange-500/20 rounded-lg p-5 mb-5 hidden">
                     <h3 class="text-lg font-semibold mb-4 text-orange-400">Admin Controls</h3>
-                    <div class="admin-form flex gap-2.5 flex-wrap">
+                    <div class="admin-form grid grid-cols-1 md:grid-cols-2 gap-4">
                         <input type="text" id="discover-youtube-url" placeholder="YouTube URL for Discover section" 
-                               class="flex-1 min-w-[200px] px-4 py-3 rounded-lg bg-white/90 border-0">
+                               class="px-4 py-3 rounded-lg bg-white/90 border-0 text-black">
                         <input type="text" id="discover-song-title" placeholder="Song title" 
-                               class="flex-1 min-w-[200px] px-4 py-3 rounded-lg bg-white/90 border-0">
+                               class="px-4 py-3 rounded-lg bg-white/90 border-0 text-black">
+                        <input type="text" id="discover-song-artist" placeholder="Artist" 
+                               class="px-4 py-3 rounded-lg bg-white/90 border-0 text-black">
+                        <input type="text" id="discover-song-year" placeholder="Year" 
+                               class="px-4 py-3 rounded-lg bg-white/90 border-0 text-black">
                         <button id="add-to-discover-btn" 
-                                class="bg-orange-500 text-white px-4 py-3 rounded-lg cursor-pointer transition-colors hover:bg-orange-600">
+                                class="bg-orange-500 text-white px-4 py-3 rounded-lg cursor-pointer transition-colors hover:bg-orange-600 md:col-span-2">
                             <i class="fas fa-plus mr-1"></i> Add to Discover
                         </button>
                     </div>
@@ -1119,6 +1525,51 @@
                     <!-- Discover songs will be generated here dynamically -->
                 </div>
             </section>
+        </div>
+    </div>
+
+    <!-- Playlist Generator Modal -->
+    <div id="playlist-generator-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold accent-color">Generate Playlist</h3>
+                <button id="close-generator-btn" class="text-white text-xl">&times;</button>
+            </div>
+            
+            <div class="filter-section">
+                <span class="filter-title">Select Genres:</span>
+                <div id="genre-filters" class="filter-options">
+                    <!-- Genre options will be populated here -->
+                </div>
+            </div>
+            
+            <div class="filter-section">
+                <span class="filter-title">Select Eras:</span>
+                <div id="era-filters" class="filter-options">
+                    <!-- Era options will be populated here -->
+                </div>
+            </div>
+            
+            <div class="filter-section">
+                <span class="filter-title">Select Artists:</span>
+                <div id="artist-filters" class="filter-options">
+                    <!-- Artist options will be populated here -->
+                </div>
+            </div>
+            
+            <div class="song-count-selector">
+                <span class="filter-title">Number of Songs:</span>
+                <input type="number" id="song-count" class="song-count-input" min="1" max="50" value="10">
+            </div>
+            
+            <div class="flex justify-end gap-3 mt-6">
+                <button id="close-generator-btn" class="bg-gray-500 text-white px-4 py-2 rounded cursor-pointer transition-colors hover:bg-gray-600">
+                    Cancel
+                </button>
+                <button id="generate-btn" class="accent-btn text-white px-4 py-2 rounded cursor-pointer transition-colors hover:bg-green-600">
+                    Generate Playlist
+                </button>
+            </div>
         </div>
     </div>
 
