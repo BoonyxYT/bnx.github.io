@@ -596,6 +596,219 @@
         .sound-toggle.active {
             background: rgba(34, 211, 238, 0.2);
         }
+        
+        /* Estilos para el modal de selección de playlist */
+        .playlist-select-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .playlist-select-modal.show {
+            display: flex;
+        }
+        
+        .playlist-select-content {
+            background: rgba(30, 41, 59, 0.95);
+            border-radius: 12px;
+            padding: 25px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        }
+        
+        .playlist-option {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            margin: 8px 0;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .playlist-option:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .playlist-option.selected {
+            background: rgba(34, 211, 238, 0.2);
+            border: 1px solid #22d3ee;
+        }
+        
+        .playlist-option-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: rgba(34, 211, 238, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+        }
+        
+        .playlist-option-info {
+            flex: 1;
+        }
+        
+        .playlist-option-name {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        
+        .playlist-option-count {
+            font-size: 0.75rem;
+            opacity: 0.7;
+        }
+        
+        /* Estilos para el modal de configuración */
+        .settings-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .settings-modal.show {
+            display: flex;
+        }
+        
+        .settings-content {
+            background: rgba(30, 41, 59, 0.95);
+            border-radius: 12px;
+            padding: 25px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        }
+        
+        .settings-section {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .settings-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        
+        .settings-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #22d3ee;
+        }
+        
+        .settings-option {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 0;
+        }
+        
+        .settings-label {
+            font-size: 1rem;
+        }
+        
+        .settings-description {
+            font-size: 0.875rem;
+            opacity: 0.7;
+            margin-top: 4px;
+        }
+        
+        /* Switch toggle */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: #22d3ee;
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
+        /* Estilos para edición de playlists */
+        .playlist-header {
+            position: relative;
+        }
+        
+        .playlist-edit-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            width: 100%;
+            margin-right: 10px;
+        }
+        
+        .playlist-edit-input:focus {
+            outline: none;
+            border-color: #22d3ee;
+        }
+        
+        .edit-actions {
+            display: flex;
+            gap: 8px;
+        }
     </style>
 </head>
 <body class="theme-original text-white min-h-screen pb-12">
@@ -613,6 +826,9 @@
             <div class="flex gap-4">
                 <button id="discover-btn" class="accent-btn text-white px-6 py-3 rounded-lg cursor-pointer transition-all hover:-translate-y-1 hover:shadow-lg sound-element">
                     <i class="fas fa-compass mr-2"></i> Discover
+                </button>
+                <button id="settings-btn" class="bg-white/20 text-white px-4 py-3 rounded-lg cursor-pointer transition-colors hover:bg-white/30 sound-element">
+                    <i class="fas fa-cog mr-2"></i> Settings
                 </button>
                 <div class="theme-selector">
                     <button id="theme-toggle-btn" class="bg-white/20 text-white px-4 py-3 rounded-lg cursor-pointer transition-colors hover:bg-white/30 sound-element">
@@ -636,10 +852,6 @@
                         </div>
                         <div class="theme-option sound-element" data-theme="dynamic">
                             <span class="theme-color"></span> Dynamic
-                        </div>
-                        <div class="sound-toggle" id="sound-toggle">
-                            <i class="fas fa-volume-up" id="sound-icon"></i>
-                            <span id="sound-text">Sonidos: On</span>
                         </div>
                     </div>
                 </div>
@@ -808,6 +1020,48 @@
         </div>
     </div>
 
+    <!-- Modal para seleccionar playlist al añadir desde Discover -->
+    <div id="playlist-select-modal" class="playlist-select-modal">
+        <div class="playlist-select-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold accent-color">Add to Playlist</h3>
+                <button id="close-playlist-select" class="text-white text-xl sound-element">&times;</button>
+            </div>
+            
+            <div class="mb-4">
+                <p id="selected-song-info" class="text-lg mb-2"></p>
+                <p class="text-sm opacity-70">Choose where to add this song</p>
+            </div>
+            
+            <div class="mb-4">
+                <h4 class="font-medium mb-2">Select existing playlist:</h4>
+                <div id="playlist-options-container" class="max-h-60 overflow-y-auto">
+                    <!-- Las opciones de playlist se generarán aquí -->
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <h4 class="font-medium mb-2">Or create new playlist:</h4>
+                <div class="flex gap-2">
+                    <input type="text" id="new-playlist-name" placeholder="New playlist name" 
+                           class="flex-1 px-4 py-2 rounded-lg bg-white/90 border-0 text-black">
+                    <button id="create-new-playlist-btn" class="accent-btn text-white px-4 py-2 rounded-lg cursor-pointer transition-colors hover:bg-green-600 sound-element">
+                        Create
+                    </button>
+                </div>
+            </div>
+            
+            <div class="flex justify-end gap-3 mt-6">
+                <button id="cancel-playlist-select" class="bg-gray-500 text-white px-4 py-2 rounded cursor-pointer transition-colors hover:bg-gray-600 sound-element">
+                    Cancel
+                </button>
+                <button id="confirm-add-to-playlist" class="accent-btn text-white px-4 py-2 rounded cursor-pointer transition-colors hover:bg-green-600 sound-element">
+                    Add to Playlist
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Playlist Generator Modal -->
     <div id="playlist-generator-modal" class="modal-overlay">
         <div class="modal-content">
@@ -841,6 +1095,110 @@
                 </button>
                 <button id="generate-btn" class="accent-btn text-white px-4 py-2 rounded cursor-pointer transition-colors hover:bg-green-600 sound-element">
                     Generate Playlist
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Configuración -->
+    <div id="settings-modal" class="settings-modal">
+        <div class="settings-content">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold accent-color">
+                    <i class="fas fa-cog mr-2"></i> Settings
+                </h3>
+                <button id="close-settings" class="text-white text-xl sound-element">&times;</button>
+            </div>
+            
+            <div class="settings-section">
+                <h4 class="settings-title">Audio Settings</h4>
+                
+                <div class="settings-option">
+                    <div>
+                        <div class="settings-label">Interface Sounds</div>
+                        <div class="settings-description">Enable or disable sound effects when interacting with the app</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="sound-toggle-checkbox" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                
+                <div class="settings-option">
+                    <div>
+                        <div class="settings-label">Auto-play Next Song</div>
+                        <div class="settings-description">Automatically play the next song when the current one ends</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="autoplay-toggle" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="settings-section">
+                <h4 class="settings-title">Appearance</h4>
+                
+                <div class="settings-option">
+                    <div>
+                        <div class="settings-label">Dynamic Theme</div>
+                        <div class="settings-description">Change colors based on the currently playing song</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="dynamic-theme-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                
+                <div class="settings-option">
+                    <div>
+                        <div class="settings-label">Dark Mode</div>
+                        <div class="settings-description">Always use dark theme</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="dark-mode-toggle" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="settings-section">
+                <h4 class="settings-title">Data Management</h4>
+                
+                <div class="settings-option">
+                    <div>
+                        <div class="settings-label">Export Data</div>
+                        <div class="settings-description">Download a backup of your playlists and settings</div>
+                    </div>
+                    <button id="export-data-btn" class="accent-btn text-white px-4 py-2 rounded cursor-pointer transition-colors hover:bg-green-600 sound-element">
+                        Export
+                    </button>
+                </div>
+                
+                <div class="settings-option">
+                    <div>
+                        <div class="settings-label">Import Data</div>
+                        <div class="settings-description">Restore your playlists from a backup file</div>
+                    </div>
+                    <button id="import-data-btn" class="accent-btn text-white px-4 py-2 rounded cursor-pointer transition-colors hover:bg-green-600 sound-element">
+                        Import
+                    </button>
+                </div>
+                
+                <div class="settings-option">
+                    <div>
+                        <div class="settings-label">Clear All Data</div>
+                        <div class="settings-description">Delete all playlists and reset the app</div>
+                    </div>
+                    <button id="clear-data-btn" class="bg-red-500 text-white px-4 py-2 rounded cursor-pointer transition-colors hover:bg-red-600 sound-element">
+                        Clear
+                    </button>
+                </div>
+            </div>
+            
+            <div class="flex justify-end mt-6">
+                <button id="save-settings" class="accent-btn text-white px-6 py-3 rounded-lg cursor-pointer transition-colors hover:bg-green-600 sound-element">
+                    Save Settings
                 </button>
             </div>
         </div>
@@ -955,20 +1313,9 @@
             }
 
             updateUI() {
-                const soundIcon = document.getElementById('sound-icon');
-                const soundText = document.getElementById('sound-text');
-                const soundToggle = document.getElementById('sound-toggle');
-                
-                if (soundIcon && soundText && soundToggle) {
-                    if (this.enabled) {
-                        soundIcon.className = 'fas fa-volume-up';
-                        soundText.textContent = 'Sonidos: On';
-                        soundToggle.classList.add('active');
-                    } else {
-                        soundIcon.className = 'fas fa-volume-mute';
-                        soundText.textContent = 'Sonidos: Off';
-                        soundToggle.classList.remove('active');
-                    }
+                const soundToggle = document.getElementById('sound-toggle-checkbox');
+                if (soundToggle) {
+                    soundToggle.checked = this.enabled;
                 }
             }
         }
@@ -1068,6 +1415,10 @@
         // Historial de canciones recientes
         let recentSongs = JSON.parse(localStorage.getItem('recentSongs')) || [];
 
+        // Variables para el modal de selección de playlist
+        let selectedPlaylistIndex = null;
+        let currentDiscoverSongIndex = null;
+
         // Función para habilitar sonidos en los botones
         function enableButtonSounds() {
             // Usar event delegation para mejor performance
@@ -1094,7 +1445,8 @@
                 
                 // Reproducir sonido de transición para elementos modales
                 if (element.id === 'close-add-song-modal' || element.id === 'close-generator-btn' || 
-                    element.id === 'cancel-generator-btn') {
+                    element.id === 'cancel-generator-btn' || element.id === 'close-settings' ||
+                    element.id === 'close-playlist-select' || element.id === 'cancel-playlist-select') {
                     soundManager.play('transition');
                 }
             });
@@ -1633,7 +1985,12 @@
 
                 playlistElement.innerHTML = `
                     <div class="playlist-header flex justify-between items-center mb-5 pb-4 border-b border-white/20">
-                        <h3 class="playlist-title text-2xl accent-color">${playlist.name}</h3>
+                        <div class="flex items-center flex-1">
+                            <h3 class="playlist-title text-2xl accent-color mr-3">${playlist.name}</h3>
+                            <button class="edit-playlist-btn text-white/70 hover:text-white transition-colors sound-element" data-index="${playlistIndex}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </div>
                         <div class="playlist-actions flex gap-2.5">
                             <button class="delete-playlist bg-red-500 text-white px-4 py-2 rounded cursor-pointer transition-colors hover:bg-red-600 sound-element" 
                                     data-index="${playlistIndex}">
@@ -1683,6 +2040,14 @@
                 });
             });
 
+            // Add event listeners for edit buttons
+            document.querySelectorAll('.edit-playlist-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const playlistIndex = this.getAttribute('data-index');
+                    editPlaylist(playlistIndex);
+                });
+            });
+
             // Update the existing playlists dropdown
             updatePlaylistsDropdown();
             
@@ -1690,6 +2055,86 @@
             if (currentTheme === 'dynamic') {
                 collectBeatElements();
             }
+        }
+
+        // Edit playlist name
+        function editPlaylist(playlistIndex) {
+            soundManager.play('softClick');
+            const playlist = playlists[playlistIndex];
+            const playlistHeader = document.querySelectorAll('.playlist-header')[playlistIndex];
+            const playlistTitle = playlistHeader.querySelector('.playlist-title');
+            const editButton = playlistHeader.querySelector('.edit-playlist-btn');
+            
+            // Create input field
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'playlist-edit-input';
+            input.value = playlist.name;
+            
+            // Create edit actions
+            const editActions = document.createElement('div');
+            editActions.className = 'edit-actions';
+            editActions.innerHTML = `
+                <button class="save-edit-btn accent-btn text-white px-3 py-1 rounded cursor-pointer text-sm transition-colors hover:bg-green-600 sound-element" 
+                        data-index="${playlistIndex}">
+                    <i class="fas fa-check"></i>
+                </button>
+                <button class="cancel-edit-btn bg-gray-500 text-white px-3 py-1 rounded cursor-pointer text-sm transition-colors hover:bg-gray-600 sound-element" 
+                        data-index="${playlistIndex}">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            // Replace title with input and actions
+            playlistHeader.querySelector('.flex-1').innerHTML = '';
+            playlistHeader.querySelector('.flex-1').appendChild(input);
+            playlistHeader.querySelector('.flex-1').appendChild(editActions);
+            
+            // Focus on input
+            input.focus();
+            input.select();
+            
+            // Add event listeners for save and cancel
+            document.querySelector('.save-edit-btn').addEventListener('click', function() {
+                savePlaylistEdit(playlistIndex, input.value);
+            });
+            
+            document.querySelector('.cancel-edit-btn').addEventListener('click', function() {
+                cancelPlaylistEdit(playlistIndex);
+            });
+            
+            // Save on Enter key
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    savePlaylistEdit(playlistIndex, input.value);
+                }
+            });
+            
+            // Cancel on Escape key
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    cancelPlaylistEdit(playlistIndex);
+                }
+            });
+        }
+
+        // Save playlist edit
+        function savePlaylistEdit(playlistIndex, newName) {
+            soundManager.play('bubble');
+            if (newName.trim() === '') {
+                alert('Playlist name cannot be empty');
+                return;
+            }
+            
+            playlists[playlistIndex].name = newName.trim();
+            savePlaylists();
+            renderPlaylists();
+        }
+
+        // Cancel playlist edit
+        function cancelPlaylistEdit(playlistIndex) {
+            soundManager.play('transition');
+            renderPlaylists();
         }
 
         // Get all unique tags from discover songs
@@ -1977,7 +2422,7 @@
             document.querySelectorAll('.discover-add').forEach(button => {
                 button.addEventListener('click', function() {
                     const index = this.getAttribute('data-index');
-                    addDiscoverSongToPlaylist(index);
+                    showPlaylistSelectModal(index);
                 });
             });
             
@@ -1985,6 +2430,119 @@
             if (currentTheme === 'dynamic') {
                 collectBeatElements();
             }
+        }
+
+        // Show playlist selection modal
+        function showPlaylistSelectModal(discoverSongIndex) {
+            soundManager.play('softClick');
+            currentDiscoverSongIndex = discoverSongIndex;
+            selectedPlaylistIndex = null;
+            
+            const song = discoverSongs[discoverSongIndex];
+            document.getElementById('selected-song-info').textContent = `"${song.title}" by ${song.artist || 'Unknown Artist'}`;
+            
+            // Render playlist options
+            renderPlaylistOptions();
+            
+            // Show modal
+            document.getElementById('playlist-select-modal').classList.add('show');
+        }
+
+        // Render playlist options in the selection modal
+        function renderPlaylistOptions() {
+            const container = document.getElementById('playlist-options-container');
+            container.innerHTML = '';
+            
+            if (playlists.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center p-4 opacity-70">
+                        <p>You don't have any playlists yet.</p>
+                        <p>Create a new playlist using the form below.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            playlists.forEach((playlist, index) => {
+                const option = document.createElement('div');
+                option.className = `playlist-option sound-element ${selectedPlaylistIndex === index ? 'selected' : ''}`;
+                option.setAttribute('data-index', index);
+                
+                option.innerHTML = `
+                    <div class="playlist-option-icon">
+                        <i class="fas fa-music"></i>
+                    </div>
+                    <div class="playlist-option-info">
+                        <div class="playlist-option-name">${playlist.name}</div>
+                        <div class="playlist-option-count">${playlist.songs.length} songs</div>
+                    </div>
+                `;
+                
+                option.addEventListener('click', function() {
+                    selectPlaylistOption(index);
+                });
+                
+                container.appendChild(option);
+            });
+        }
+
+        // Select a playlist option
+        function selectPlaylistOption(index) {
+            soundManager.play('softClick');
+            selectedPlaylistIndex = index;
+            
+            // Update UI
+            document.querySelectorAll('.playlist-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            document.querySelector(`.playlist-option[data-index="${index}"]`).classList.add('selected');
+        }
+
+        // Add a discover song to selected playlist
+        function addDiscoverSongToPlaylist() {
+            soundManager.play('bubble');
+            const song = discoverSongs[currentDiscoverSongIndex];
+            let playlistIndex = selectedPlaylistIndex;
+            let playlistName = document.getElementById('new-playlist-name').value.trim();
+            
+            // If creating a new playlist
+            if (playlistIndex === null && playlistName) {
+                playlists.push({
+                    id: generateId(),
+                    name: playlistName,
+                    songs: []
+                });
+                playlistIndex = playlists.length - 1;
+            }
+            
+            // If no playlist selected and no new name provided
+            if (playlistIndex === null) {
+                alert('Please select a playlist or create a new one');
+                return;
+            }
+            
+            // Add the song to the playlist
+            playlists[playlistIndex].songs.push({
+                id: generateId(),
+                title: song.title,
+                url: song.url,
+                videoId: song.videoId
+            });
+            
+            // Save and update the view
+            savePlaylists();
+            renderPlaylists();
+            
+            // Close modal and show success message
+            hidePlaylistSelectModal();
+            alert(`"${song.title}" has been added to "${playlists[playlistIndex].name}"!`);
+        }
+
+        // Hide playlist selection modal
+        function hidePlaylistSelectModal() {
+            soundManager.play('transition');
+            document.getElementById('playlist-select-modal').classList.remove('show');
+            document.getElementById('new-playlist-name').value = '';
         }
 
         // Update the existing playlists dropdown
@@ -2116,36 +2674,6 @@
             } else {
                 player.loadVideoById(song.videoId);
             }
-        }
-
-        // Add a discover song to user's playlist
-        function addDiscoverSongToPlaylist(index) {
-            soundManager.play('bubble');
-            const song = discoverSongs[index];
-            
-            // Check if user has a "My Discoveries" playlist, if not create one
-            let playlistIndex = playlists.findIndex(p => p.name === "My Discoveries");
-            if (playlistIndex === -1) {
-                playlists.push({
-                    id: generateId(),
-                    name: "My Discoveries",
-                    songs: []
-                });
-                playlistIndex = playlists.length - 1;
-            }
-            
-            // Add the song to the playlist
-            playlists[playlistIndex].songs.push({
-                id: generateId(),
-                title: song.title,
-                url: song.url,
-                videoId: song.videoId
-            });
-            
-            // Save and update the view
-            savePlaylists();
-            renderPlaylists();
-            alert(`"${song.title}" has been added to your "My Discoveries" playlist!`);
         }
 
         // Remove a song
@@ -2588,6 +3116,50 @@
             document.getElementById('add-song-modal').classList.remove('show');
         }
 
+        // Funciones para el modal de configuración
+        function showSettingsModal() {
+            soundManager.play('softClick');
+            document.getElementById('settings-modal').classList.add('show');
+            
+            // Cargar configuraciones actuales
+            document.getElementById('sound-toggle-checkbox').checked = soundManager.enabled;
+            document.getElementById('autoplay-toggle').checked = localStorage.getItem('autoplay') !== 'false';
+            document.getElementById('dynamic-theme-toggle').checked = localStorage.getItem('dynamicTheme') === 'true';
+            document.getElementById('dark-mode-toggle').checked = localStorage.getItem('darkMode') !== 'false';
+        }
+
+        function hideSettingsModal() {
+            soundManager.play('transition');
+            document.getElementById('settings-modal').classList.remove('show');
+        }
+
+        function saveSettings() {
+            soundManager.play('bubble');
+            
+            // Guardar configuraciones
+            soundManager.enabled = document.getElementById('sound-toggle-checkbox').checked;
+            localStorage.setItem('soundEnabled', soundManager.enabled);
+            
+            const autoplay = document.getElementById('autoplay-toggle').checked;
+            localStorage.setItem('autoplay', autoplay);
+            
+            const dynamicTheme = document.getElementById('dynamic-theme-toggle').checked;
+            localStorage.setItem('dynamicTheme', dynamicTheme);
+            
+            const darkMode = document.getElementById('dark-mode-toggle').checked;
+            localStorage.setItem('darkMode', darkMode);
+            
+            // Aplicar cambios
+            if (dynamicTheme && currentTheme !== 'dynamic') {
+                applyTheme('dynamic');
+            } else if (!dynamicTheme && currentTheme === 'dynamic') {
+                applyTheme('original');
+            }
+            
+            alert('Settings saved successfully!');
+            hideSettingsModal();
+        }
+
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Application initialized');
@@ -2630,6 +3202,15 @@
             // Discover button event
             document.getElementById('discover-btn').addEventListener('click', scrollToDiscover);
             
+            // Settings button event
+            document.getElementById('settings-btn').addEventListener('click', showSettingsModal);
+            
+            // Save settings event
+            document.getElementById('save-settings').addEventListener('click', saveSettings);
+            
+            // Close settings event
+            document.getElementById('close-settings').addEventListener('click', hideSettingsModal);
+            
             // Theme selector events
             document.getElementById('theme-toggle-btn').addEventListener('click', toggleThemeSelector);
             
@@ -2640,12 +3221,6 @@
                     applyTheme(theme);
                     document.getElementById('theme-options').classList.remove('show');
                 });
-            });
-            
-            // Toggle de sonidos
-            document.getElementById('sound-toggle').addEventListener('click', function(e) {
-                e.stopPropagation();
-                soundManager.toggle();
             });
             
             // Close theme selector when clicking outside
@@ -2694,6 +3269,35 @@
             document.getElementById('add-song-modal').addEventListener('click', function(e) {
                 if (e.target === this) {
                     hideAddSongModal();
+                }
+            });
+            
+            // Playlist selection modal events
+            document.getElementById('close-playlist-select').addEventListener('click', hidePlaylistSelectModal);
+            document.getElementById('cancel-playlist-select').addEventListener('click', hidePlaylistSelectModal);
+            document.getElementById('confirm-add-to-playlist').addEventListener('click', addDiscoverSongToPlaylist);
+            document.getElementById('create-new-playlist-btn').addEventListener('click', function() {
+                const newName = document.getElementById('new-playlist-name').value.trim();
+                if (newName) {
+                    // Deseleccionar cualquier playlist existente
+                    selectedPlaylistIndex = null;
+                    document.querySelectorAll('.playlist-option').forEach(option => {
+                        option.classList.remove('selected');
+                    });
+                }
+            });
+            
+            // Cerrar modal de selección de playlist al hacer clic fuera
+            document.getElementById('playlist-select-modal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    hidePlaylistSelectModal();
+                }
+            });
+            
+            // Cerrar modal de configuración al hacer clic fuera
+            document.getElementById('settings-modal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    hideSettingsModal();
                 }
             });
             
