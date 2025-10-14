@@ -550,6 +550,52 @@
         .add-song-modal.show {
             display: flex;
         }
+        
+        /* Nuevos estilos para sonidos */
+        .sound-element {
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .sound-element:active {
+            transform: scale(0.97);
+        }
+        
+        .sound-element::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.3s, height 0.3s;
+        }
+        
+        .sound-element:active::after {
+            width: 100px;
+            height: 100px;
+        }
+        
+        .sound-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .sound-toggle:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .sound-toggle.active {
+            background: rgba(34, 211, 238, 0.2);
+        }
     </style>
 </head>
 <body class="theme-original text-white min-h-screen pb-12">
@@ -565,31 +611,35 @@
                 <p class="text-xl opacity-90">Create and manage your YouTube playlists easily</p>
             </div>
             <div class="flex gap-4">
-                <button id="discover-btn" class="accent-btn text-white px-6 py-3 rounded-lg cursor-pointer transition-all hover:-translate-y-1 hover:shadow-lg">
+                <button id="discover-btn" class="accent-btn text-white px-6 py-3 rounded-lg cursor-pointer transition-all hover:-translate-y-1 hover:shadow-lg sound-element">
                     <i class="fas fa-compass mr-2"></i> Discover
                 </button>
                 <div class="theme-selector">
-                    <button id="theme-toggle-btn" class="bg-white/20 text-white px-4 py-3 rounded-lg cursor-pointer transition-colors hover:bg-white/30">
+                    <button id="theme-toggle-btn" class="bg-white/20 text-white px-4 py-3 rounded-lg cursor-pointer transition-colors hover:bg-white/30 sound-element">
                         <i class="fas fa-palette mr-2"></i> Themes
                     </button>
                     <div id="theme-options" class="theme-options">
-                        <div class="theme-option" data-theme="original">
+                        <div class="theme-option sound-element" data-theme="original">
                             <span class="theme-color"></span> Original
                         </div>
-                        <div class="theme-option" data-theme="red">
+                        <div class="theme-option sound-element" data-theme="red">
                             <span class="theme-color"></span> Red
                         </div>
-                        <div class="theme-option" data-theme="green">
+                        <div class="theme-option sound-element" data-theme="green">
                             <span class="theme-color"></span> Green
                         </div>
-                        <div class="theme-option" data-theme="purple">
+                        <div class="theme-option sound-element" data-theme="purple">
                             <span class="theme-color"></span> Purple
                         </div>
-                        <div class="theme-option" data-theme="black">
+                        <div class="theme-option sound-element" data-theme="black">
                             <span class="theme-color"></span> Black
                         </div>
-                        <div class="theme-option" data-theme="dynamic">
+                        <div class="theme-option sound-element" data-theme="dynamic">
                             <span class="theme-color"></span> Dynamic
+                        </div>
+                        <div class="sound-toggle" id="sound-toggle">
+                            <i class="fas fa-volume-up" id="sound-icon"></i>
+                            <span id="sound-text">Sonidos: On</span>
                         </div>
                     </div>
                 </div>
@@ -607,7 +657,7 @@
                 </span>
             </div>
             <button id="logout-btn" 
-                    class="bg-red-500 text-white border-0 px-3 py-2 rounded cursor-pointer transition-colors hover:bg-red-600">
+                    class="bg-red-500 text-white border-0 px-3 py-2 rounded cursor-pointer transition-colors hover:bg-red-600 sound-element">
                 Logout
             </button>
         </div>
@@ -618,7 +668,7 @@
                 <section class="flex-1 min-w-[350px] bg-white/10 rounded-xl p-6 shadow-lg">
                     <div class="flex justify-between items-center mb-5 pb-2.5 border-b border-white/20">
                         <h2 class="text-2xl font-bold accent-color">Recently Played</h2>
-                        <button id="open-add-song-modal" class="accent-btn text-white px-4 py-2 rounded cursor-pointer transition-colors hover:bg-green-600">
+                        <button id="open-add-song-modal" class="accent-btn text-white px-4 py-2 rounded cursor-pointer transition-colors hover:bg-green-600 sound-element">
                             <i class="fas fa-plus mr-2"></i> Add Song
                         </button>
                     </div>
@@ -655,7 +705,7 @@
                     <h2 class="text-2xl font-bold accent-color">
                         <i class="fas fa-compass mr-2"></i> Discover
                     </h2>
-                    <button id="generate-playlist-btn" class="accent-btn text-white px-4 py-2 rounded-lg cursor-pointer transition-colors hover:bg-green-600">
+                    <button id="generate-playlist-btn" class="accent-btn text-white px-4 py-2 rounded-lg cursor-pointer transition-colors hover:bg-green-600 sound-element">
                         <i class="fas fa-magic mr-2"></i> Generate Playlist
                     </button>
                 </div>
@@ -664,13 +714,13 @@
                 <div class="filter-container mb-6">
                     <h3 class="text-lg font-semibold mb-3 accent-color">Filter by:</h3>
                     <div class="filter-toggle-buttons">
-                        <button id="show-all-btn" class="filter-toggle accent-btn">
+                        <button id="show-all-btn" class="filter-toggle accent-btn sound-element">
                             <i class="fas fa-eye mr-1"></i> Show All
                         </button>
-                        <button id="genres-btn" class="filter-toggle">
+                        <button id="genres-btn" class="filter-toggle sound-element">
                             <i class="fas fa-tags mr-1"></i> Genres
                         </button>
-                        <button id="artists-btn" class="filter-toggle">
+                        <button id="artists-btn" class="filter-toggle sound-element">
                             <i class="fas fa-users mr-1"></i> Artists
                         </button>
                     </div>
@@ -695,7 +745,7 @@
                         <input type="text" id="discover-song-year" placeholder="Year" 
                                class="px-4 py-3 rounded-lg bg-white/90 border-0 text-black">
                         <button id="add-to-discover-btn" 
-                                class="bg-orange-500 text-white px-4 py-3 rounded-lg cursor-pointer transition-colors hover:bg-orange-600 md:col-span-2">
+                                class="bg-orange-500 text-white px-4 py-3 rounded-lg cursor-pointer transition-colors hover:bg-orange-600 md:col-span-2 sound-element">
                             <i class="fas fa-plus mr-1"></i> Add to Discover
                         </button>
                     </div>
@@ -713,7 +763,7 @@
         <div class="add-song-modal-content">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-xl font-bold accent-color">Add New Song</h3>
-                <button id="close-add-song-modal" class="text-white text-xl">&times;</button>
+                <button id="close-add-song-modal" class="text-white text-xl sound-element">&times;</button>
             </div>
             
             <div class="mb-5">
@@ -738,7 +788,7 @@
                        class="w-full px-4 py-3.5 rounded-lg bg-white/90 border-0 text-base text-black">
             </div>
             <button id="add-song-btn" 
-                    class="w-full inline-block accent-btn text-white px-6 py-3.5 rounded-lg cursor-pointer text-base font-medium text-center transition-all hover:-translate-y-1 hover:shadow-lg">
+                    class="w-full inline-block accent-btn text-white px-6 py-3.5 rounded-lg cursor-pointer text-base font-medium text-center transition-all hover:-translate-y-1 hover:shadow-lg sound-element">
                 <i class="fas fa-plus-circle mr-2"></i> Add to Playlist
             </button>
             
@@ -750,7 +800,7 @@
                         <option value="">Select a playlist...</option>
                     </select>
                     <button id="quick-add-btn" 
-                            class="accent-btn text-white px-4 py-3 rounded-lg cursor-pointer transition-colors hover:bg-green-600">
+                            class="accent-btn text-white px-4 py-3 rounded-lg cursor-pointer transition-colors hover:bg-green-600 sound-element">
                         <i class="fas fa-plus mr-1"></i> Add
                     </button>
                 </div>
@@ -763,7 +813,7 @@
         <div class="modal-content">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-xl font-bold accent-color">Generate Playlist</h3>
-                <button id="close-generator-btn" class="text-white text-xl">&times;</button>
+                <button id="close-generator-btn" class="text-white text-xl sound-element">&times;</button>
             </div>
             
             <div class="filter-section">
@@ -786,10 +836,10 @@
             </div>
             
             <div class="flex justify-end gap-3 mt-6">
-                <button id="cancel-generator-btn" class="bg-gray-500 text-white px-4 py-2 rounded cursor-pointer transition-colors hover:bg-gray-600">
+                <button id="cancel-generator-btn" class="bg-gray-500 text-white px-4 py-2 rounded cursor-pointer transition-colors hover:bg-gray-600 sound-element">
                     Cancel
                 </button>
-                <button id="generate-btn" class="accent-btn text-white px-4 py-2 rounded cursor-pointer transition-colors hover:bg-green-600">
+                <button id="generate-btn" class="accent-btn text-white px-4 py-2 rounded cursor-pointer transition-colors hover:bg-green-600 sound-element">
                     Generate Playlist
                 </button>
             </div>
@@ -800,6 +850,132 @@
     <script src="https://www.youtube.com/iframe_api"></script>
     
     <script>
+        // Sistema de sonidos para interacciones
+        class SoundManager {
+            constructor() {
+                this.enabled = localStorage.getItem('soundEnabled') !== 'false';
+                this.init();
+            }
+
+            init() {
+                // Precargar sonidos
+                this.sounds = {};
+                this.createSounds();
+            }
+
+            createSounds() {
+                // Crear sonidos usando el Web Audio API
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    
+                    // Sonido suave de clic
+                    this.sounds.softClick = () => {
+                        if (!this.enabled) return;
+                        
+                        const oscillator = audioContext.createOscillator();
+                        const gainNode = audioContext.createGain();
+                        
+                        oscillator.connect(gainNode);
+                        gainNode.connect(audioContext.destination);
+                        
+                        oscillator.type = 'sine';
+                        oscillator.frequency.value = 600;
+                        gainNode.gain.value = 0.1;
+                        
+                        const now = audioContext.currentTime;
+                        gainNode.gain.setValueAtTime(0.1, now);
+                        gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+                        
+                        oscillator.start(now);
+                        oscillator.stop(now + 0.1);
+                    };
+                    
+                    // Sonido de burbuja (para acciones positivas)
+                    this.sounds.bubble = () => {
+                        if (!this.enabled) return;
+                        
+                        const oscillator = audioContext.createOscillator();
+                        const gainNode = audioContext.createGain();
+                        
+                        oscillator.connect(gainNode);
+                        gainNode.connect(audioContext.destination);
+                        
+                        oscillator.type = 'sine';
+                        oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                        oscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.2);
+                        
+                        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
+                        
+                        oscillator.start(audioContext.currentTime);
+                        oscillator.stop(audioContext.currentTime + 0.2);
+                    };
+                    
+                    // Sonido de transición
+                    this.sounds.transition = () => {
+                        if (!this.enabled) return;
+                        
+                        const oscillator = audioContext.createOscillator();
+                        const gainNode = audioContext.createGain();
+                        
+                        oscillator.connect(gainNode);
+                        gainNode.connect(audioContext.destination);
+                        
+                        oscillator.type = 'sine';
+                        oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
+                        oscillator.frequency.exponentialRampToValueAtTime(600, audioContext.currentTime + 0.15);
+                        
+                        gainNode.gain.setValueAtTime(0.08, audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.15);
+                        
+                        oscillator.start(audioContext.currentTime);
+                        oscillator.stop(audioContext.currentTime + 0.15);
+                    };
+                    
+                } catch (e) {
+                    console.log("Web Audio API no soportada, usando fallback");
+                    // Fallback simple - no hará sonido si no hay soporte
+                    this.sounds.softClick = () => {};
+                    this.sounds.bubble = () => {};
+                    this.sounds.transition = () => {};
+                }
+            }
+
+            play(soundName) {
+                if (this.sounds[soundName]) {
+                    this.sounds[soundName]();
+                }
+            }
+
+            toggle() {
+                this.enabled = !this.enabled;
+                localStorage.setItem('soundEnabled', this.enabled);
+                this.updateUI();
+                return this.enabled;
+            }
+
+            updateUI() {
+                const soundIcon = document.getElementById('sound-icon');
+                const soundText = document.getElementById('sound-text');
+                const soundToggle = document.getElementById('sound-toggle');
+                
+                if (soundIcon && soundText && soundToggle) {
+                    if (this.enabled) {
+                        soundIcon.className = 'fas fa-volume-up';
+                        soundText.textContent = 'Sonidos: On';
+                        soundToggle.classList.add('active');
+                    } else {
+                        soundIcon.className = 'fas fa-volume-mute';
+                        soundText.textContent = 'Sonidos: Off';
+                        soundToggle.classList.remove('active');
+                    }
+                }
+            }
+        }
+
+        // Inicializar el manager de sonidos
+        const soundManager = new SoundManager();
+
         // Sample data for testing the application
         let playlists = JSON.parse(localStorage.getItem('musicPlaylists')) || [
             {
@@ -892,6 +1068,38 @@
         // Historial de canciones recientes
         let recentSongs = JSON.parse(localStorage.getItem('recentSongs')) || [];
 
+        // Función para habilitar sonidos en los botones
+        function enableButtonSounds() {
+            // Usar event delegation para mejor performance
+            document.addEventListener('click', function(e) {
+                const button = e.target.closest('button');
+                if (!button || button.disabled) return;
+
+                // Diferentes sonidos para diferentes tipos de botones
+                if (button.classList.contains('accent-btn')) {
+                    soundManager.play('softClick');
+                } else if (button.classList.contains('recent-song-play')) {
+                    soundManager.play('bubble');
+                } else if (button.id === 'generate-btn' || button.id === 'add-song-btn') {
+                    soundManager.play('bubble');
+                } else {
+                    soundManager.play('softClick');
+                }
+            });
+
+            // Sonidos para elementos con clase sound-element
+            document.addEventListener('click', function(e) {
+                const element = e.target.closest('.sound-element');
+                if (!element) return;
+                
+                // Reproducir sonido de transición para elementos modales
+                if (element.id === 'close-add-song-modal' || element.id === 'close-generator-btn' || 
+                    element.id === 'cancel-generator-btn') {
+                    soundManager.play('transition');
+                }
+            });
+        }
+
         // Debug function
         function debugLog(message) {
             console.log(message);
@@ -968,7 +1176,7 @@
 
             recentSongs.forEach((song, index) => {
                 const songElement = document.createElement('div');
-                songElement.className = 'recent-song-item beat-element';
+                songElement.className = 'recent-song-item beat-element sound-element';
                 
                 songElement.innerHTML = `
                     <div class="recent-song-thumbnail">
@@ -979,7 +1187,7 @@
                         <div class="recent-song-artist">${song.artist}</div>
                     </div>
                     <div class="recent-song-actions">
-                        <button class="recent-song-play" data-index="${index}">
+                        <button class="recent-song-play sound-element" data-index="${index}">
                             <i class="fas fa-play"></i>
                         </button>
                     </div>
@@ -999,6 +1207,7 @@
 
         // Reproducir canción reciente
         function playRecentSong(index) {
+            soundManager.play('softClick');
             const song = recentSongs[index];
             
             // Obtener miniatura y extraer colores
@@ -1057,12 +1266,14 @@
 
         // Toggle theme selector
         function toggleThemeSelector() {
+            soundManager.play('softClick');
             const themeOptions = document.getElementById('theme-options');
             themeOptions.classList.toggle('show');
         }
 
         // Scroll to discover section
         function scrollToDiscover() {
+            soundManager.play('softClick');
             document.querySelector('.discover-section').scrollIntoView({ 
                 behavior: 'smooth' 
             });
@@ -1359,7 +1570,7 @@
 
             playlists.forEach((playlist, playlistIndex) => {
                 const playlistElement = document.createElement('div');
-                playlistElement.className = 'playlist-card beat-element bg-white/10 rounded-xl p-5 mb-6 shadow-lg transition-transform hover:-translate-y-1';
+                playlistElement.className = 'playlist-card beat-element sound-element bg-white/10 rounded-xl p-5 mb-6 shadow-lg transition-transform hover:-translate-y-1';
                 
                 let songsHtml = '';
                 
@@ -1385,11 +1596,11 @@
                                     </div>
                                 </div>
                                 <div class="song-actions flex gap-2.5">
-                                    <button class="btn-play accent-btn text-white px-3 py-2 rounded cursor-pointer text-sm transition-colors hover:bg-green-600" 
+                                    <button class="btn-play accent-btn text-white px-3 py-2 rounded cursor-pointer text-sm transition-colors hover:bg-green-600 sound-element" 
                                             data-playlist="${playlistIndex}" data-song="${songIndex}">
                                         <i class="fas fa-play mr-1"></i> Play
                                     </button>
-                                    <button class="bg-red-500 text-white px-3 py-2 rounded cursor-pointer text-sm transition-colors hover:bg-red-600" 
+                                    <button class="bg-red-500 text-white px-3 py-2 rounded cursor-pointer text-sm transition-colors hover:bg-red-600 sound-element" 
                                             data-playlist="${playlistIndex}" data-song="${songIndex}">
                                         <i class="fas fa-trash mr-1"></i> Remove
                                     </button>
@@ -1412,7 +1623,7 @@
                             </div>
                         </div>
                         <div class="song-actions">
-                            <button class="add-to-playlist-btn accent-btn text-white px-3 py-2 rounded cursor-pointer text-sm transition-colors hover:bg-green-600" 
+                            <button class="add-to-playlist-btn accent-btn text-white px-3 py-2 rounded cursor-pointer text-sm transition-colors hover:bg-green-600 sound-element" 
                                     data-playlist="${playlistIndex}">
                                 <i class="fas fa-plus-circle mr-1"></i> Add to this Playlist
                             </button>
@@ -1424,7 +1635,7 @@
                     <div class="playlist-header flex justify-between items-center mb-5 pb-4 border-b border-white/20">
                         <h3 class="playlist-title text-2xl accent-color">${playlist.name}</h3>
                         <div class="playlist-actions flex gap-2.5">
-                            <button class="delete-playlist bg-red-500 text-white px-4 py-2 rounded cursor-pointer transition-colors hover:bg-red-600" 
+                            <button class="delete-playlist bg-red-500 text-white px-4 py-2 rounded cursor-pointer transition-colors hover:bg-red-600 sound-element" 
                                     data-index="${playlistIndex}">
                                 <i class="fas fa-trash mr-1"></i> Delete Playlist
                             </button>
@@ -1548,7 +1759,7 @@
             
             allTags.forEach(tag => {
                 tagsHtml += `
-                    <button class="filter-tag ${activeTag === tag ? 'active' : ''}" 
+                    <button class="filter-tag sound-element ${activeTag === tag ? 'active' : ''}" 
                             data-tag="${tag}">
                         ${tag}
                     </button>
@@ -1580,7 +1791,7 @@
             
             allArtists.forEach(artist => {
                 artistsHtml += `
-                    <button class="filter-tag ${activeArtist === artist ? 'active' : ''}" 
+                    <button class="filter-tag sound-element ${activeArtist === artist ? 'active' : ''}" 
                             data-artist="${artist}">
                         ${artist}
                     </button>
@@ -1601,6 +1812,7 @@
 
         // Set active tag and re-render discover songs
         function setActiveTag(tag) {
+            soundManager.play('softClick');
             activeTag = tag;
             activeArtist = null; // Reset artist filter when using tag filter
             
@@ -1611,6 +1823,7 @@
 
         // Set active artist and re-render discover songs
         function setActiveArtist(artist) {
+            soundManager.play('softClick');
             activeArtist = artist;
             activeTag = null; // Reset tag filter when using artist filter
             
@@ -1644,6 +1857,7 @@
 
         // Toggle filter visibility
         function toggleFilterType(type) {
+            soundManager.play('softClick');
             // Hide all filter lists first
             document.getElementById('tag-filters').classList.remove('active');
             document.getElementById('artist-filters').classList.remove('active');
@@ -1665,6 +1879,7 @@
 
         // Reset all filters
         function resetFilters() {
+            soundManager.play('softClick');
             activeTag = null;
             activeArtist = null;
             activeFilterType = null;
@@ -1715,7 +1930,7 @@
                 const originalIndex = discoverSongs.findIndex(s => s.id === song.id);
                 
                 const songElement = document.createElement('div');
-                songElement.className = 'discover-song-card beat-element bg-white/5 rounded-lg p-4 transition-transform hover:-translate-y-1 hover:bg-white/10';
+                songElement.className = 'discover-song-card beat-element sound-element bg-white/5 rounded-lg p-4 transition-transform hover:-translate-y-1 hover:bg-white/10';
                 
                 // Generate tags HTML
                 let tagsHtml = '';
@@ -1737,11 +1952,11 @@
                         <div class="song-url text-xs opacity-70 truncate">${song.url}</div>
                     </div>
                     <div class="discover-song-actions flex gap-2.5 mt-2.5">
-                        <button class="discover-play accent-btn text-white px-3 py-2 rounded cursor-pointer text-sm flex-1 transition-colors hover:bg-green-600" 
+                        <button class="discover-play accent-btn text-white px-3 py-2 rounded cursor-pointer text-sm flex-1 transition-colors hover:bg-green-600 sound-element" 
                                 data-index="${originalIndex}">
                             <i class="fas fa-play mr-1"></i> Play
                         </button>
-                        <button class="discover-add accent-btn text-white px-3 py-2 rounded cursor-pointer text-sm flex-1 transition-colors hover:bg-green-600" 
+                        <button class="discover-add accent-btn text-white px-3 py-2 rounded cursor-pointer text-sm flex-1 transition-colors hover:bg-green-600 sound-element" 
                                 data-index="${originalIndex}">
                             <i class="fas fa-plus mr-1"></i> Add to My List
                         </button>
@@ -1793,6 +2008,7 @@
 
         // Modificar la función playSong para integrar el tema dinámico
         function playSong(playlistIndex, songIndex) {
+            soundManager.play('softClick');
             currentPlaylistIndex = playlistIndex;
             currentSongIndex = parseInt(songIndex);
 
@@ -1870,6 +2086,7 @@
 
         // Modificar la función playDiscoverSong para integrar el tema dinámico
         function playDiscoverSong(index) {
+            soundManager.play('softClick');
             const song = discoverSongs[index];
             
             // Añadir a canciones recientes
@@ -1903,6 +2120,7 @@
 
         // Add a discover song to user's playlist
         function addDiscoverSongToPlaylist(index) {
+            soundManager.play('bubble');
             const song = discoverSongs[index];
             
             // Check if user has a "My Discoveries" playlist, if not create one
@@ -1932,6 +2150,7 @@
 
         // Remove a song
         function removeSong(playlistIndex, songIndex) {
+            soundManager.play('softClick');
             if (confirm('Are you sure you want to remove this song?')) {
                 playlists[playlistIndex].songs.splice(songIndex, 1);
                 savePlaylists();
@@ -1941,6 +2160,7 @@
 
         // Delete a playlist
         function deletePlaylist(playlistIndex) {
+            soundManager.play('softClick');
             if (confirm('Are you sure you want to delete this playlist?')) {
                 playlists.splice(playlistIndex, 1);
                 savePlaylists();
@@ -1950,6 +2170,7 @@
 
         // Add a new song to user's playlist
         function addSong() {
+            soundManager.play('bubble');
             const youtubeUrl = document.getElementById('youtube-url').value.trim();
             const songTitle = document.getElementById('song-title').value.trim();
             const playlistName = document.getElementById('playlist-name').value.trim();
@@ -2008,6 +2229,7 @@
 
         // Add a song to discover section (admin only)
         function addSongToDiscover() {
+            soundManager.play('bubble');
             const youtubeUrl = document.getElementById('discover-youtube-url').value.trim();
             const songTitle = document.getElementById('discover-song-title').value.trim();
             const songArtist = document.getElementById('discover-song-artist').value.trim();
@@ -2058,6 +2280,7 @@
 
         // Quick add to existing playlist
         function quickAdd() {
+            soundManager.play('bubble');
             const playlistIndex = document.getElementById('existing-playlists').value;
             if (playlistIndex === "") {
                 alert('Please select a playlist');
@@ -2069,6 +2292,7 @@
         }
 
         function logout() {
+            soundManager.play('softClick');
             currentUser = null;
             saveUser();
             // Redirect to login page
@@ -2102,11 +2326,13 @@
 
         // Playlist Generator Functions
         function openPlaylistGenerator() {
+            soundManager.play('softClick');
             document.getElementById('playlist-generator-modal').style.display = 'flex';
             populateGeneratorFilters();
         }
 
         function closePlaylistGenerator() {
+            soundManager.play('transition');
             document.getElementById('playlist-generator-modal').style.display = 'none';
             // Reset selections
             selectedGenres = [];
@@ -2124,7 +2350,7 @@
             genresContainer.innerHTML = '';
             allGenres.forEach(genre => {
                 genresContainer.innerHTML += `
-                    <div class="filter-option ${selectedGenres.includes(genre) ? 'selected' : ''}" 
+                    <div class="filter-option sound-element ${selectedGenres.includes(genre) ? 'selected' : ''}" 
                          data-value="${genre}" onclick="toggleFilter('genres', '${genre}')">
                         ${genre}
                     </div>
@@ -2136,7 +2362,7 @@
             erasContainer.innerHTML = '';
             allEras.forEach(era => {
                 erasContainer.innerHTML += `
-                    <div class="filter-option ${selectedEras.includes(era) ? 'selected' : ''}" 
+                    <div class="filter-option sound-element ${selectedEras.includes(era) ? 'selected' : ''}" 
                          data-value="${era}" onclick="toggleFilter('eras', '${era}')">
                         ${era}
                     </div>
@@ -2148,6 +2374,7 @@
         }
 
         function toggleFilter(type, value) {
+            soundManager.play('softClick');
             let array;
             switch(type) {
                 case 'genres':
@@ -2193,6 +2420,7 @@
         }
 
         function generatePlaylist() {
+            soundManager.play('bubble');
             // Filter songs based on selections
             let filteredSongs = [...discoverSongs];
             
@@ -2351,10 +2579,12 @@
 
         // Funciones para el modal de añadir canciones
         function showAddSongModal() {
+            soundManager.play('softClick');
             document.getElementById('add-song-modal').classList.add('show');
         }
 
         function hideAddSongModal() {
+            soundManager.play('transition');
             document.getElementById('add-song-modal').classList.remove('show');
         }
 
@@ -2370,6 +2600,10 @@
             
             // Initialize particles background
             initParticles();
+            
+            // Inicializar sistema de sonidos
+            enableButtonSounds();
+            soundManager.updateUI();
             
             // Check if user is already signed in
             updateUIForUser();
@@ -2406,6 +2640,12 @@
                     applyTheme(theme);
                     document.getElementById('theme-options').classList.remove('show');
                 });
+            });
+            
+            // Toggle de sonidos
+            document.getElementById('sound-toggle').addEventListener('click', function(e) {
+                e.stopPropagation();
+                soundManager.toggle();
             });
             
             // Close theme selector when clicking outside
@@ -2462,4 +2702,3 @@
     </script>
 </body>
 </html>
-
