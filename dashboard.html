@@ -308,6 +308,20 @@
             background: #22d3ee;
             color: white;
         }
+        
+        /* Filter visibility */
+        .filter-list {
+            display: none;
+        }
+        
+        .filter-list.active {
+            display: flex;
+        }
+        
+        .filter-toggle.active {
+            background: #22d3ee;
+            color: white;
+        }
     </style>
 
     <script>
@@ -435,6 +449,7 @@
         // Tag filter variables
         let activeTag = null;
         let activeArtist = null;
+        let activeFilterType = null; // 'genres', 'artists', or null
         
         // Theme management
         let currentTheme = localStorage.getItem('currentTheme') || 'original';
@@ -715,12 +730,7 @@
             const container = document.getElementById('tag-filters');
             const allTags = getAllTags();
             
-            let tagsHtml = `
-                <button class="tag-filter accent-btn text-white px-4 py-2 rounded-lg cursor-pointer transition-colors hover:bg-green-600 ${activeTag === null ? 'active' : ''}" 
-                        data-tag="all">
-                    <i class="fas fa-eye mr-1"></i> Show All
-                </button>
-            `;
+            let tagsHtml = '';
             
             allTags.forEach(tag => {
                 tagsHtml += `
@@ -737,7 +747,7 @@
             document.querySelectorAll('.tag-filter').forEach(button => {
                 button.addEventListener('click', function() {
                     const tag = this.getAttribute('data-tag');
-                    setActiveTag(tag === 'all' ? null : tag);
+                    setActiveTag(tag);
                 });
             });
         }
@@ -747,12 +757,7 @@
             const container = document.getElementById('artist-filters');
             const allArtists = getAllArtists();
             
-            let artistsHtml = `
-                <button class="artist-filter accent-btn text-white px-4 py-2 rounded-lg cursor-pointer transition-colors hover:bg-green-600 ${activeArtist === null ? 'active' : ''}" 
-                        data-artist="all">
-                    <i class="fas fa-eye mr-1"></i> Show All
-                </button>
-            `;
+            let artistsHtml = '';
             
             allArtists.forEach(artist => {
                 artistsHtml += `
@@ -769,7 +774,7 @@
             document.querySelectorAll('.artist-filter').forEach(button => {
                 button.addEventListener('click', function() {
                     const artist = this.getAttribute('data-artist');
-                    setActiveArtist(artist === 'all' ? null : artist);
+                    setActiveArtist(artist);
                 });
             });
         }
@@ -789,6 +794,52 @@
             activeTag = null; // Reset tag filter when using artist filter
             renderTagFilters();
             renderArtistFilters();
+            renderDiscoverSongs();
+        }
+
+        // Toggle filter visibility
+        function toggleFilterType(type) {
+            // If clicking the same filter type, toggle it off
+            if (activeFilterType === type) {
+                activeFilterType = null;
+            } else {
+                activeFilterType = type;
+            }
+            
+            updateFilterVisibility();
+        }
+
+        // Update filter visibility based on activeFilterType
+        function updateFilterVisibility() {
+            const tagFilters = document.getElementById('tag-filters');
+            const artistFilters = document.getElementById('artist-filters');
+            const genresBtn = document.getElementById('genres-btn');
+            const artistsBtn = document.getElementById('artists-btn');
+            
+            // Reset all
+            tagFilters.classList.remove('active');
+            artistFilters.classList.remove('active');
+            genresBtn.classList.remove('active');
+            artistsBtn.classList.remove('active');
+            
+            // Show the active filter
+            if (activeFilterType === 'genres') {
+                tagFilters.classList.add('active');
+                genresBtn.classList.add('active');
+            } else if (activeFilterType === 'artists') {
+                artistFilters.classList.add('active');
+                artistsBtn.classList.add('active');
+            }
+        }
+
+        // Reset all filters
+        function resetFilters() {
+            activeTag = null;
+            activeArtist = null;
+            activeFilterType = null;
+            renderTagFilters();
+            renderArtistFilters();
+            updateFilterVisibility();
             renderDiscoverSongs();
         }
 
@@ -1146,6 +1197,7 @@
                 renderDiscoverSongs();
                 renderTagFilters();
                 renderArtistFilters();
+                updateFilterVisibility();
             } else {
                 // User is not signed in, redirect to login
                 window.location.href = 'index.html';
@@ -1467,6 +1519,18 @@
                 songCount = parseInt(this.value) || 10;
             });
             
+            // Filter toggle events
+            document.getElementById('genres-btn').addEventListener('click', function() {
+                toggleFilterType('genres');
+            });
+            
+            document.getElementById('artists-btn').addEventListener('click', function() {
+                toggleFilterType('artists');
+            });
+            
+            // Show all button event
+            document.getElementById('show-all-btn').addEventListener('click', resetFilters);
+            
             // Close modal when clicking outside
             document.getElementById('playlist-generator-modal').addEventListener('click', function(e) {
                 if (e.target === this) {
@@ -1615,23 +1679,20 @@
                 <div class="tag-filters-section mb-6">
                     <h3 class="text-lg font-semibold mb-3 accent-color">Filter by:</h3>
                     <div class="flex flex-wrap gap-2 mb-4">
-                        <button class="tag-filter accent-btn text-white px-4 py-2 rounded-lg cursor-pointer transition-colors hover:bg-green-600 ${activeTag === null && activeArtist === null ? 'active' : ''}" 
-                                onclick="setActiveTag(null); setActiveArtist(null);">
+                        <button id="show-all-btn" class="tag-filter accent-btn text-white px-4 py-2 rounded-lg cursor-pointer transition-colors hover:bg-green-600">
                             <i class="fas fa-eye mr-1"></i> Show All
                         </button>
-                        <button class="tag-filter bg-white/10 text-white px-4 py-2 rounded-lg cursor-pointer transition-colors hover:bg-white/20" 
-                                onclick="document.getElementById('tag-filters').classList.toggle('hidden'); document.getElementById('artist-filters').classList.add('hidden');">
+                        <button id="genres-btn" class="tag-filter bg-white/10 text-white px-4 py-2 rounded-lg cursor-pointer transition-colors hover:bg-white/20">
                             <i class="fas fa-tags mr-1"></i> Genres
                         </button>
-                        <button class="tag-filter bg-white/10 text-white px-4 py-2 rounded-lg cursor-pointer transition-colors hover:bg-white/20" 
-                                onclick="document.getElementById('artist-filters').classList.toggle('hidden'); document.getElementById('tag-filters').classList.add('hidden');">
+                        <button id="artists-btn" class="tag-filter bg-white/10 text-white px-4 py-2 rounded-lg cursor-pointer transition-colors hover:bg-white/20">
                             <i class="fas fa-users mr-1"></i> Artists
                         </button>
                     </div>
-                    <div id="tag-filters" class="flex flex-wrap gap-2 hidden">
+                    <div id="tag-filters" class="filter-list flex flex-wrap gap-2">
                         <!-- Tag filters will be generated here dynamically -->
                     </div>
-                    <div id="artist-filters" class="flex flex-wrap gap-2 hidden">
+                    <div id="artist-filters" class="filter-list flex flex-wrap gap-2">
                         <!-- Artist filters will be generated here dynamically -->
                     </div>
                 </div>
