@@ -459,6 +459,10 @@
         let selectedEras = [];
         let songCount = 10;
 
+        // Cache for rendered filters to improve performance
+        let tagFiltersRendered = false;
+        let artistFiltersRendered = false;
+
         // Debug function
         function debugLog(message) {
             console.log(message);
@@ -725,8 +729,10 @@
             return Array.from(eras);
         }
 
-        // Render tag filters
+        // Render tag filters (only once)
         function renderTagFilters() {
+            if (tagFiltersRendered) return;
+            
             const container = document.getElementById('tag-filters');
             const allTags = getAllTags();
             
@@ -742,18 +748,21 @@
             });
             
             container.innerHTML = tagsHtml;
+            tagFiltersRendered = true;
             
-            // Add event listeners to tag filters
-            document.querySelectorAll('.tag-filter').forEach(button => {
-                button.addEventListener('click', function() {
-                    const tag = this.getAttribute('data-tag');
+            // Use event delegation for better performance
+            container.addEventListener('click', function(e) {
+                if (e.target.classList.contains('tag-filter')) {
+                    const tag = e.target.getAttribute('data-tag');
                     setActiveTag(tag);
-                });
+                }
             });
         }
 
-        // Render artist filters
+        // Render artist filters (only once)
         function renderArtistFilters() {
+            if (artistFiltersRendered) return;
+            
             const container = document.getElementById('artist-filters');
             const allArtists = getAllArtists();
             
@@ -769,13 +778,14 @@
             });
             
             container.innerHTML = artistsHtml;
+            artistFiltersRendered = true;
             
-            // Add event listeners to artist filters
-            document.querySelectorAll('.artist-filter').forEach(button => {
-                button.addEventListener('click', function() {
-                    const artist = this.getAttribute('data-artist');
+            // Use event delegation for better performance
+            container.addEventListener('click', function(e) {
+                if (e.target.classList.contains('artist-filter')) {
+                    const artist = e.target.getAttribute('data-artist');
                     setActiveArtist(artist);
-                });
+                }
             });
         }
 
@@ -783,8 +793,9 @@
         function setActiveTag(tag) {
             activeTag = tag;
             activeArtist = null; // Reset artist filter when using tag filter
-            renderTagFilters();
-            renderArtistFilters();
+            
+            // Update UI state
+            updateFilterButtons();
             renderDiscoverSongs();
         }
 
@@ -792,9 +803,33 @@
         function setActiveArtist(artist) {
             activeArtist = artist;
             activeTag = null; // Reset tag filter when using artist filter
-            renderTagFilters();
-            renderArtistFilters();
+            
+            // Update UI state
+            updateFilterButtons();
             renderDiscoverSongs();
+        }
+
+        // Update filter button states
+        function updateFilterButtons() {
+            // Update tag filters
+            document.querySelectorAll('.tag-filter').forEach(button => {
+                const tag = button.getAttribute('data-tag');
+                if (activeTag === tag) {
+                    button.classList.add('active');
+                } else {
+                    button.classList.remove('active');
+                }
+            });
+            
+            // Update artist filters
+            document.querySelectorAll('.artist-filter').forEach(button => {
+                const artist = button.getAttribute('data-artist');
+                if (activeArtist === artist) {
+                    button.classList.add('active');
+                } else {
+                    button.classList.remove('active');
+                }
+            });
         }
 
         // Toggle filter visibility
@@ -837,8 +872,7 @@
             activeTag = null;
             activeArtist = null;
             activeFilterType = null;
-            renderTagFilters();
-            renderArtistFilters();
+            updateFilterButtons();
             updateFilterVisibility();
             renderDiscoverSongs();
         }
