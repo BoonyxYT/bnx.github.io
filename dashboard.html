@@ -793,9 +793,11 @@
         function setActiveTag(tag) {
             activeTag = tag;
             activeArtist = null; // Reset artist filter when using tag filter
+            activeFilterType = 'genres';
             
             // Update UI state
             updateFilterButtons();
+            updateFilterVisibility();
             renderDiscoverSongs();
         }
 
@@ -803,9 +805,11 @@
         function setActiveArtist(artist) {
             activeArtist = artist;
             activeTag = null; // Reset tag filter when using artist filter
+            activeFilterType = 'artists';
             
             // Update UI state
             updateFilterButtons();
+            updateFilterVisibility();
             renderDiscoverSongs();
         }
 
@@ -1807,3 +1811,6 @@
 
 </body>
 </html>
+</body>
+</html>
+
