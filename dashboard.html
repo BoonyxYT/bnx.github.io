@@ -867,44 +867,43 @@
             text-align: center;
         }
         
-        .song-volume-control {
+        /* Barra de volumen vertical para el reproductor */
+        .player-volume-container {
             display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 8px;
-            margin-top: 5px;
+            margin-right: 15px;
+            width: 40px;
         }
         
-        .song-volume-slider {
-            -webkit-appearance: none;
-            flex: 1;
-            height: 3px;
-            border-radius: 2px;
-            background: rgba(255, 255, 255, 0.3);
-            outline: none;
+        .player-volume-slider {
+            -webkit-appearance: slider-vertical;
+            writing-mode: bt-lr;
+            width: 8px;
+            height: 150px;
+            padding: 0 5px;
         }
         
-        .song-volume-slider::-webkit-slider-thumb {
+        .player-volume-slider::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
-            width: 12px;
-            height: 12px;
+            width: 16px;
+            height: 16px;
             border-radius: 50%;
             background: #ffffff;
             cursor: pointer;
         }
         
-        .song-volume-slider::-moz-range-thumb {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: #ffffff;
-            cursor: pointer;
-        }
-        
-        .song-volume-icon {
-            color: rgba(255, 255, 255, 0.7);
+        .player-volume-label {
+            margin-top: 10px;
             font-size: 0.8rem;
-            min-width: 16px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        /* Contenedor del reproductor con volumen */
+        .player-with-volume {
+            display: flex;
+            align-items: center;
         }
     </style>
 </head>
@@ -991,10 +990,18 @@
                             <i class="fas fa-play-circle mr-2"></i> Player
                         </h3>
                         <div id="player-container">
-                            <div id="youtube-player" style="display: none;"></div>
-                            <div id="player-placeholder" class="player-placeholder text-center p-10 bg-black/30 rounded-lg">
-                                <i class="fas fa-play-circle text-5xl mb-4 opacity-50"></i>
-                                <p>Select a song to play it here</p>
+                            <div class="player-with-volume">
+                                <div class="player-volume-container">
+                                    <input type="range" id="player-volume-slider" class="player-volume-slider" min="0" max="100" value="100" orient="vertical">
+                                    <div class="player-volume-label">Volume</div>
+                                </div>
+                                <div style="flex: 1;">
+                                    <div id="youtube-player" style="display: none;"></div>
+                                    <div id="player-placeholder" class="player-placeholder text-center p-10 bg-black/30 rounded-lg">
+                                        <i class="fas fa-play-circle text-5xl mb-4 opacity-50"></i>
+                                        <p>Select a song to play it here</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1488,6 +1495,9 @@
         let selectedPlaylistIndex = null;
         let currentDiscoverSongIndex = null;
 
+        // Variable para la canción actualmente en reproducción
+        let currentPlayingSong = null;
+
         // Función para habilitar sonidos en los botones
         function enableButtonSounds() {
             // Usar event delegation para mejor performance
@@ -1645,6 +1655,12 @@
             document.getElementById('youtube-player').style.display = 'block';
             document.getElementById('player-container').classList.add('player-active');
 
+            // Actualizar barra de volumen del reproductor
+            const playerVolumeSlider = document.getElementById('player-volume-slider');
+            if (playerVolumeSlider) {
+                playerVolumeSlider.value = song.volume || 100;
+            }
+
             if (!player) {
                 player = new YT.Player('youtube-player', {
                     height: '384',
@@ -1660,6 +1676,7 @@
                 });
             } else {
                 player.loadVideoById(song.videoId);
+                currentPlayingSong = song;
                 setTimeout(() => {
                     if (player && player.setVolume) {
                         const songVolume = song.volume || 100;
@@ -1673,13 +1690,10 @@
         // Función cuando el reproductor está listo
         function onPlayerReady(event) {
             // Aplicar volumen inicial
-            if (player && player.setVolume) {
-                const currentSong = getCurrentSong();
-                if (currentSong) {
-                    const songVolume = currentSong.volume || 100;
-                    const finalVolume = Math.round((globalVolume * songVolume) / 100);
-                    player.setVolume(finalVolume);
-                }
+            if (player && player.setVolume && currentPlayingSong) {
+                const songVolume = currentPlayingSong.volume || 100;
+                const finalVolume = Math.round((globalVolume * songVolume) / 100);
+                player.setVolume(finalVolume);
             }
         }
 
@@ -1688,7 +1702,7 @@
             if (currentPlaylistIndex !== null && currentSongIndex !== null) {
                 return playlists[currentPlaylistIndex].songs[currentSongIndex];
             }
-            return null;
+            return currentPlayingSong;
         }
 
         // Extract YouTube video ID from URL
@@ -1772,6 +1786,7 @@
             // Si está activado Dynamic Theme Lite, no iniciar efectos de movimiento
             if (dynamicThemeLite) {
                 console.log("Dynamic Theme Lite activado - sin animaciones");
+                stopBeatEffects();
                 return;
             }
         }
@@ -2058,11 +2073,6 @@
                                     <div class="song-details flex-1">
                                         <div class="song-title font-medium text-lg mb-1">${song.title}</div>
                                         <div class="song-artist text-sm opacity-80 mb-1">${song.artist || 'Unknown Artist'}</div>
-                                        <div class="song-volume-control">
-                                            <i class="fas fa-volume-down song-volume-icon"></i>
-                                            <input type="range" min="0" max="100" value="${song.volume || 100}" class="song-volume-slider" data-song-id="${song.id}">
-                                            <i class="fas fa-volume-up song-volume-icon"></i>
-                                        </div>
                                         <div class="song-url text-sm opacity-70 break-all">${song.url}</div>
                                     </div>
                                 </div>
@@ -2167,53 +2177,12 @@
                 });
             });
 
-            // Add event listeners for volume sliders
-            document.querySelectorAll('.song-volume-slider').forEach(slider => {
-                slider.addEventListener('input', function() {
-                    const songId = this.getAttribute('data-song-id');
-                    const volume = parseInt(this.value);
-                    updateSongVolume(songId, volume);
-                });
-            });
-
             // Update the existing playlists dropdown
             updatePlaylistsDropdown();
             
             // Actualizar elementos que reaccionan al ritmo
             if (currentTheme === 'dynamic') {
                 collectBeatElements();
-            }
-        }
-
-        // Update song volume
-        function updateSongVolume(songId, volume) {
-            // Buscar en playlists
-            for (let playlist of playlists) {
-                for (let song of playlist.songs) {
-                    if (song.id === songId) {
-                        song.volume = volume;
-                        savePlaylists();
-                        
-                        // Si esta canción se está reproduciendo actualmente, actualizar el volumen
-                        if (player && player.getPlayerState && player.getPlayerState() === 1) {
-                            const currentSong = getCurrentSong();
-                            if (currentSong && currentSong.id === songId) {
-                                const finalVolume = Math.round((globalVolume * volume) / 100);
-                                player.setVolume(finalVolume);
-                            }
-                        }
-                        return;
-                    }
-                }
-            }
-            
-            // Buscar en discoverSongs
-            for (let song of discoverSongs) {
-                if (song.id === songId) {
-                    song.volume = volume;
-                    saveDiscoverSongs();
-                    return;
-                }
             }
         }
 
@@ -2553,11 +2522,6 @@
                         <div class="song-title font-medium text-lg mb-1">${song.title}</div>
                         <div class="song-artist text-sm opacity-80 mb-1">${song.artist || 'Unknown Artist'}</div>
                         <div class="song-year text-sm opacity-70 mb-2">${song.year || 'Unknown Year'}</div>
-                        <div class="song-volume-control">
-                            <i class="fas fa-volume-down song-volume-icon"></i>
-                            <input type="range" min="0" max="100" value="${song.volume || 100}" class="song-volume-slider" data-song-id="${song.id}">
-                            <i class="fas fa-volume-up song-volume-icon"></i>
-                        </div>
                         <div class="song-tags my-2">${tagsHtml}</div>
                         <div class="song-url text-xs opacity-70 truncate">${song.url}</div>
                     </div>
@@ -2588,15 +2552,6 @@
                 button.addEventListener('click', function() {
                     const index = this.getAttribute('data-index');
                     showPlaylistSelectModal(index);
-                });
-            });
-            
-            // Add event listeners for volume sliders
-            document.querySelectorAll('.song-volume-slider').forEach(slider => {
-                slider.addEventListener('input', function() {
-                    const songId = this.getAttribute('data-song-id');
-                    const volume = parseInt(this.value);
-                    updateSongVolume(songId, volume);
                 });
             });
             
@@ -2739,6 +2694,24 @@
             });
         }
 
+        // Función para actualizar el volumen de la canción actual
+        function updateCurrentSongVolume(volume) {
+            const currentSong = getCurrentSong();
+            if (currentSong) {
+                currentSong.volume = volume;
+                
+                // Aplicar volumen al reproductor
+                if (player && player.setVolume) {
+                    const finalVolume = Math.round((globalVolume * volume) / 100);
+                    player.setVolume(finalVolume);
+                }
+                
+                // Guardar cambios
+                savePlaylists();
+                saveDiscoverSongs();
+            }
+        }
+
         // Modificar la función playSong para integrar el tema dinámico
         function playSong(playlistIndex, songIndex) {
             soundManager.play('softClick');
@@ -2746,6 +2719,7 @@
             currentSongIndex = parseInt(songIndex);
 
             const song = playlists[playlistIndex].songs[songIndex];
+            currentPlayingSong = song;
             
             // Añadir a canciones recientes
             addToRecentSongs(song);
@@ -2763,6 +2737,12 @@
             document.getElementById('player-placeholder').style.display = 'none';
             document.getElementById('youtube-player').style.display = 'block';
             document.getElementById('player-container').classList.add('player-active');
+
+            // Actualizar barra de volumen del reproductor
+            const playerVolumeSlider = document.getElementById('player-volume-slider');
+            if (playerVolumeSlider) {
+                playerVolumeSlider.value = song.volume || 100;
+            }
 
             if (!player) {
                 player = new YT.Player('youtube-player', {
@@ -2807,9 +2787,16 @@
 
                 const nextSong = playlist.songs[currentSongIndex];
                 player.loadVideoById(nextSong.videoId);
+                currentPlayingSong = nextSong;
                 
                 // Añadir a canciones recientes
                 addToRecentSongs(nextSong);
+                
+                // Actualizar barra de volumen del reproductor
+                const playerVolumeSlider = document.getElementById('player-volume-slider');
+                if (playerVolumeSlider) {
+                    playerVolumeSlider.value = nextSong.volume || 100;
+                }
                 
                 // Aplicar volumen a la siguiente canción
                 setTimeout(() => {
@@ -2843,6 +2830,7 @@
         function playDiscoverSong(index) {
             soundManager.play('softClick');
             const song = discoverSongs[index];
+            currentPlayingSong = song;
             
             // Añadir a canciones recientes
             addToRecentSongs(song);
@@ -2860,6 +2848,12 @@
             document.getElementById('player-placeholder').style.display = 'none';
             document.getElementById('youtube-player').style.display = 'block';
             document.getElementById('player-container').classList.add('player-active');
+
+            // Actualizar barra de volumen del reproductor
+            const playerVolumeSlider = document.getElementById('player-volume-slider');
+            if (playerVolumeSlider) {
+                playerVolumeSlider.value = song.volume || 100;
+            }
 
             if (!player) {
                 player = new YT.Player('youtube-player', {
@@ -3505,6 +3499,12 @@
                         player.setVolume(finalVolume);
                     }
                 }
+            });
+            
+            // Barra de volumen del reproductor
+            document.getElementById('player-volume-slider').addEventListener('input', function() {
+                const volume = parseInt(this.value);
+                updateCurrentSongVolume(volume);
             });
             
             // Theme selector events
