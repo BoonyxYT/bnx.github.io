@@ -1416,8 +1416,8 @@
             }
         ];
 
-        // Discover songs (shared across all users) - Updated with tags, artists and years
-        let discoverSongs = JSON.parse(localStorage.getItem('discoverSongs')) || [
+        // Discover songs - NO se guardan en localStorage, se cargan siempre del código
+        let discoverSongs = [
             { 
                 id: "d1", 
                 title: "Big Sleep", 
@@ -1438,7 +1438,7 @@
                 year: 2023,
                 volume: 100
             },
-                        { 
+            { 
                 id: "d3", 
                 title: "WELTiTA", 
                 url: "https://www.youtube.com/watch?v=vmbyVU9w47Y", 
@@ -1556,9 +1556,10 @@
             localStorage.setItem('musicPlaylists', JSON.stringify(playlists));
         }
 
-        function saveDiscoverSongs() {
-            localStorage.setItem('discoverSongs', JSON.stringify(discoverSongs));
-        }
+        // Eliminada la función saveDiscoverSongs
+        // function saveDiscoverSongs() {
+        //     localStorage.setItem('discoverSongs', JSON.stringify(discoverSongs));
+        // }
 
         function saveUser() {
             localStorage.setItem('currentUser', JSON.stringify(currentUser));
@@ -2718,7 +2719,6 @@
                 
                 // Guardar cambios
                 savePlaylists();
-                saveDiscoverSongs();
             }
         }
 
@@ -2994,7 +2994,7 @@
                 return;
             }
             
-            // Add the song to discover section
+            // Add the song to discover section (solo en memoria, no se guarda en localStorage)
             discoverSongs.push({
                 id: generateId(),
                 title: songTitle,
@@ -3007,19 +3007,24 @@
                 volume: 100
             });
             
-            // Save and update the view
-            saveDiscoverSongs();
+            // NOTA: No guardamos en localStorage
+            
+            // Actualizar la vista
             renderDiscoverSongs();
+            
+            // Reinicializar los filtros para incluir las nuevas etiquetas/artistas
+            tagFiltersRendered = false;
+            artistFiltersRendered = false;
             renderTagFilters();
             renderArtistFilters();
             
-            // Clear input fields
+            // Limpiar campos del formulario
             document.getElementById('discover-youtube-url').value = '';
             document.getElementById('discover-song-title').value = '';
             document.getElementById('discover-song-artist').value = '';
             document.getElementById('discover-song-year').value = '';
             
-            alert('Song added to Discover section!');
+            alert('Song added to Discover section! (Note: This will reset when page is refreshed unless added to the code)');
         }
 
         // Quick add to existing playlist
@@ -3384,8 +3389,8 @@
         // Función para borrar todos los datos
         function clearAllData() {
             soundManager.play('softClick');
-            if (confirm('Are you sure you want to clear all data? This action cannot be undone.')) {
-                // Resetear todos los datos
+            if (confirm('Are you sure you want to clear all user data? This will delete your playlists and recent songs, but will NOT affect Discover songs. This action cannot be undone.')) {
+                // Resetear solo datos del usuario, NO discoverSongs
                 playlists = [
                     {
                         id: "1",
@@ -3406,42 +3411,10 @@
                 
                 recentSongs = [];
                 
-                discoverSongs = [
-                    { 
-                        id: "d1", 
-                        title: "Big Sleep", 
-                        url: "https://www.youtube.com/watch?v=-wTr3bTbVO8", 
-                        videoId: "f_zl_x8T2lY",
-                        tags: ["Pop", "R&B", "Chill"],
-                        artist: "The Weeknd",
-                        year: 2023,
-                        volume: 100
-                    },
-                    { 
-                        id: "d2", 
-                        title: "SOLEAO", 
-                        url: "https://www.youtube.com/watch?v=JgqsAvvwZAQ", 
-                        videoId: "nhQYnQtypgQ",
-                        tags: ["Reggaeton", "Latin"],
-                        artist: "Myke Towers",
-                        year: 2023,
-                        volume: 100
-                    },
-                    { 
-                id: "d3", 
-                title: "WELTiTA", 
-                url: "https://www.youtube.com/watch?v=vmbyVU9w47Y", 
-                videoId: "vmbyVU9w47Y",
-                tags: ["Reggaeton", "Latin"],
-                artist: "Myke Towers",
-                year: 2023,
-                volume: 100
-                 }
-                ];
+                // NOTA: discoverSongs se mantiene igual (no se resetea)
                 
-                // Guardar datos reseteados
+                // Guardar solo datos del usuario
                 savePlaylists();
-                saveDiscoverSongs();
                 saveRecentSongs();
                 
                 // Recargar la interfaz
@@ -3449,7 +3422,7 @@
                 renderDiscoverSongs();
                 renderRecentSongs();
                 
-                alert('All data has been cleared successfully!');
+                alert('All user data has been cleared successfully! Discover songs were not affected.');
             }
         }
 
@@ -3622,6 +3595,7 @@
     </script>
 </body>
 </html>
+
 
 
 
