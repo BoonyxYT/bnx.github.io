@@ -1,4 +1,4 @@
-alert("SCRIPT NUEVO FUNCIONANDO");
+console.log("SCRIPT RADIO CARGADO");
 
 const mensaje = document.getElementById("mensaje");
 const radio = document.getElementById("radio");
