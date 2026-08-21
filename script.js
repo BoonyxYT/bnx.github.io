@@ -1,24 +1,33 @@
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: #111;
-    color: white;
+const mensaje = document.getElementById("mensaje");
+
+const url = "https://pxfkqvyhpgbhqvnirinc.supabase.co/functions/v1/clever-handler";
+
+async function comprobarColor() {
+    try {
+        const respuesta = await fetch(url);
+
+        if (!respuesta.ok) {
+            throw new Error(`HTTP ${respuesta.status}`);
+        }
+
+        const datos = await respuesta.json();
+
+        if (datos.color === "rojo") {
+            mensaje.textContent = "ROJO";
+        } else if (datos.color === "azul") {
+            mensaje.textContent = "AZUL";
+        } else {
+            mensaje.textContent = "Esperando a Roblox...";
+        }
+
+    } catch (error) {
+        console.error("Error:", error);
+        mensaje.textContent = "Error de conexión";
+    }
 }
 
-.container {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 20px;
-}
+// Comprobar inmediatamente
+comprobarColor();
 
-h1 {
-    font-size: 32px;
-}
-
-#mensaje {
-    font-size: 50px;
-    font-weight: bold;
-}
+// Comprobar cada segundo
+setInterval(comprobarColor, 1000);
