@@ -1,4 +1,3 @@
-
 body {
     margin: 0;
     font-family: Arial, sans-serif;
@@ -15,12 +14,11 @@ body {
     gap: 20px;
 }
 
-button {
-    padding: 12px 20px;
-    font-size: 16px;
-    cursor: pointer;
+h1 {
+    font-size: 32px;
 }
 
 #mensaje {
-    font-size: 20px;
+    font-size: 50px;
+    font-weight: bold;
 }
