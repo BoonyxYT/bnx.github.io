@@ -3,63 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>BNX Radio</title>
-
-    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-    <main>
+    <h1>PRUEBA NUEVA WEB</h1>
 
-        <h1>BNX Radio</h1>
+    <h2>Vincular radio</h2>
 
-        <section id="vinculacion">
+    <input
+        id="codigoRadio"
+        type="text"
+        inputmode="numeric"
+        maxlength="6"
+        placeholder="Código de 6 dígitos"
+    >
 
-            <h2>Vincular radio</h2>
+    <button id="vincularButton">
+        Vincular
+    </button>
 
-            <p>
-                Introduce el código que aparece en Roblox.
-            </p>
+    <p id="estadoVinculacion">
+        Esperando código...
+    </p>
 
-            <input
-                id="codigoRadio"
-                type="text"
-                inputmode="numeric"
-                maxlength="6"
-                autocomplete="off"
-                placeholder="Código de 6 dígitos"
-            >
-
-            <button id="vincularButton">
-                Vincular
-            </button>
-
-            <p id="estadoVinculacion">
-                Esperando código...
-            </p>
-
-        </section>
-
-
-        <section id="radioContainer">
-
-            <h2>Radio</h2>
-
-            <audio
-                id="radio"
-                controls
-                preload="metadata"
-            ></audio>
-
-        </section>
-
-    </main>
-
+    <audio id="radio" controls></audio>
 
     <script src="script.js"></script>
 
 </body>
 </html>
-:::
