@@ -26,8 +26,6 @@ async function comprobarColor() {
     }
 }
 
-// Comprobar inmediatamente
 comprobarColor();
 
-// Comprobar cada segundo
 setInterval(comprobarColor, 1000);
