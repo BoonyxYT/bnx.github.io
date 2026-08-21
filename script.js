@@ -1,23 +1,24 @@
-const button = document.getElementById("supabaseButton");
-const mensaje = document.getElementById("mensaje");
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #111;
+    color: white;
+}
 
-const url = "https://pxfkqvyhpgbhqvnirinc.supabase.co/functions/v1/clever-handler";
+.container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+}
 
-button.addEventListener("click", async () => {
-    mensaje.textContent = "Conectando con Supabase...";
+h1 {
+    font-size: 32px;
+}
 
-    try {
-        const respuesta = await fetch(url);
-
-        if (!respuesta.ok) {
-            throw new Error(`HTTP ${respuesta.status}`);
-        }
-
-        const datos = await respuesta.json();
-
-        mensaje.textContent = datos.mensaje;
-    } catch (error) {
-        console.error(error);
-        mensaje.textContent = "Error al conectar con Supabase.";
-    }
-});
+#mensaje {
+    font-size: 50px;
+    font-weight: bold;
+}
