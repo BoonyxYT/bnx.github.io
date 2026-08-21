@@ -1,3 +1,5 @@
+alert("SCRIPT NUEVO FUNCIONANDO");
+
 const mensaje = document.getElementById("mensaje");
 const radio = document.getElementById("radio");
 
