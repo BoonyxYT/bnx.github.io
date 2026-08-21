@@ -1,11 +1,11 @@
-console.log("SCRIPT RADIO CARGADO");
+console.log("SCRIPT RADIO NUEVO CARGADO");
 
 const cleverUrl =
     "https://pxfkqvyhpgbhqvnirinc.supabase.co/functions/v1/clever-handler";
 
 
 // ==========================================
-// ELEMENTOS DE LA WEB
+// ELEMENTOS
 // ==========================================
 
 const codigoInput = document.getElementById("codigoRadio");
@@ -16,13 +16,13 @@ const radio = document.getElementById("radio");
 
 
 // ==========================================
-// COMPROBAR QUE EXISTEN LOS ELEMENTOS
+// COMPROBAR ELEMENTOS
 // ==========================================
 
-console.log("Input:", codigoInput);
-console.log("Botón:", vincularButton);
-console.log("Estado:", estadoVinculacion);
-console.log("Radio:", radio);
+console.log("codigoInput:", codigoInput);
+console.log("vincularButton:", vincularButton);
+console.log("estadoVinculacion:", estadoVinculacion);
+console.log("radio:", radio);
 
 
 // ==========================================
@@ -36,7 +36,7 @@ vincularButton.addEventListener("click", async () => {
     console.log("Código introducido:", codigo);
 
 
-    // Comprobar formato
+    // Comprobar código
 
     if (!/^\d{6}$/.test(codigo)) {
 
@@ -79,7 +79,7 @@ vincularButton.addEventListener("click", async () => {
         if (!respuesta.ok || !datos.success) {
 
             throw new Error(
-                datos.error || "No se pudo vincular el código."
+                datos.error || `HTTP ${respuesta.status}`
             );
 
         }
@@ -88,16 +88,9 @@ vincularButton.addEventListener("click", async () => {
         estadoVinculacion.textContent =
             "Código encontrado. Esperando confirmación de Roblox...";
 
-
-        /*
-         * Aquí NO creamos ninguna radio_session.
-         *
-         * La web solamente ha puesto:
-         *
-         * link_requested = true
-         *
-         * Roblox será quien confirme la vinculación.
-         */
+        console.log(
+            "Solicitud de vinculación enviada correctamente."
+        );
 
 
     } catch (error) {
