@@ -1,29 +1,65 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Radio Roblox</title>
+    <title>BNX Radio</title>
 
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-    <main class="container">
+    <main>
 
-        <h1>Radio Roblox</h1>
+        <h1>BNX Radio</h1>
 
-        <p id="mensaje">Esperando a Roblox...</p>
+        <section id="vinculacion">
 
-        <audio id="radio" controls></audio>
+            <h2>Vincular radio</h2>
+
+            <p>
+                Introduce el código que aparece en Roblox.
+            </p>
+
+            <input
+                id="codigoRadio"
+                type="text"
+                inputmode="numeric"
+                maxlength="6"
+                autocomplete="off"
+                placeholder="Código de 6 dígitos"
+            >
+
+            <button id="vincularButton">
+                Vincular
+            </button>
+
+            <p id="estadoVinculacion">
+                Esperando código...
+            </p>
+
+        </section>
+
+
+        <section id="radioContainer">
+
+            <h2>Radio</h2>
+
+            <audio
+                id="radio"
+                controls
+                preload="metadata"
+            ></audio>
+
+        </section>
 
     </main>
+
 
     <script src="script.js"></script>
 
 </body>
-
 </html>
+:::
