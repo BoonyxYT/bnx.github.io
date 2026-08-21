@@ -1,57 +1,114 @@
 console.log("SCRIPT RADIO CARGADO");
 
-const mensaje = document.getElementById("mensaje");
+const cleverUrl =
+    "https://pxfkqvyhpgbhqvnirinc.supabase.co/functions/v1/clever-handler";
+
+
+// ==========================================
+// ELEMENTOS DE LA WEB
+// ==========================================
+
+const codigoInput = document.getElementById("codigoRadio");
+const vincularButton = document.getElementById("vincularButton");
+const estadoVinculacion = document.getElementById("estadoVinculacion");
+
 const radio = document.getElementById("radio");
 
-const url = "https://pxfkqvyhpgbhqvnirinc.supabase.co/functions/v1/clever-handler";
 
-let colorAnterior = null;
+// ==========================================
+// COMPROBAR QUE EXISTEN LOS ELEMENTOS
+// ==========================================
 
-async function comprobarColor() {
+console.log("Input:", codigoInput);
+console.log("Botón:", vincularButton);
+console.log("Estado:", estadoVinculacion);
+console.log("Radio:", radio);
+
+
+// ==========================================
+// VINCULAR CÓDIGO
+// ==========================================
+
+vincularButton.addEventListener("click", async () => {
+
+    const codigo = codigoInput.value.trim();
+
+    console.log("Código introducido:", codigo);
+
+
+    // Comprobar formato
+
+    if (!/^\d{6}$/.test(codigo)) {
+
+        estadoVinculacion.textContent =
+            "Introduce un código válido de 6 dígitos.";
+
+        return;
+    }
+
+
+    estadoVinculacion.textContent =
+        "Comprobando código...";
+
+    vincularButton.disabled = true;
+
+
     try {
-        const respuesta = await fetch(url);
 
-        if (!respuesta.ok) {
-            throw new Error(`HTTP ${respuesta.status}`);
-        }
+        const respuesta = await fetch(cleverUrl, {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+                action: "request_link",
+                code: codigo
+            })
+
+        });
+
 
         const datos = await respuesta.json();
 
-        console.log("Respuesta:", datos);
+        console.log("Respuesta de Supabase:", datos);
 
-        if (datos.color === "rojo") {
 
-            mensaje.textContent = "ROJO";
+        if (!respuesta.ok || !datos.success) {
 
-            if (colorAnterior !== "rojo") {
-                radio.src = "./audio/rojo.mp3";
-                radio.load();
-            }
+            throw new Error(
+                datos.error || "No se pudo vincular el código."
+            );
 
-        } else if (datos.color === "azul") {
-
-            mensaje.textContent = "AZUL";
-
-            if (colorAnterior !== "azul") {
-                radio.src = "./audio/azul.mp3";
-                radio.load();
-            }
-
-        } else {
-
-            mensaje.textContent = "Esperando a Roblox...";
         }
 
-        colorAnterior = datos.color;
+
+        estadoVinculacion.textContent =
+            "Código encontrado. Esperando confirmación de Roblox...";
+
+
+        /*
+         * Aquí NO creamos ninguna radio_session.
+         *
+         * La web solamente ha puesto:
+         *
+         * link_requested = true
+         *
+         * Roblox será quien confirme la vinculación.
+         */
+
 
     } catch (error) {
 
-        console.error("Error:", error);
-        mensaje.textContent = "Error de conexión";
+        console.error("Error de vinculación:", error);
+
+        estadoVinculacion.textContent =
+            "Error: " + error.message;
+
+        vincularButton.disabled = false;
 
     }
-}
 
-comprobarColor();
-
-setInterval(comprobarColor, 1000);
+});
